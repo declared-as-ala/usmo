@@ -1,0 +1,77 @@
+name: Seed Production Database
+
+# Manual only — every seed script under apps/api/src/seed*.ts wipes its own
+# collection(s) before inserting (`deleteMany({})`), so this must never run
+# automatically on push. Real user/order/membership data created after the
+# first seed is NOT touched (seed scripts only target their own demo
+# collections), but re-running this will reset catalog/content collections
+# (products, news, sponsors, players, etc.) back to the seed data every time.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type SEED-PRODUCTION to confirm you want to (re)seed the live VPS database'
+        required: true
+
+jobs:
+  seed:
+    name: Seed VPS MongoDB
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'SEED-PRODUCTION'
+    steps:
+      - name: Seed over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 20m
+          script: |
+            set -Eeuo pipefail
+
+            DEPLOY_DIR='${{ secrets.VPS_DEPLOY_PATH }}'
+            if [ -z "$DEPLOY_DIR" ]; then DEPLOY_DIR=/var/www/usmo; fi
+            cd "$DEPLOY_DIR"
+
+            if ! docker compose -f docker-compose.prod.yml exec -T api wget --quiet --output-document=/dev/null http://127.0.0.1:3001/api/health; then
+              echo "[seed] ERROR: usm-api is not running/healthy. Deploy first (push to main), then re-run this workflow." >&2
+              exit 1
+            fi
+
+            # seed.ts and seed-jerseys.ts upload real product photos to MinIO —
+            # the production image only ships apps/api/dist, not the source
+            # assets, so copy them from the already-checked-out repo on disk.
+            # Remove any leftover copy first: `docker cp` nests directories
+            # instead of replacing them when the destination already exists,
+            # which would happen on a second run against the same container.
+            echo "[seed] Copying seed assets into the api container..."
+            docker compose -f docker-compose.prod.yml exec -T api rm -rf /app/apps/api/seed-assets
+            docker cp apps/api/seed-assets usm-api:/app/apps/api/seed-assets
+
+            run_seed() {
+              echo "[seed] Running $1..."
+              docker compose -f docker-compose.prod.yml exec -T -w /app/apps/api api node "dist/$1.js"
+            }
+
+            # Order matches the dependency chain established during development
+            # (see docs/progress.md): loyalty's badge catalog must exist before
+            # donations unlocks the "donor" badge; jerseys intentionally runs
+            # last so it's the final word on the product catalog.
+            run_seed seed
+            run_seed seed-heritage
+            run_seed seed-players-staff
+            run_seed seed-hero-slides
+            run_seed seed-media
+            run_seed seed-membership-plans
+            run_seed seed-fan-zone
+            run_seed seed-news
+            run_seed seed-products
+            run_seed seed-legends
+            run_seed seed-stadium
+            run_seed seed-loyalty
+            run_seed seed-sponsor-slugs
+            run_seed seed-jerseys
+            run_seed seed-donations
+
+            echo "[seed] All seed scripts completed successfully."
