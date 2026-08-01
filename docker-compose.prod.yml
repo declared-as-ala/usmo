@@ -150,14 +150,33 @@ services:
       retries: 3
 
   # ── Certbot (Let's Encrypt) — run manually, not a long-lived daemon ──────
-  # First issuance (after DNS points at the VPS and nginx is already running
-  # to serve the HTTP-01 challenge on port 80):
-  #   docker compose -f docker-compose.prod.yml run --rm certbot certonly \
-  #     --webroot -w /var/www/certbot \
-  #     -d $APP_DOMAIN -d $API_DOMAIN \
-  #     --email you@example.com --agree-tos --no-eff-email
-  # Renewal (cron this on the VPS, see scripts/setup-vps.sh):
+  #
+  # Chicken-and-egg note: nginx's config unconditionally references
+  # certificate files (see deploy/nginx/templates/default.conf.template), so
+  # it CANNOT start at all until certs already exist — meaning you can't use
+  # nginx to serve the HTTP-01 webroot challenge for the very first issuance.
+  #
+  # FIRST issuance — standalone mode, run BEFORE `docker compose up nginx`
+  # (nothing else may be bound to port 80 at this point; run once per domain,
+  # each becomes its own /etc/letsencrypt/live/<domain>/ lineage, matching the
+  # separate ssl_certificate paths the two nginx server blocks expect):
+  #   docker run --rm -p 80:80 \
+  #     -v $(pwd)/deploy/certbot/conf:/etc/letsencrypt \
+  #     -v $(pwd)/deploy/certbot/www:/var/www/certbot \
+  #     certbot/certbot certonly --standalone \
+  #     -d $APP_DOMAIN --email $LETSENCRYPT_EMAIL --agree-tos --no-eff-email
+  #   docker run --rm -p 80:80 \
+  #     -v $(pwd)/deploy/certbot/conf:/etc/letsencrypt \
+  #     -v $(pwd)/deploy/certbot/www:/var/www/certbot \
+  #     certbot/certbot certonly --standalone \
+  #     -d $API_DOMAIN --email $LETSENCRYPT_EMAIL --agree-tos --no-eff-email
+  #   docker compose -f docker-compose.prod.yml up -d nginx
+  #
+  # RENEWAL — webroot mode, safe once nginx is already running (nginx serves
+  # /.well-known/acme-challenge/ from the shared ./deploy/certbot/www volume;
+  # this is what scripts/setup-vps.sh's cron entry runs nightly):
   #   docker compose -f docker-compose.prod.yml run --rm certbot renew
+  #   docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
   certbot:
     image: certbot/certbot:latest
     container_name: usm-certbot

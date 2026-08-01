@@ -108,11 +108,28 @@ cat <<EOF
 Next steps:
   1. git clone https://github.com/declared-as-ala/usmo.git $DEPLOY_DIR   (if not already cloned)
   2. cd $DEPLOY_DIR && cp .env.production.example .env && nano .env      (fill in real secrets)
-  3. Point APP_DOMAIN and API_DOMAIN's DNS A records at this server's IP
-  4. docker compose -f docker-compose.prod.yml up -d nginx web api mongo minio mc
-  5. docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot \\
-       -w /var/www/certbot -d \$APP_DOMAIN -d \$API_DOMAIN \\
-       --email \$LETSENCRYPT_EMAIL --agree-tos --no-eff-email
-  6. docker compose -f docker-compose.prod.yml restart nginx
+  3. Point APP_DOMAIN and API_DOMAIN's DNS A records at this server's IP, and set -a; source .env; set +a
+     so \$APP_DOMAIN etc. are available to the commands below.
+  4. Start everything EXCEPT nginx (nginx can't start yet — its config needs
+     certs that don't exist until step 5):
+       docker compose -f docker-compose.prod.yml up -d mongo minio mc api web
+  5. Issue the first certificates in standalone mode — one per domain, run
+     BEFORE nginx is up so port 80 is free (see docker-compose.prod.yml's
+     certbot service comments for the full explanation):
+       docker run --rm -p 80:80 \\
+         -v \$(pwd)/deploy/certbot/conf:/etc/letsencrypt \\
+         -v \$(pwd)/deploy/certbot/www:/var/www/certbot \\
+         certbot/certbot certonly --standalone \\
+         -d \$APP_DOMAIN --email \$LETSENCRYPT_EMAIL --agree-tos --no-eff-email
+       docker run --rm -p 80:80 \\
+         -v \$(pwd)/deploy/certbot/conf:/etc/letsencrypt \\
+         -v \$(pwd)/deploy/certbot/www:/var/www/certbot \\
+         certbot/certbot certonly --standalone \\
+         -d \$API_DOMAIN --email \$LETSENCRYPT_EMAIL --agree-tos --no-eff-email
+  6. Now that certs exist, start nginx:
+       docker compose -f docker-compose.prod.yml up -d nginx
+
+  Future renewals reuse the already-running nginx via webroot mode — the
+  cron entry this script installed handles that automatically.
 
 EOF
