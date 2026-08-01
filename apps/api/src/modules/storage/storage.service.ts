@@ -54,7 +54,7 @@ export class StorageService {
     @InjectModel(MediaFile.name) private readonly mediaFileModel: Model<MediaFile>,
   ) {
     this.bucket = process.env.MINIO_BUCKET || 'usm-media';
-    this.publicUrl = (process.env.MINIO_PUBLIC_URL || 'http://localhost:9000/usm-media').replace(/\/$/, '');
+    this.publicUrl = (process.env.MINIO_PUBLIC_URL || `/${this.bucket}`).replace(/\/$/, '');
   }
 
   // ─────────────────────────────────────────────────────────────────────────

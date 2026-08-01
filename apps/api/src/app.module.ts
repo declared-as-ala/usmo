@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -44,6 +44,7 @@ import { MatchesModule } from './modules/matches/matches.module';
 import { PlayersModule } from './modules/players/players.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { validateEnvironment } from './config/environment';
+import { PublicMediaUrlInterceptor } from './common/public-media-url.interceptor';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { validateEnvironment } from './config/environment';
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: PublicMediaUrlInterceptor },
   ],
 })
 export class AppModule {}
