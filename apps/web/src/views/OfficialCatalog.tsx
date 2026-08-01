@@ -98,7 +98,7 @@ function ProductSkeleton() {
 
 export const OfficialCatalog: React.FC = () => {
   const { clubSettings } = useApp();
-  const catalogueRef = useRef<HTMLElement>(null);
+  const catalogueRef = useRef<HTMLDivElement>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [banner, setBanner] = useState<any>(null);
