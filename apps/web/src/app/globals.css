@@ -187,6 +187,17 @@ body {
   animation: skeleton-shimmer 1.5s infinite;
 }
 
+/* Hides the scrollbar on horizontally-scrollable rows (category chips, rankings
+   lists, etc.) while keeping the element fully scrollable via touch/drag/wheel. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Custom visual utilities */
 .sports-clip {
   clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);

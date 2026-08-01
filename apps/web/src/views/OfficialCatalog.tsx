@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowRight, Check, ChevronDown, Filter, Heart, MessageCircle,
+  ArrowRight, Check, Filter, Heart, MessageCircle,
   PackageCheck, Search, ShieldCheck, ShoppingBag, SlidersHorizontal,
   Sparkles, Truck, X,
 } from 'lucide-react';
@@ -144,6 +144,7 @@ export const OfficialCatalog: React.FC = () => {
 
   const reset = () => { setCategory('all'); setBadge(''); setInStock(false); setSearch(''); };
   const browse = (slug = 'all') => { setCategory(slug); requestAnimationFrame(() => catalogueRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
+  const activeFilterCount = [category !== 'all', Boolean(badge), inStock, Boolean(search.trim())].filter(Boolean).length;
 
   // A plain JSX value (not a component defined during render) — same filter
   // fields are reused verbatim in both the desktop sidebar and mobile drawer.
@@ -157,64 +158,152 @@ export const OfficialCatalog: React.FC = () => {
   );
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F5F7FA] text-usm-blue-dark">
+    <main className="min-h-screen bg-[#F5F7FA] text-usm-blue-dark">
+      {/* Compact, text-first hero — no full-bleed image or oversized min-height standing
+          between the visitor and the product grid. The decorative photo only shows on
+          desktop, where there's room for it beside the copy instead of above it. */}
       <section className="relative isolate overflow-hidden bg-white text-usm-blue-dark">
-        <div className="pointer-events-none absolute -top-32 right-0 h-[520px] w-[520px] rounded-full bg-usm-blue-primary/10 blur-[140px]" />
-        <div className="relative mx-auto grid w-full max-w-[1440px] items-center gap-8 px-4 pb-12 pt-28 sm:min-h-[640px] sm:gap-10 sm:px-8 sm:pb-20 sm:pt-32 lg:min-h-[760px] lg:grid-cols-[1fr_1fr] lg:gap-16 lg:px-12 lg:pt-40">
-          <div className="relative z-10 order-2 w-full min-w-0 max-w-xl lg:order-none">
-            <p className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-usm-blue-soft px-4 py-2 text-[10px] font-black uppercase tracking-[.22em] text-[#0D63FF]">
-              <Sparkles size={13} />{hasAdminCopy ? (banner.eyebrow || 'Boutique officielle') : 'Boutique officielle'}
-            </p>
-            <h1 className="mt-4 break-words font-display text-4xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:mt-6 sm:text-5xl sm:leading-[.92] sm:tracking-[-.04em] lg:text-7xl">
-              {hasAdminCopy ? banner.title.trim() : 'Portez les couleurs de Monastir'}
-            </h1>
-            <p className="mt-4 max-w-lg break-words text-base leading-7 text-[#5B6B82] sm:mt-6 sm:text-lg">
-              {hasAdminCopy && banner.description?.trim()
-                ? banner.description.trim()
-                : 'Découvrez les maillots, accessoires, packs supporters et produits officiels de l’US Monastir.'}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
-              {hasAdminCopy && banner.ctaHref ? (
-                <a href={banner.ctaHref} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0D63FF] px-6 text-sm font-black text-white shadow-[0_12px_30px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">{banner.ctaLabel || 'Découvrir'}<ArrowRight size={16} /></a>
+        <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-usm-blue-primary/10 blur-[110px] sm:h-96 sm:w-96" />
+        <div className="relative mx-auto max-w-[1440px] px-4 pb-6 pt-24 sm:px-8 sm:pb-8 sm:pt-28 lg:px-12 lg:pt-32">
+          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-12">
+            <div className="max-w-xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-usm-blue-soft px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[.2em] text-[#0D63FF]">
+                <Sparkles size={12} />{hasAdminCopy ? (banner.eyebrow || 'Boutique officielle') : 'Boutique officielle'}
+              </p>
+              <h1 className="mt-3 break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-5xl">
+                {hasAdminCopy ? banner.title.trim() : 'Portez les couleurs de Monastir'}
+              </h1>
+              <p className="mt-3 max-w-lg break-words text-sm leading-6 text-[#5B6B82] sm:text-base">
+                {hasAdminCopy && banner.description?.trim()
+                  ? banner.description.trim()
+                  : 'Maillots, accessoires et packs supporters officiels de l’US Monastir.'}
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                {hasAdminCopy && banner.ctaHref ? (
+                  <a href={banner.ctaHref} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">{banner.ctaLabel || 'Découvrir'}<ArrowRight size={15} /></a>
+                ) : (
+                  <button onClick={() => browse()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">Voir les produits<ArrowRight size={15} /></button>
+                )}
+              </div>
+
+              {/* Trust signals — one compact line instead of the old 4-row, full-width
+                  strip that used to push the whole catalogue down by ~250px on mobile. */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] font-bold text-[#5B6B82] sm:mt-5">
+                <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#0D63FF]" />Articles officiels</span>
+                <span className="inline-flex items-center gap-1.5"><Check size={14} className="text-[#0D63FF]" />Commande confirmée</span>
+                <span className="inline-flex items-center gap-1.5"><Truck size={14} className="text-[#0D63FF]" />Livraison ou retrait</span>
+                <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} className="text-[#0D63FF]" />Assistance boutique</span>
+              </div>
+            </div>
+
+            <div className="relative hidden lg:block">
+              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] bg-usm-blue-primary/10 blur-2xl" />
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[1.75rem] border border-usm-border shadow-[0_24px_60px_-28px_rgba(13,99,255,0.35)]">
+                {!settingsLoading && (
+                  <img
+                    src={hasAdminImage ? desktopBannerImage : '/banners/boutique_hero.webp'}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick category chips — one tap jumps straight into a filtered grid,
+              faster than scrolling to the sidebar and smarter than a generic
+              "explore categories" button that just scrolled to the same spot. */}
+          {categories.length > 0 && (
+            <div className="no-scrollbar -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:mt-8">
+              <button
+                onClick={() => browse('all')}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition ${
+                  category === 'all' ? 'border-[#0D63FF] bg-[#0D63FF] text-white' : 'border-[#DDE8F8] bg-white text-usm-blue-dark hover:border-[#0D63FF]/40'
+                }`}
+              >
+                Tout voir
+              </button>
+              {categories.map((item: any) => (
+                <button
+                  key={item._id || item.slug}
+                  onClick={() => browse(item.slug)}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition ${
+                    category === item.slug ? 'border-[#0D63FF] bg-[#0D63FF] text-white' : 'border-[#DDE8F8] bg-white text-usm-blue-dark hover:border-[#0D63FF]/40'
+                  }`}
+                >
+                  <span aria-hidden="true">{item.icon}</span>{item.nameFr || item.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section id="catalogue" ref={catalogueRef} className="scroll-mt-20 border-t border-[#DDE8F8] bg-[#F5F7FA] py-8 sm:py-10 lg:py-12">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
+          <div className="rounded-[1.75rem] border border-[#DDE8F8] bg-white p-3 shadow-sm sm:p-4">
+            <div className="flex flex-col gap-3 lg:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6f7d91]" size={18} />
+                <label htmlFor="catalogue-search" className="sr-only">Rechercher un produit</label>
+                <input id="catalogue-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Rechercher un maillot, un accessoire…" className="min-h-12 w-full rounded-2xl border border-transparent bg-white pl-12 pr-4 text-sm text-[#020814] outline-none transition focus:border-[#0D63FF] sm:min-h-14 sm:text-base" />
+              </div>
+              <select aria-label="Trier les produits" value={sort} onChange={event => setSort(event.target.value as SortOption)} className="min-h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm font-bold text-[#020814] outline-none focus:border-[#0D63FF] sm:min-h-14 lg:w-auto">
+                <option value="date_desc">Nouveautés</option>
+                <option value="popularity_desc">Plus populaires</option>
+                <option value="price_asc">Prix croissant</option>
+                <option value="price_desc">Prix décroissant</option>
+              </select>
+              <button onClick={() => setMobileFilters(true)} className="relative inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-usm-blue-dark ring-1 ring-inset ring-[#DDE8F8] sm:min-h-14 lg:hidden lg:w-auto">
+                <SlidersHorizontal size={17} />Filtres
+                {activeFilterCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-[#0D63FF] text-[10px] font-black text-white">{activeFilterCount}</span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr] lg:gap-8">
+            <aside className="hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white p-5 shadow-sm lg:block">
+              <div className="mb-5 flex items-center gap-2 text-sm font-black"><Filter size={16} />Filtrer la boutique</div>
+              {filterFields}
+            </aside>
+            <div>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-[#5F6F84]"><span className="font-black text-usm-blue-dark">{filtered.length}</span> produit{filtered.length === 1 ? '' : 's'}</p>
+                {activeFilterCount > 0 && <button onClick={reset} className="text-xs font-black text-[#0D63FF] hover:underline">Tout réinitialiser</button>}
+              </div>
+              {catalogueLoading ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <ProductSkeleton key={index} />)}</div>
+              ) : error ? (
+                <div className="rounded-[2rem] border border-red-200 bg-red-50 p-10 text-center text-sm font-bold text-red-700">{error}</div>
+              ) : filtered.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{filtered.map((product, index) => <BoutiqueProductCard key={product._id || product.id} product={product} index={index} />)}</div>
               ) : (
-                <button onClick={() => browse()} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0D63FF] px-6 text-sm font-black text-white shadow-[0_12px_30px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">Découvrir les produits<ArrowRight size={16} /></button>
-              )}
-              <button onClick={() => browse()} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[#0D63FF] bg-white px-6 text-sm font-bold text-[#0D63FF] transition hover:bg-usm-blue-soft">Explorer les catégories<ChevronDown size={16} /></button>
-            </div>
-          </div>
-
-          <div className="relative order-1 w-full min-w-0 self-center lg:order-none">
-            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-usm-blue-primary/10 blur-2xl" />
-            <div className="relative aspect-[3/2] w-full overflow-hidden rounded-[2rem] border border-usm-border shadow-[0_30px_70px_-30px_rgba(13,99,255,0.35)]">
-              {!settingsLoading && (
-                <img
-                  src={hasAdminImage ? desktopBannerImage : '/banners/boutique_hero.webp'}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <div className="relative overflow-hidden rounded-[2rem] border border-[#DDE8F8] bg-white px-6 py-16 text-center">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-[#0D63FF]" />
+                  <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-white text-[#0D63FF]"><PackageCheck size={30} /></span>
+                  <h3 className="mt-6 font-display text-3xl font-black uppercase">Aucune pièce trouvée</h3>
+                  <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#5F6F84]">Modifiez votre recherche ou retrouvez immédiatement l’ensemble de la collection officielle.</p>
+                  <button onClick={reset} className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-black text-usm-blue-dark transition hover:bg-[#0D63FF] hover:text-white">Voir tous les produits<ArrowRight size={16} /></button>
+                </div>
               )}
             </div>
           </div>
         </div>
       </section>
 
-      <section aria-label="Garanties de la boutique" className="border-b border-usm-border bg-white text-usm-blue-dark">
-        <div className="mx-auto grid max-w-[1440px] grid-cols-1 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 lg:px-12">
-          {[[ShieldCheck, 'Articles officiels'], [Check, 'Commande confirmée'], [Truck, 'Livraison ou retrait'], [MessageCircle, 'Assistance boutique']].map(([Icon, label]: any) => <div key={label} className="flex min-h-16 items-center gap-3 border-b border-usm-border py-3 text-xs font-bold text-[#071A30] last:border-b-0 sm:min-h-20 sm:border-r sm:px-5 sm:first:pl-0 sm:[&:nth-child(2)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2)]:border-r lg:last:border-r-0"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-usm-blue-soft"><Icon size={17} className="text-[#0D63FF]" /></span>{label}</div>)}
-        </div>
-      </section>
-
-      <section id="catalogue" ref={catalogueRef} className="scroll-mt-20 border-t border-[#DDE8F8] bg-[#F5F7FA] py-20">
-        <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
-          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#0D63FF]">Le catalogue officiel</p><h2 className="mt-3 font-display text-4xl font-black uppercase leading-none text-usm-blue-dark sm:text-6xl">Trouvez votre pièce.</h2></div><p className="max-w-lg text-sm leading-6 text-[#5B6B82]">Recherchez, filtrez et commandez les produits officiels de l’US Monastir.</p></div>
-          <div className="mt-10 rounded-[2rem] border border-[#DDE8F8] bg-white p-3 shadow-sm sm:p-4">
-            <div className="flex flex-col gap-3 lg:flex-row"><div className="relative flex-1"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6f7d91]" size={18} /><label htmlFor="catalogue-search" className="sr-only">Rechercher un produit</label><input id="catalogue-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Rechercher un maillot, un accessoire…" className="min-h-14 w-full rounded-2xl border border-transparent bg-white pl-12 pr-4 text-base text-[#020814] outline-none transition focus:border-[#0D63FF]" /></div><select aria-label="Trier les produits" value={sort} onChange={event => setSort(event.target.value as SortOption)} className="min-h-14 w-full rounded-2xl border border-transparent bg-white px-4 text-sm font-bold text-[#020814] outline-none focus:border-[#0D63FF] lg:w-auto"><option value="date_desc">Nouveautés</option><option value="popularity_desc">Plus populaires</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option></select><button onClick={() => setMobileFilters(true)} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-usm-blue-dark lg:hidden lg:w-auto"><SlidersHorizontal size={17} />Filtres</button></div>
+      <section className="bg-[#0D63FF] text-white">
+        <div className="mx-auto grid max-w-[1440px] gap-6 px-4 py-12 sm:px-8 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-center lg:px-12">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[.22em] text-white/80">Une question sur votre commande ?</p>
+            <h2 className="mt-2 font-display text-3xl font-black uppercase leading-none sm:text-4xl">La boutique vous répond.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-blue-100">Tailles, disponibilité, retrait ou livraison : contactez directement l’équipe boutique.</p>
           </div>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]"><aside className="hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white p-5 shadow-sm lg:block"><div className="mb-5 flex items-center gap-2 text-sm font-black"><Filter size={16} />Filtrer la boutique</div>{filterFields}</aside><div><div className="mb-5 flex items-center justify-between gap-3"><p className="text-sm font-bold text-[#5F6F84]"><span className="font-black text-usm-blue-dark">{filtered.length}</span> produit{filtered.length === 1 ? '' : 's'}</p>{(category !== 'all' || badge || inStock || search) && <button onClick={reset} className="text-xs font-black text-[#0D63FF] hover:underline">Tout réinitialiser</button>}</div>{catalogueLoading ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <ProductSkeleton key={index} />)}</div> : error ? <div className="rounded-[2rem] border border-red-200 bg-red-50 p-10 text-center text-sm font-bold text-red-700">{error}</div> : filtered.length > 0 ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{filtered.map((product, index) => <BoutiqueProductCard key={product._id || product.id} product={product} index={index} />)}</div> : <div className="relative overflow-hidden rounded-[2rem] border border-[#DDE8F8] bg-white px-6 py-16 text-center"><div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#0D63FF] via-[#0D63FF] to-[#0D63FF]" /><span className="mx-auto grid size-16 place-items-center rounded-2xl bg-white text-[#0D63FF]"><PackageCheck size={30} /></span><h3 className="mt-6 font-display text-3xl font-black uppercase">Aucune pièce trouvée</h3><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#5F6F84]">Modifiez votre recherche ou retrouvez immédiatement l’ensemble de la collection officielle.</p><button onClick={reset} className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-black text-usm-blue-dark transition hover:bg-[#0D63FF] hover:text-white">Voir tous les produits<ArrowRight size={16} /></button></div>}</div></div>
+          <a href={`mailto:${clubSettings.contactEmail}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-black text-[#0D63FF] transition hover:bg-[#EEF5FF]"><MessageCircle size={18} />Contacter la boutique</a>
         </div>
       </section>
-
-      <section className="bg-[#0D63FF] text-white"><div className="mx-auto grid max-w-[1440px] gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center lg:px-12"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-white/80">Une question sur votre commande ?</p><h2 className="mt-3 font-display text-4xl font-black uppercase leading-none sm:text-5xl">La boutique vous répond.</h2><p className="mt-4 max-w-2xl text-sm leading-6 text-blue-100">Tailles, disponibilité, retrait ou livraison : contactez directement l’équipe boutique.</p></div><a href={`mailto:${clubSettings.contactEmail}`} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-black text-[#0D63FF] transition hover:bg-[#EEF5FF]"><MessageCircle size={18} />Contacter la boutique</a></div></section>
 
       <AnimatePresence>{mobileFilters && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-white/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileFilters(false)}><motion.div initial={{ y: 70 }} animate={{ y: 0 }} exit={{ y: 70 }} transition={{ duration: 0.25 }} onClick={event => event.stopPropagation()} className="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-white p-6 text-usm-blue-dark"><div className="mb-6 flex items-center justify-between"><div><p className="text-[9px] font-black uppercase tracking-[.18em] text-[#0D63FF]">Catalogue</p><h2 className="mt-1 font-display text-3xl font-black uppercase">Filtrer</h2></div><button aria-label="Fermer les filtres" onClick={() => setMobileFilters(false)} className="grid size-12 place-items-center rounded-full border border-[#DDE8F8] bg-[#F5F7FA]"><X size={18} /></button></div>{filterFields}<button onClick={() => setMobileFilters(false)} className="mt-7 min-h-14 w-full rounded-full bg-white text-sm font-black text-usm-blue-dark">Afficher {filtered.length} produit{filtered.length === 1 ? '' : 's'}</button></motion.div></motion.div>}</AnimatePresence>
     </main>
