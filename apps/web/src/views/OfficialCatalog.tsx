@@ -161,45 +161,48 @@ export const OfficialCatalog: React.FC = () => {
     <main className="min-h-screen bg-[#F5F7FA] text-usm-blue-dark">
       {/* Compact, text-first hero — no full-bleed image or oversized min-height standing
           between the visitor and the product grid. The decorative photo only shows on
-          desktop, where there's room for it beside the copy instead of above it. */}
+          desktop (fixed, capped height so it can't dictate the row's height at wide
+          viewports), and the search/filter bar lives inside this same section so there's
+          no second block of section padding stacked on top of the hero's own. */}
       <section className="relative isolate overflow-hidden bg-white text-usm-blue-dark">
         <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-usm-blue-primary/10 blur-[110px] sm:h-96 sm:w-96" />
-        <div className="relative mx-auto max-w-[1440px] px-4 pb-6 pt-24 sm:px-8 sm:pb-8 sm:pt-28 lg:px-12 lg:pt-32">
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-12">
+        <div className="relative mx-auto max-w-[1440px] px-4 pb-5 pt-24 sm:px-8 sm:pb-6 sm:pt-28 lg:px-12 lg:pb-7 lg:pt-28">
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
             <div className="max-w-xl">
               <p className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-usm-blue-soft px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[.2em] text-[#0D63FF]">
                 <Sparkles size={12} />{hasAdminCopy ? (banner.eyebrow || 'Boutique officielle') : 'Boutique officielle'}
               </p>
-              <h1 className="mt-3 break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-5xl">
+              <h1 className="mt-3 break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-4xl">
                 {hasAdminCopy ? banner.title.trim() : 'Portez les couleurs de Monastir'}
               </h1>
-              <p className="mt-3 max-w-lg break-words text-sm leading-6 text-[#5B6B82] sm:text-base">
+              <p className="mt-2.5 max-w-lg break-words text-sm leading-6 text-[#5B6B82] sm:text-base lg:mt-3">
                 {hasAdminCopy && banner.description?.trim()
                   ? banner.description.trim()
                   : 'Maillots, accessoires et packs supporters officiels de l’US Monastir.'}
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 lg:mt-4">
                 {hasAdminCopy && banner.ctaHref ? (
                   <a href={banner.ctaHref} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">{banner.ctaLabel || 'Découvrir'}<ArrowRight size={15} /></a>
                 ) : (
                   <button onClick={() => browse()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">Voir les produits<ArrowRight size={15} /></button>
                 )}
-              </div>
-
-              {/* Trust signals — one compact line instead of the old 4-row, full-width
-                  strip that used to push the whole catalogue down by ~250px on mobile. */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] font-bold text-[#5B6B82] sm:mt-5">
-                <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#0D63FF]" />Articles officiels</span>
-                <span className="inline-flex items-center gap-1.5"><Check size={14} className="text-[#0D63FF]" />Commande confirmée</span>
-                <span className="inline-flex items-center gap-1.5"><Truck size={14} className="text-[#0D63FF]" />Livraison ou retrait</span>
-                <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} className="text-[#0D63FF]" />Assistance boutique</span>
+                {/* Trust signals — one compact inline row instead of the old 4-row,
+                    full-width strip that used to push the catalogue down ~250px. */}
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[11px] font-bold text-[#5B6B82]">
+                  <span className="inline-flex items-center gap-1.5"><ShieldCheck size={13} className="text-[#0D63FF]" />Articles officiels</span>
+                  <span className="hidden items-center gap-1.5 sm:inline-flex"><Check size={13} className="text-[#0D63FF]" />Commande confirmée</span>
+                  <span className="inline-flex items-center gap-1.5"><Truck size={13} className="text-[#0D63FF]" />Livraison</span>
+                  <span className="hidden items-center gap-1.5 lg:inline-flex"><MessageCircle size={13} className="text-[#0D63FF]" />Assistance</span>
+                </div>
               </div>
             </div>
 
+            {/* Fixed, capped height — decoupled from column width so a wide desktop
+                viewport can't force a tall image the way an aspect-ratio class would. */}
             <div className="relative hidden lg:block">
               <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] bg-usm-blue-primary/10 blur-2xl" />
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[1.75rem] border border-usm-border shadow-[0_24px_60px_-28px_rgba(13,99,255,0.35)]">
+              <div className="relative h-48 w-full overflow-hidden rounded-[1.5rem] border border-usm-border shadow-[0_20px_50px_-24px_rgba(13,99,255,0.35)] xl:h-56">
                 {!settingsLoading && (
                   <img
                     src={hasAdminImage ? desktopBannerImage : '/banners/boutique_hero.webp'}
@@ -215,7 +218,7 @@ export const OfficialCatalog: React.FC = () => {
               faster than scrolling to the sidebar and smarter than a generic
               "explore categories" button that just scrolled to the same spot. */}
           {categories.length > 0 && (
-            <div className="no-scrollbar -mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:mt-8">
+            <div className="no-scrollbar -mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:mt-5">
               <button
                 onClick={() => browse('all')}
                 className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition ${
@@ -237,12 +240,11 @@ export const OfficialCatalog: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
-      </section>
 
-      <section id="catalogue" ref={catalogueRef} className="scroll-mt-20 border-t border-[#DDE8F8] bg-[#F5F7FA] py-8 sm:py-10 lg:py-12">
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
-          <div className="rounded-[1.75rem] border border-[#DDE8F8] bg-white p-3 shadow-sm sm:p-4">
+          {/* Search / sort / mobile-filters — lives in the hero now instead of a
+              second bordered section, removing a whole extra block of section
+              padding that used to sit between the hero and the actual grid. */}
+          <div id="catalogue" ref={catalogueRef} className="scroll-mt-20 mt-5 rounded-[1.75rem] border border-[#DDE8F8] bg-white p-3 shadow-sm sm:p-4 lg:mt-6">
             <div className="flex flex-col gap-3 lg:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6f7d91]" size={18} />
@@ -263,8 +265,12 @@ export const OfficialCatalog: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[260px_1fr] lg:gap-8">
+      <section className="border-t border-[#DDE8F8] bg-[#F5F7FA] py-6 sm:py-8 lg:py-8">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
+          <div className="grid gap-6 lg:grid-cols-[260px_1fr] lg:gap-8">
             <aside className="hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white p-5 shadow-sm lg:block">
               <div className="mb-5 flex items-center gap-2 text-sm font-black"><Filter size={16} />Filtrer la boutique</div>
               {filterFields}
