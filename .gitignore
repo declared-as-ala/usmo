@@ -60,6 +60,7 @@ tmp/
 temp/
 uploads/
 *.tmp
+_tmp_*
 
 # ── Docker-managed local data (bind-mounted volumes, if any) ────────────────
 volumes/
