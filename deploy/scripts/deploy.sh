@@ -29,6 +29,17 @@ if [[ ! -f "$ENV_FILE" ]]; then
   false
 fi
 
+env_value_present() {
+  local name=$1
+  grep -Eq "^[[:space:]]*${name}[[:space:]]*=[[:space:]]*[^[:space:]#]" "$ENV_FILE"
+}
+
+if ! { env_value_present MINIO_ROOT_USER && env_value_present MINIO_ROOT_PASSWORD; } &&
+   ! { env_value_present MINIO_ACCESS_KEY && env_value_present MINIO_SECRET_KEY; }; then
+  echo "[deploy] ERROR: configure either MINIO_ROOT_USER/MINIO_ROOT_PASSWORD or the legacy MINIO_ACCESS_KEY/MINIO_SECRET_KEY pair." >&2
+  false
+fi
+
 if [[ "${DEPLOY_SKIP_GIT_PULL:-0}" != 1 ]]; then
   if ! git diff --quiet || ! git diff --cached --quiet; then
     echo "[deploy] ERROR: tracked changes exist on the VPS; refusing to overwrite them." >&2
