@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { normalizePublicMediaUrl, normalizePublicMediaUrls } from '../public-media-url';
+import {
+  normalizePublicMediaUrl,
+  normalizePublicMediaUrls,
+  resolvePublicMediaUrl,
+} from '../public-media-url';
 
 const options = {
   bucket: 'usm-media',
@@ -15,6 +19,30 @@ describe('public media URL normalization', () => {
         options,
       ),
     ).toBe('/usm-media/banners/banner-id/original.webp');
+  });
+
+  it('overrides an unsafe production MINIO_PUBLIC_URL from the server environment', () => {
+    const productionOptions = {
+      ...options,
+      nodeEnv: 'production',
+      publicUrl: 'http://localhost:9000/usm-media',
+    };
+
+    expect(resolvePublicMediaUrl(productionOptions)).toBe('/usm-media');
+    expect(
+      normalizePublicMediaUrl(
+        'http://localhost:9000/usm-media/banners/new-upload/original.webp',
+        productionOptions,
+      ),
+    ).toBe('/usm-media/banners/new-upload/original.webp');
+  });
+
+  it('keeps an explicit external production media URL', () => {
+    expect(resolvePublicMediaUrl({
+      ...options,
+      nodeEnv: 'production',
+      publicUrl: 'https://media.example.com/usm-media/',
+    })).toBe('https://media.example.com/usm-media');
   });
 
   it('rewrites Docker-only MinIO URLs', () => {

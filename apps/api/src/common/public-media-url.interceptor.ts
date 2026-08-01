@@ -8,6 +8,7 @@ export class PublicMediaUrlInterceptor implements NestInterceptor {
     bucket: process.env.MINIO_BUCKET,
     publicUrl: process.env.MINIO_PUBLIC_URL,
     minioEndpoint: process.env.MINIO_ENDPOINT,
+    nodeEnv: process.env.NODE_ENV,
   };
 
   intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {

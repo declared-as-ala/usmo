@@ -13,6 +13,7 @@ import sharp = require('sharp');
 import * as path from 'path';
 import { Readable } from 'stream';
 import { fileTypeFromBuffer } from 'file-type';
+import { resolvePublicMediaUrl } from '../../common/public-media-url';
 
 import { MINIO_CLIENT } from './minio.provider';
 import { MediaFile } from './media-file.schema';
@@ -54,7 +55,12 @@ export class StorageService {
     @InjectModel(MediaFile.name) private readonly mediaFileModel: Model<MediaFile>,
   ) {
     this.bucket = process.env.MINIO_BUCKET || 'usm-media';
-    this.publicUrl = (process.env.MINIO_PUBLIC_URL || `/${this.bucket}`).replace(/\/$/, '');
+    this.publicUrl = resolvePublicMediaUrl({
+      bucket: this.bucket,
+      publicUrl: process.env.MINIO_PUBLIC_URL,
+      minioEndpoint: process.env.MINIO_ENDPOINT,
+      nodeEnv: process.env.NODE_ENV,
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -101,7 +101,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-${MINIO_SECRET_KEY:-}}
       MINIO_BUCKET: ${MINIO_BUCKET:-usm-media}
       # Relative by default so internal MinIO names can never leak to browsers.
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-/usm-media}
+      # Browser media is always served by the same-origin Nginx proxy. Do not
+      # allow a stale VPS .env value (especially localhost) to bypass it.
+      MINIO_PUBLIC_URL: /usm-media
 
   # ── Next.js Web (internal only — reached via nginx at https://$APP_DOMAIN) ─
   web:

@@ -21,6 +21,35 @@ export interface PublicMediaUrlOptions {
   bucket?: string;
   publicUrl?: string;
   minioEndpoint?: string;
+  nodeEnv?: string;
+}
+
+export function resolvePublicMediaUrl(options: PublicMediaUrlOptions = {}): string {
+  const bucket = options.bucket || DEFAULT_MEDIA_BUCKET;
+  const fallback = `/${bucket}`;
+  const configured = trimTrailingSlash(options.publicUrl || fallback);
+
+  if (options.nodeEnv !== 'production' || configured.startsWith('/')) return configured;
+
+  try {
+    const hostname = new URL(configured).hostname.toLowerCase();
+    const internalHosts = new Set([
+      'localhost',
+      '127.0.0.1',
+      '[::1]',
+      'minio',
+      'usm-minio',
+      options.minioEndpoint?.toLowerCase(),
+    ].filter((host): host is string => Boolean(host)));
+
+    // Browsers cannot reach loopback or Docker DNS names on the VPS. Production
+    // must send those requests through the same-origin Nginx media route.
+    if (internalHosts.has(hostname)) return fallback;
+  } catch {
+    return fallback;
+  }
+
+  return configured;
 }
 
 /**
@@ -32,7 +61,7 @@ export function normalizePublicMediaUrl(
   options: PublicMediaUrlOptions = {},
 ): string {
   const bucket = options.bucket || DEFAULT_MEDIA_BUCKET;
-  const publicUrl = trimTrailingSlash(options.publicUrl || `/${bucket}` || DEFAULT_PUBLIC_MEDIA_URL);
+  const publicUrl = resolvePublicMediaUrl(options) || DEFAULT_PUBLIC_MEDIA_URL;
 
   for (const legacyBase of legacyMediaBases(bucket, options.minioEndpoint)) {
     if (value === legacyBase) return publicUrl;
