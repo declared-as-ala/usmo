@@ -111,13 +111,6 @@ export default function AdminNews() {
 
   useEffect(() => { loadArticles(); }, [loadArticles]);
 
-  useEffect(() => {
-    if (searchParams.get('new') === '1') {
-      router.replace('/admin/news');
-      openAddForm();
-    }
-  }, [searchParams, router]);
-
   // ── Form helpers ──
   const openAddForm = () => {
     setEditingId(null);
@@ -126,6 +119,13 @@ export default function AdminNews() {
     setSaveSuccess(false);
     setShowForm(true);
   };
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      router.replace('/admin/news');
+      openAddForm();
+    }
+  }, [searchParams, router]);
 
   const openEditForm = (article: NewsArticle) => {
     setEditingId(article._id);

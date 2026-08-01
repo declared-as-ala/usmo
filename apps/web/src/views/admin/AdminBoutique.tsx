@@ -99,18 +99,18 @@ export default function AdminBoutique() {
     loadCatalogData();
   }, []);
 
+  const openAddForm = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowForm(true);
+  };
+
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       router.replace('/admin/boutique');
       openAddForm();
     }
   }, [searchParams, router]);
-
-  const openAddForm = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setShowForm(true);
-  };
 
   const saveBoutiqueBanner = async (event?: React.FormEvent) => {
     event?.preventDefault();
