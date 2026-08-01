@@ -16,7 +16,7 @@ COPY packages/shared packages/shared
 
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so this
 # one must be a build ARG (not just a runtime env var like SITE_URL/INTERNAL_API_URL).
-ARG NEXT_PUBLIC_API_URL=http://localhost:3001/api
+ARG NEXT_PUBLIC_API_URL=/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 # Read by next.config.ts at build time to whitelist the production MinIO/API
 # host for next/image — optional, only needed for a real production build.
@@ -34,11 +34,10 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-COPY --from=build /app/apps/web/.next/standalone ./
-COPY --from=build /app/apps/web/.next/static apps/web/.next/static
-COPY --from=build /app/apps/web/public apps/web/public
+COPY --chown=node:node --from=build /app/apps/web/.next/standalone ./
+COPY --chown=node:node --from=build /app/apps/web/.next/static apps/web/.next/static
+COPY --chown=node:node --from=build /app/apps/web/public apps/web/public
 
-RUN chown -R node:node /app
 USER node
 
 EXPOSE 3000

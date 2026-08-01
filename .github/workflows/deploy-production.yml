@@ -9,7 +9,6 @@ env:
   NODE_VERSION: "22"
 
 jobs:
-  # ── CI: install, lint, typecheck, build. Deploy never runs if this fails. ──
   ci:
     name: Build & Validate
     runs-on: ubuntu-latest
@@ -17,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node ${{ env.NODE_VERSION }}
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -26,73 +25,83 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (web)
-        run: npm run lint:web
-
-      - name: Typecheck (web)
-        run: npm run typecheck:web
-
-      - name: Typecheck (api)
-        run: npm run typecheck:api
-
-      # No test script is currently configured in package.json — add one
-      # (e.g. "test": "vitest run") and this step will start running it.
-      - name: Tests
+      - name: Lint and typecheck
         run: |
-          if npm run | grep -qE '^\s*test$'; then
-            npm test
-          else
-            echo "No 'test' script configured — skipping."
-          fi
+          npm run lint:web
+          npm run typecheck:web
+          npm run typecheck:api
 
-      - name: Build web
-        run: npm run build:web
+      - name: Tests
+        run: npm test
 
-      - name: Build api
-        run: npm run build:api
+      - name: Application builds
+        env:
+          NEXT_PUBLIC_API_URL: /api
+        run: |
+          npm run build:web
+          npm run build:api
 
-  # ── Deploy: SSH into the VPS and redeploy via docker compose. ──────────────
+      - name: Validate production Compose
+        env:
+          JWT_SECRET: ci-only-placeholder-with-at-least-32-characters
+          MINIO_ROOT_USER: ci-user
+          MINIO_ROOT_PASSWORD: ci-only-placeholder-password
+        run: docker compose -f docker-compose.prod.yml config --quiet
+
+      - name: Build production Docker images
+        env:
+          JWT_SECRET: ci-only-placeholder-with-at-least-32-characters
+          MINIO_ROOT_USER: ci-user
+          MINIO_ROOT_PASSWORD: ci-only-placeholder-password
+        run: docker compose -f docker-compose.prod.yml build api web nginx
+
+      - name: Validate safe Nginx fallback
+        run: |
+          docker run --rm --add-host api:127.0.0.1 --add-host web:127.0.0.1 --add-host minio:127.0.0.1 usm-nginx:prod nginx -t
+          docker run --rm \
+            --add-host api:127.0.0.1 --add-host web:127.0.0.1 --add-host minio:127.0.0.1 \
+            -e 'NGINX_SERVER_NAMES=https://invalid.example, bad.example' \
+            -e MINIO_BUCKET=usm-media \
+            usm-nginx:prod nginx -t
+
   deploy:
     name: Deploy to VPS
     needs: ci
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     steps:
-      - name: Deploy over SSH
+      - name: Deploy and verify over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT }}
+          command_timeout: 30m
           script: |
-            set -e
+            set -Eeuo pipefail
 
-            sudo mkdir -p /var/www/usmo
-            sudo chown -R "$USER":"$USER" /var/www/usmo
+            DEPLOY_DIR='${{ secrets.VPS_DEPLOY_PATH }}'
+            if [ -z "$DEPLOY_DIR" ]; then DEPLOY_DIR=/var/www/usmo; fi
 
-            if [ ! -d /var/www/usmo/.git ]; then
-              git clone https://github.com/declared-as-ala/usmo.git /var/www/usmo
+            sudo mkdir -p "$DEPLOY_DIR"
+            sudo chown -R "$USER":"$USER" "$DEPLOY_DIR"
+
+            if [ ! -d "$DEPLOY_DIR/.git" ]; then
+              git clone --branch main https://github.com/declared-as-ala/usmo.git "$DEPLOY_DIR"
             fi
 
-            cd /var/www/usmo
-
-            git fetch origin
-            git reset --hard origin/main
-            git clean -fd
-
-            # .env is gitignored and never touched by the steps above — it must
-            # already exist here from the one-time manual VPS setup (copied
-            # from .env.production.example and filled in with real secrets).
-            if [ ! -f .env ]; then
-              echo "ERROR: /var/www/usmo/.env is missing on the VPS."
-              echo "Copy .env.production.example to .env and fill in real values before the first deploy."
+            cd "$DEPLOY_DIR"
+            if ! git diff --quiet || ! git diff --cached --quiet; then
+              echo "ERROR: tracked changes exist on the VPS; refusing to overwrite them."
               exit 1
             fi
 
-            docker compose -f docker-compose.prod.yml down
-            docker compose -f docker-compose.prod.yml build --pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            git fetch --prune origin main
+            git checkout main
+            git merge --ff-only origin/main
 
-            docker image prune -f
-            docker compose -f docker-compose.prod.yml ps
+            DEPLOY_SKIP_GIT_PULL=1 \
+            DEPLOY_BRANCH=main \
+            DEPLOY_PUBLIC_HOST='${{ secrets.VPS_HOST }}' \
+              bash deploy/scripts/deploy.sh

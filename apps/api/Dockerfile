@@ -31,12 +31,11 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 
-COPY --from=prod-deps /app/node_modules node_modules
-COPY --from=build /app/apps/api/dist apps/api/dist
-COPY --from=build /app/packages/shared packages/shared
+COPY --chown=node:node --from=prod-deps /app/node_modules node_modules
+COPY --chown=node:node --from=build /app/apps/api/dist apps/api/dist
+COPY --chown=node:node --from=build /app/packages/shared packages/shared
 
 # node:22-alpine ships a non-root "node" user (uid/gid 1000) — own the app dir.
-RUN chown -R node:node /app
 USER node
 
 EXPOSE 3001

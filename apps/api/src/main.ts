@@ -11,6 +11,9 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Respect X-Forwarded-* from the single trusted reverse-proxy hop.
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
   // Set global API prefix
   app.setGlobalPrefix('api');
 

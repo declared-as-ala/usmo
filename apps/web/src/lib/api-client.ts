@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+// Same-origin keeps production browser requests behind Nginx and avoids
+// leaking Docker-only hostnames. Local development can override this value.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 async function fetchJson(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;

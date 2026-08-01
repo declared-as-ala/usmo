@@ -43,11 +43,12 @@ import { CompetitionsModule } from './modules/competitions/competitions.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { PlayersModule } from './modules/players/players.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { validateEnvironment } from './config/environment';
 
 @Module({
   imports: [
     // Load .env into process.env globally for all modules
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
 
     ThrottlerModule.forRoot([{
       ttl: 60000,

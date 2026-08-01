@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Inject,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -248,6 +249,14 @@ export class StorageService {
    * Generate a presigned PUT URL for direct browser uploads (optional / future use).
    */
   async generateSignedUploadUrl(objectKey: string, expirySeconds = 3600): Promise<string> {
+    // The internal client signs URLs for the Docker-only `minio` hostname.
+    // Never return those unusable internal URLs to production browsers. The
+    // supported production upload path is the authenticated API upload route.
+    if (process.env.NODE_ENV === 'production') {
+      throw new ServiceUnavailableException(
+        'Direct browser uploads are disabled; use the API upload endpoint',
+      );
+    }
     return this.minio.presignedPutObject(this.bucket, objectKey, expirySeconds);
   }
 
