@@ -1,0 +1,42 @@
+# Keep Docker build contexts small and free of secrets/artifacts.
+# Dockerfiles COPY package.json files then source explicitly, so this mainly
+# protects against accidentally sending node_modules/.git/.env into the daemon.
+
+.git/
+.github/
+
+node_modules/
+**/node_modules/
+
+.next/
+**/.next/
+dist/
+**/dist/
+out/
+**/out/
+coverage/
+**/coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+logs/
+*.log
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+docs/
+NEXTSTEP.md
+README.md
+CLAUDE.md
+AGENTS.md
+
+docker-compose*.yml
+Dockerfile*

@@ -1,0 +1,27 @@
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { OrdersController } from './orders.controller';
+import { OrdersService } from './orders.service';
+import { Order, OrderSchema } from './order.schema';
+import { Product, ProductSchema } from '../products/product.schema';
+import { CartModule } from '../cart/cart.module';
+import { AuthModule } from '../auth/auth.module';
+import { LoyaltyModule } from '../loyalty/loyalty.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: Order.name, schema: OrderSchema },
+      { name: Product.name, schema: ProductSchema },
+    ]),
+    CartModule,
+    AuthModule,
+    LoyaltyModule,
+    NotificationsModule,
+  ],
+  controllers: [OrdersController],
+  providers: [OrdersService],
+  exports: [OrdersService],
+})
+export class OrdersModule {}

@@ -1,0 +1,83 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# NOTE: patterns intentionally have NO leading slash so they match at any depth
+# (apps/web/.next, apps/api/dist, packages/*/dist, etc.), not just the repo root.
+
+# ── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ── Build output ────────────────────────────────────────────────────────────
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Testing / coverage ──────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Environment / secrets ───────────────────────────────────────────────────
+# All .env variants are ignored EXCEPT the committed *.example templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# ── TLS / SSH / credentials ──────────────────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.ppk
+.ssh/
+credentials.json
+service-account*.json
+
+# ── Uploaded / temporary files ───────────────────────────────────────────────
+tmp/
+temp/
+uploads/
+*.tmp
+
+# ── Docker-managed local data (bind-mounted volumes, if any) ────────────────
+volumes/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Local AI tooling state (contains local-only settings, not project source) ─
+.claude/
+1be2ae26-9754-41cc-ab02-95c58ed488b0/
+image.png
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+.vercel
+*.pid

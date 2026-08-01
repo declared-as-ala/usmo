@@ -1,0 +1,136 @@
+# =============================================================================
+# USM Platform — Docker Compose (Local Development)
+# =============================================================================
+#
+# Services:
+#   mongo   — MongoDB 7 (data persisted in ./volumes/mongo)
+#   minio   — MinIO S3-compatible storage (data persisted in ./volumes/minio)
+#   mc      — MinIO Client (one-shot: creates usm-media bucket + public policy)
+#   api     — NestJS backend (port 3001)
+#   web     — Next.js frontend (port 3000)
+#
+# Usage:
+#   docker compose up          — start all services
+#   docker compose up minio mc — start MinIO only (useful if using Atlas for MongoDB)
+#   docker compose up -d       — start in background
+#   docker compose down -v     — stop + remove volumes
+#
+# MinIO Console: http://localhost:9001
+#   User: minioadmin
+#   Password: minioadmin123
+#
+# =============================================================================
+
+services:
+
+  # ── MongoDB ──────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: usm-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: usmo
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO ─────────────────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: usm-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web Console
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO Client (bucket init) ────────────────────────────────────────────────
+  # Runs once on startup to create the usm-media bucket with public-read policy.
+  # Exits immediately after setup.
+  mc:
+    image: minio/mc:latest
+    container_name: usm-mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin123;
+        mc mb --ignore-existing local/usm-media;
+        mc anonymous set public local/usm-media;
+        echo '[mc] Bucket usm-media ready with public-read policy.';
+        exit 0;
+      "
+    restart: "no"
+
+  # ── NestJS API ────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: usm-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/usmo
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CLIENT_URL: http://localhost:3000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: usm-media
+      # Public URL uses localhost because the browser makes requests from the host machine
+      MINIO_PUBLIC_URL: http://localhost:9000/usm-media
+    profiles:
+      - full
+
+  # ── Next.js Web ────────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    container_name: usm-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      SITE_URL: http://localhost:3000
+      INTERNAL_API_URL: http://api:3001/api
+    profiles:
+      - full
+
+volumes:
+  mongo_data:
+  minio_data:

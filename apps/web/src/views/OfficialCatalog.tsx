@@ -1,0 +1,220 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowRight, Check, ChevronDown, Filter, Heart, MessageCircle,
+  PackageCheck, Search, ShieldCheck, ShoppingBag, SlidersHorizontal,
+  Sparkles, Truck, X,
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { api } from '../lib/api-client';
+
+type SortOption = 'date_desc' | 'popularity_desc' | 'price_asc' | 'price_desc';
+
+const formatTND = (millimes: number) => `${((millimes || 0) / 1000).toFixed(3)} DT`;
+const stockFor = (product: any) => (product.variants || []).reduce((sum: number, item: any) => sum + (item.stock || 0), 0);
+const hasBadge = (product: any, badge: string) => product.badges?.some((item: string) => item.toLowerCase() === badge.toLowerCase());
+
+function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: number }) {
+  const router = useRouter();
+  const { addToCart, wishlist, toggleWishlist } = useApp();
+  const id = product._id || product.id;
+  const stock = stockFor(product);
+  const soldOut = stock <= 0 || product.status === 'archived';
+  const liked = wishlist.includes(id);
+  const discount = product.oldPrice && product.oldPrice > product.price
+    ? Math.round((1 - product.price / product.oldPrice) * 100)
+    : 0;
+  const sizes = Array.from(new Set((product.variants || []).filter((item: any) => item.stock > 0).map((item: any) => item.size))).slice(0, 4);
+  const coverImage = product.coverImage || product.image;
+  const hoverImage = (product.images || []).find((url: string) => url && url !== coverImage);
+
+  const add = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (soldOut) return;
+    addToCart({ ...product, id, price: formatTND(product.price) }, (sizes[0] as string) || 'Unique');
+  };
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.035, 0.18) }}
+      onClick={() => router.push(`/product/${product.slug}`)}
+      className="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white shadow-[0_18px_50px_-38px_rgba(2,8,20,.55)] transition duration-300 hover:-translate-y-1 hover:border-[#0D63FF] hover:shadow-[0_26px_60px_-34px_rgba(2,8,20,.5)]"
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-[#F5F7FA]">
+        {coverImage ? (
+          <>
+            <img
+              src={coverImage}
+              alt={product.nameFr || product.name}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${hoverImage ? 'group-hover:opacity-0' : 'group-hover:scale-[1.035] duration-500'}`}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            />
+            {hoverImage && (
+              <img
+                src={hoverImage}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              />
+            )}
+          </>
+        ) : (
+          <div className="grid h-full place-items-center text-[#8290a4]"><ShoppingBag size={34} /></div>
+        )}
+        <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {hasBadge(product, 'new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
+            {hasBadge(product, 'limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
+            {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
+          </div>
+          <button aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'} onClick={(event) => { event.stopPropagation(); toggleWishlist(id); }} className="grid size-11 shrink-0 place-items-center rounded-full border border-white/70 bg-white/90 text-[#020814] shadow-sm backdrop-blur transition hover:bg-white hover:text-[#0D63FF]">
+            <Heart size={17} fill={liked ? 'currentColor' : 'none'} className={liked ? 'text-red-500' : ''} />
+          </button>
+        </div>
+        {soldOut && <div className="absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[2px]"><span className="rounded-full border border-white/25 bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-[.15em] text-usm-blue-dark">Épuisé</span></div>}
+      </div>
+      <div className="p-4 sm:p-5">
+        <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
+        <h3 className="mt-2 min-h-11 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
+        {sizes.length > 0 && <div className="mt-3 flex items-center gap-1.5">{sizes.map(size => <span key={String(size)} className="grid min-w-7 place-items-center rounded-md border border-[#dce3ed] px-1.5 py-1 text-[9px] font-bold text-[#53627a]">{String(size)}</span>)}</div>}
+        <div className="mt-4 flex items-end justify-between gap-3 border-t border-[#e6eaf0] pt-4">
+          <div><p className="font-mono text-sm font-black text-[#020814]">{formatTND(product.price)}</p>{product.oldPrice > product.price && <p className="mt-0.5 font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}</div>
+          <button disabled={soldOut} onClick={add} aria-label={`Ajouter ${product.nameFr || product.name} au panier`} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0D63FF] px-3 text-[10px] font-black uppercase tracking-wide text-white transition hover:bg-[#0052D9] disabled:cursor-not-allowed disabled:opacity-40"><ShoppingBag size={14} /><span className="hidden sm:inline">Ajouter</span></button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function ProductSkeleton() {
+  return <div className="overflow-hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white"><div className="skeleton-loader aspect-[4/5]" /><div className="space-y-3 p-5"><div className="skeleton-loader h-2 w-1/3 rounded" /><div className="skeleton-loader h-5 w-4/5 rounded" /><div className="skeleton-loader h-10 w-full rounded" /></div></div>;
+}
+
+export const OfficialCatalog: React.FC = () => {
+  const { clubSettings } = useApp();
+  const catalogueRef = useRef<HTMLElement>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [banner, setBanner] = useState<any>(null);
+  const [catalogueLoading, setCatalogueLoading] = useState(true);
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<SortOption>('date_desc');
+  const [inStock, setInStock] = useState(false);
+  const [badge, setBadge] = useState('');
+  const [mobileFilters, setMobileFilters] = useState(false);
+
+  useEffect(() => {
+    api.getHomepageSettings()
+      .then(settings => setBanner(settings?.boutiqueBanner || null))
+      .catch(() => setBanner(null))
+      .finally(() => setSettingsLoading(false));
+
+    Promise.all([api.getProducts({ sort: 'date_desc', limit: 100 }), api.getCategories()])
+      .then(([catalogue, categoryData]) => {
+        setProducts(catalogue.products || []);
+        setCategories(categoryData || []);
+      })
+      .catch((requestError: any) => setError(requestError.message || 'Impossible de charger la boutique.'))
+      .finally(() => setCatalogueLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => products.filter(product => {
+    const searchable = `${product.name || ''} ${product.nameFr || ''} ${product.description || ''}`.toLowerCase();
+    return (category === 'all' || product.category === category)
+      && (!search.trim() || searchable.includes(search.trim().toLowerCase()))
+      && (!inStock || stockFor(product) > 0)
+      && (!badge || hasBadge(product, badge));
+  }).sort((a, b) => sort === 'price_asc' ? a.price - b.price : sort === 'price_desc' ? b.price - a.price : sort === 'popularity_desc' ? (b.views || 0) - (a.views || 0) : new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()), [products, category, search, inStock, badge, sort]);
+
+  const featured = products.find(product => product.isFeatured) || products[0];
+  const desktopBannerImage = banner?.desktopImageUrl || banner?.imageUrl || '';
+  const hasAdminImage = Boolean(banner?.isActive && desktopBannerImage);
+  // Only trust admin copy once a real title has been written — an active banner with just
+  // an image (or a blank title) should never leak the CMS's "Votre campagne boutique" preview text.
+  const hasAdminCopy = Boolean(banner?.isActive && banner.title?.trim());
+
+  const reset = () => { setCategory('all'); setBadge(''); setInStock(false); setSearch(''); };
+  const browse = (slug = 'all') => { setCategory(slug); requestAnimationFrame(() => catalogueRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
+
+  const FilterFields = () => (
+    <div className="space-y-5">
+      <div><label htmlFor="boutique-category" className="mb-2 block text-[10px] font-black uppercase tracking-[.16em] text-[#637089]">Catégorie</label><select id="boutique-category" value={category} onChange={event => setCategory(event.target.value)} className="min-h-12 w-full rounded-xl border border-[#d4dbe5] bg-white px-3 text-sm font-bold text-[#020814] outline-none focus:border-[#0057ff]"><option value="all">Toutes les catégories</option>{categories.map((item: any) => <option key={item._id || item.slug} value={item.slug}>{item.nameFr || item.name}</option>)}</select></div>
+      <div><label htmlFor="boutique-badge" className="mb-2 block text-[10px] font-black uppercase tracking-[.16em] text-[#637089]">Sélection</label><select id="boutique-badge" value={badge} onChange={event => setBadge(event.target.value)} className="min-h-12 w-full rounded-xl border border-[#d4dbe5] bg-white px-3 text-sm font-bold text-[#020814] outline-none focus:border-[#0057ff]"><option value="">Tous les produits</option><option value="new">Nouveautés</option><option value="bestseller">Meilleures ventes</option><option value="limited">Édition limitée</option><option value="official">Produits officiels</option></select></div>
+      <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-[#d4dbe5] bg-white px-3 text-sm font-bold text-[#020814]"><input checked={inStock} onChange={event => setInStock(event.target.checked)} type="checkbox" className="size-4 accent-[#0057ff]" />En stock uniquement</label>
+      {(category !== 'all' || badge || inStock || search) && <button onClick={reset} className="inline-flex min-h-11 items-center gap-2 text-sm font-black text-[#0057ff] hover:text-[#020814]"><X size={15} />Effacer les filtres</button>}
+    </div>
+  );
+
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#F5F7FA] text-usm-blue-dark">
+      <section className="relative isolate overflow-hidden bg-white text-usm-blue-dark">
+        <div className="pointer-events-none absolute -top-32 right-0 h-[520px] w-[520px] rounded-full bg-usm-blue-primary/10 blur-[140px]" />
+        <div className="relative mx-auto grid w-full max-w-[1440px] items-center gap-8 px-4 pb-12 pt-28 sm:min-h-[640px] sm:gap-10 sm:px-8 sm:pb-20 sm:pt-32 lg:min-h-[760px] lg:grid-cols-[1fr_1fr] lg:gap-16 lg:px-12 lg:pt-40">
+          <div className="relative z-10 order-2 w-full min-w-0 max-w-xl lg:order-none">
+            <p className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-usm-blue-soft px-4 py-2 text-[10px] font-black uppercase tracking-[.22em] text-[#0D63FF]">
+              <Sparkles size={13} />{hasAdminCopy ? (banner.eyebrow || 'Boutique officielle') : 'Boutique officielle'}
+            </p>
+            <h1 className="mt-4 break-words font-display text-4xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:mt-6 sm:text-5xl sm:leading-[.92] sm:tracking-[-.04em] lg:text-7xl">
+              {hasAdminCopy ? banner.title.trim() : 'Portez les couleurs de Monastir'}
+            </h1>
+            <p className="mt-4 max-w-lg break-words text-base leading-7 text-[#5B6B82] sm:mt-6 sm:text-lg">
+              {hasAdminCopy && banner.description?.trim()
+                ? banner.description.trim()
+                : 'Découvrez les maillots, accessoires, packs supporters et produits officiels de l’US Monastir.'}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3 sm:mt-8">
+              {hasAdminCopy && banner.ctaHref ? (
+                <a href={banner.ctaHref} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0D63FF] px-6 text-sm font-black text-white shadow-[0_12px_30px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">{banner.ctaLabel || 'Découvrir'}<ArrowRight size={16} /></a>
+              ) : (
+                <button onClick={() => browse()} className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#0D63FF] px-6 text-sm font-black text-white shadow-[0_12px_30px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">Découvrir les produits<ArrowRight size={16} /></button>
+              )}
+              <button onClick={() => browse()} className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[#0D63FF] bg-white px-6 text-sm font-bold text-[#0D63FF] transition hover:bg-usm-blue-soft">Explorer les catégories<ChevronDown size={16} /></button>
+            </div>
+          </div>
+
+          <div className="relative order-1 w-full min-w-0 self-center lg:order-none">
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-usm-blue-primary/10 blur-2xl" />
+            <div className="relative aspect-[3/2] w-full overflow-hidden rounded-[2rem] border border-usm-border shadow-[0_30px_70px_-30px_rgba(13,99,255,0.35)]">
+              {!settingsLoading && (
+                <img
+                  src={hasAdminImage ? desktopBannerImage : '/banners/boutique_hero.webp'}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-label="Garanties de la boutique" className="border-b border-usm-border bg-white text-usm-blue-dark">
+        <div className="mx-auto grid max-w-[1440px] grid-cols-1 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4 lg:px-12">
+          {[[ShieldCheck, 'Articles officiels'], [Check, 'Commande confirmée'], [Truck, 'Livraison ou retrait'], [MessageCircle, 'Assistance boutique']].map(([Icon, label]: any) => <div key={label} className="flex min-h-16 items-center gap-3 border-b border-usm-border py-3 text-xs font-bold text-[#071A30] last:border-b-0 sm:min-h-20 sm:border-r sm:px-5 sm:first:pl-0 sm:[&:nth-child(2)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2)]:border-r lg:last:border-r-0"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-usm-blue-soft"><Icon size={17} className="text-[#0D63FF]" /></span>{label}</div>)}
+        </div>
+      </section>
+
+      <section id="catalogue" ref={catalogueRef} className="scroll-mt-20 border-t border-[#DDE8F8] bg-[#F5F7FA] py-20">
+        <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12">
+          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#0D63FF]">Le catalogue officiel</p><h2 className="mt-3 font-display text-4xl font-black uppercase leading-none text-usm-blue-dark sm:text-6xl">Trouvez votre pièce.</h2></div><p className="max-w-lg text-sm leading-6 text-[#5B6B82]">Recherchez, filtrez et commandez les produits officiels de l’US Monastir.</p></div>
+          <div className="mt-10 rounded-[2rem] border border-[#DDE8F8] bg-white p-3 shadow-sm sm:p-4">
+            <div className="flex flex-col gap-3 lg:flex-row"><div className="relative flex-1"><Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6f7d91]" size={18} /><label htmlFor="catalogue-search" className="sr-only">Rechercher un produit</label><input id="catalogue-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Rechercher un maillot, un accessoire…" className="min-h-14 w-full rounded-2xl border border-transparent bg-white pl-12 pr-4 text-base text-[#020814] outline-none transition focus:border-[#0D63FF]" /></div><select aria-label="Trier les produits" value={sort} onChange={event => setSort(event.target.value as SortOption)} className="min-h-14 w-full rounded-2xl border border-transparent bg-white px-4 text-sm font-bold text-[#020814] outline-none focus:border-[#0D63FF] lg:w-auto"><option value="date_desc">Nouveautés</option><option value="popularity_desc">Plus populaires</option><option value="price_asc">Prix croissant</option><option value="price_desc">Prix décroissant</option></select><button onClick={() => setMobileFilters(true)} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-black text-usm-blue-dark lg:hidden lg:w-auto"><SlidersHorizontal size={17} />Filtres</button></div>
+          </div>
+          <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]"><aside className="hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white p-5 shadow-sm lg:block"><div className="mb-5 flex items-center gap-2 text-sm font-black"><Filter size={16} />Filtrer la boutique</div><FilterFields /></aside><div><div className="mb-5 flex items-center justify-between gap-3"><p className="text-sm font-bold text-[#5F6F84]"><span className="font-black text-usm-blue-dark">{filtered.length}</span> produit{filtered.length === 1 ? '' : 's'}</p>{(category !== 'all' || badge || inStock || search) && <button onClick={reset} className="text-xs font-black text-[#0D63FF] hover:underline">Tout réinitialiser</button>}</div>{catalogueLoading ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{Array.from({ length: 8 }, (_, index) => <ProductSkeleton key={index} />)}</div> : error ? <div className="rounded-[2rem] border border-red-200 bg-red-50 p-10 text-center text-sm font-bold text-red-700">{error}</div> : filtered.length > 0 ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">{filtered.map((product, index) => <BoutiqueProductCard key={product._id || product.id} product={product} index={index} />)}</div> : <div className="relative overflow-hidden rounded-[2rem] border border-[#DDE8F8] bg-white px-6 py-16 text-center"><div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#0D63FF] via-[#0D63FF] to-[#0D63FF]" /><span className="mx-auto grid size-16 place-items-center rounded-2xl bg-white text-[#0D63FF]"><PackageCheck size={30} /></span><h3 className="mt-6 font-display text-3xl font-black uppercase">Aucune pièce trouvée</h3><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#5F6F84]">Modifiez votre recherche ou retrouvez immédiatement l’ensemble de la collection officielle.</p><button onClick={reset} className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-black text-usm-blue-dark transition hover:bg-[#0D63FF] hover:text-white">Voir tous les produits<ArrowRight size={16} /></button></div>}</div></div>
+        </div>
+      </section>
+
+      <section className="bg-[#0D63FF] text-white"><div className="mx-auto grid max-w-[1440px] gap-8 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_auto] lg:items-center lg:px-12"><div><p className="text-[10px] font-black uppercase tracking-[.22em] text-white/80">Une question sur votre commande ?</p><h2 className="mt-3 font-display text-4xl font-black uppercase leading-none sm:text-5xl">La boutique vous répond.</h2><p className="mt-4 max-w-2xl text-sm leading-6 text-blue-100">Tailles, disponibilité, retrait ou livraison : contactez directement l’équipe boutique.</p></div><a href={`mailto:${clubSettings.contactEmail}`} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-black text-[#0D63FF] transition hover:bg-[#EEF5FF]"><MessageCircle size={18} />Contacter la boutique</a></div></section>
+
+      <AnimatePresence>{mobileFilters && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-white/70 backdrop-blur-sm lg:hidden" onClick={() => setMobileFilters(false)}><motion.div initial={{ y: 70 }} animate={{ y: 0 }} exit={{ y: 70 }} transition={{ duration: 0.25 }} onClick={event => event.stopPropagation()} className="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-white p-6 text-usm-blue-dark"><div className="mb-6 flex items-center justify-between"><div><p className="text-[9px] font-black uppercase tracking-[.18em] text-[#0D63FF]">Catalogue</p><h2 className="mt-1 font-display text-3xl font-black uppercase">Filtrer</h2></div><button aria-label="Fermer les filtres" onClick={() => setMobileFilters(false)} className="grid size-12 place-items-center rounded-full border border-[#DDE8F8] bg-[#F5F7FA]"><X size={18} /></button></div><FilterFields /><button onClick={() => setMobileFilters(false)} className="mt-7 min-h-14 w-full rounded-full bg-white text-sm font-black text-usm-blue-dark">Afficher {filtered.length} produit{filtered.length === 1 ? '' : 's'}</button></motion.div></motion.div>}</AnimatePresence>
+    </main>
+  );
+};

@@ -1,0 +1,94 @@
+import {
+  LayoutDashboard,
+  Radio,
+  Trophy,
+  Newspaper,
+  Image as ImageIcon,
+  Handshake,
+  ShoppingBag,
+  ShoppingCart,
+  FileText,
+  Search,
+  Bell,
+  BarChart3,
+  UserCog,
+  Settings,
+  Layers,
+  Megaphone,
+  Landmark,
+  History,
+  CalendarDays,
+  Shield,
+  Heart,
+  GalleryHorizontal,
+  Crown,
+  MapPin,
+  Award,
+  LifeBuoy,
+  type LucideIcon,
+} from 'lucide-react';
+
+export interface AdminNavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}
+
+export interface AdminNavGroup {
+  label: string;
+  items: AdminNavItem[];
+}
+
+export const ADMIN_NAV: AdminNavGroup[] = [
+  {
+    label: 'Overview',
+    items: [
+      { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+      { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Pages Management',
+    items: [
+      { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal },
+      { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag },
+      { label: 'Football Section', href: '/admin/football', icon: Trophy },
+      { label: 'Basketball Section', href: '/admin/basketball', icon: Trophy },
+      { label: 'History Page', href: '/admin/history', icon: Landmark },
+      { label: 'Timeline Page', href: '/admin/timeline', icon: History },
+      { label: 'Palmarès Page', href: '/admin/palmares', icon: Trophy },
+      { label: 'Trophies List', href: '/admin/trophies', icon: Trophy },
+      { label: 'Legends', href: '/admin/legends', icon: Crown },
+      { label: 'Season Stats', href: '/admin/season-performance', icon: CalendarDays },
+      { label: 'Stadium Guide', href: '/admin/stadium', icon: MapPin },
+      { label: 'Downloads Center', href: '/admin/downloads', icon: FileText },
+      { label: 'Newsroom', href: '/admin/news', icon: Newspaper },
+      { label: 'Media Portal', href: '/admin/media', icon: ImageIcon },
+      { label: 'Legal Pages', href: '/admin/pages-legal', icon: Shield },
+      { label: 'Custom Pages', href: '/admin/pages', icon: Layers },
+    ],
+  },
+  {
+    label: 'Operations & Community',
+    items: [
+      { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart },
+      { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
+      { label: 'Fan Zone', href: '/admin/fanzone', icon: Megaphone },
+      { label: 'Memberships', href: '/admin/memberships', icon: Shield },
+      { label: 'Membership Plans', href: '/admin/membership-plans', icon: Shield },
+      { label: 'Donations', href: '/admin/donations', icon: Heart },
+      { label: 'Fan Accounts', href: '/admin/fans', icon: UserCog },
+      { label: 'Loyalty & Rewards', href: '/admin/loyalty', icon: Award },
+      { label: 'Support Tickets', href: '/admin/support', icon: LifeBuoy },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Notifications', href: '/admin/notifications', icon: Bell },
+      { label: 'Users & Roles', href: '/admin/users', icon: UserCog },
+      { label: 'Settings', href: '/admin/settings', icon: Settings },
+      { label: 'SEO Config', href: '/admin/seo', icon: Search },
+    ],
+  },
+];

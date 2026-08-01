@@ -1,0 +1,21 @@
+{
+  "name": "usm-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=web",
+    "dev:api": "npm run dev --workspace=api",
+    "build:web": "npm run build --workspace=web",
+    "build:api": "npm run build --workspace=api",
+    "lint:web": "npm run lint --workspace=web",
+    "typecheck:web": "npm run typecheck --workspace=web",
+    "typecheck:api": "npm run typecheck --workspace=api"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
+}

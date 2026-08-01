@@ -1,0 +1,98 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ── CI: install, lint, typecheck, build. Deploy never runs if this fails. ──
+  ci:
+    name: Build & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (web)
+        run: npm run lint:web
+
+      - name: Typecheck (web)
+        run: npm run typecheck:web
+
+      - name: Typecheck (api)
+        run: npm run typecheck:api
+
+      # No test script is currently configured in package.json — add one
+      # (e.g. "test": "vitest run") and this step will start running it.
+      - name: Tests
+        run: |
+          if npm run | grep -qE '^\s*test$'; then
+            npm test
+          else
+            echo "No 'test' script configured — skipping."
+          fi
+
+      - name: Build web
+        run: npm run build:web
+
+      - name: Build api
+        run: npm run build:api
+
+  # ── Deploy: SSH into the VPS and redeploy via docker compose. ──────────────
+  deploy:
+    name: Deploy to VPS
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+
+            sudo mkdir -p /var/www/usmo
+            sudo chown -R "$USER":"$USER" /var/www/usmo
+
+            if [ ! -d /var/www/usmo/.git ]; then
+              git clone https://github.com/declared-as-ala/usmo.git /var/www/usmo
+            fi
+
+            cd /var/www/usmo
+
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+
+            # .env is gitignored and never touched by the steps above — it must
+            # already exist here from the one-time manual VPS setup (copied
+            # from .env.production.example and filled in with real secrets).
+            if [ ! -f .env ]; then
+              echo "ERROR: /var/www/usmo/.env is missing on the VPS."
+              echo "Copy .env.production.example to .env and fill in real values before the first deploy."
+              exit 1
+            fi
+
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml build --pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            docker image prune -f
+            docker compose -f docker-compose.prod.yml ps

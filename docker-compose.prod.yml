@@ -1,0 +1,176 @@
+# =============================================================================
+# USM Platform — Docker Compose (PRODUCTION)
+# =============================================================================
+#
+# Only nginx publishes ports to the host (80/443). Every other service —
+# mongo, minio, api, web — is reachable exclusively over the internal
+# "usm-internal" Docker network. Nothing else is exposed on the VPS.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml ps
+#   docker compose -f docker-compose.prod.yml logs -f api
+#
+# Requires a populated .env.production file next to this compose file
+# (copy .env.production.example and fill in real values — never commit it).
+# =============================================================================
+
+services:
+
+  # ── MongoDB (internal only) ───────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: usm-mongo
+    restart: unless-stopped
+    networks: [usm-internal]
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: usmo
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO (internal only — served publicly through nginx, see nginx.conf) ─
+  minio:
+    image: minio/minio:latest
+    container_name: usm-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    networks: [usm-internal]
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO Client (one-shot bucket init) ───────────────────────────────────
+  mc:
+    image: minio/mc:latest
+    container_name: usm-mc
+    networks: [usm-internal]
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc mb --ignore-existing local/${MINIO_BUCKET};
+        mc anonymous set public local/${MINIO_BUCKET};
+        echo '[mc] Bucket ${MINIO_BUCKET} ready with public-read policy.';
+        exit 0;
+      "
+    restart: "no"
+
+  # ── NestJS API (internal only — reached via nginx at https://$API_DOMAIN) ─
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: usm-api:prod
+    container_name: usm-api
+    restart: unless-stopped
+    networks: [usm-internal]
+    depends_on:
+      mongo:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017/usmo}
+      JWT_SECRET: ${JWT_SECRET}
+      CLIENT_URL: https://${APP_DOMAIN}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      # Browsers load media via nginx (https://$API_DOMAIN/usm-media/...), not the internal MinIO port directly.
+      MINIO_PUBLIC_URL: https://${API_DOMAIN}/${MINIO_BUCKET}
+
+  # ── Next.js Web (internal only — reached via nginx at https://$APP_DOMAIN) ─
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://${API_DOMAIN}/api
+        API_DOMAIN: ${API_DOMAIN}
+        MINIO_BUCKET: ${MINIO_BUCKET}
+    image: usm-web:prod
+    container_name: usm-web
+    restart: unless-stopped
+    networks: [usm-internal]
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://${API_DOMAIN}/api
+      SITE_URL: https://${APP_DOMAIN}
+      INTERNAL_API_URL: http://api:3001/api
+
+  # ── Nginx reverse proxy (only service exposed to the internet) ───────────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: usm-nginx
+    restart: unless-stopped
+    networks: [usm-internal]
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+      - web
+      - minio
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    volumes:
+      - ./deploy/nginx/templates:/etc/nginx/templates:ro
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+    # nginx:alpine's docker-entrypoint.sh envsubst's everything in
+    # /etc/nginx/templates/*.template into /etc/nginx/conf.d/ on startup.
+    command: ["nginx", "-g", "daemon off;"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "--tries=1", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Certbot (Let's Encrypt) — run manually, not a long-lived daemon ──────
+  # First issuance (after DNS points at the VPS and nginx is already running
+  # to serve the HTTP-01 challenge on port 80):
+  #   docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+  #     --webroot -w /var/www/certbot \
+  #     -d $APP_DOMAIN -d $API_DOMAIN \
+  #     --email you@example.com --agree-tos --no-eff-email
+  # Renewal (cron this on the VPS, see scripts/setup-vps.sh):
+  #   docker compose -f docker-compose.prod.yml run --rm certbot renew
+  certbot:
+    image: certbot/certbot:latest
+    container_name: usm-certbot
+    networks: [usm-internal]
+    volumes:
+      - ./deploy/certbot/conf:/etc/letsencrypt
+      - ./deploy/certbot/www:/var/www/certbot
+    entrypoint: "true" # no-op when brought up by `docker compose up`; invoked via `run` instead
+
+networks:
+  usm-internal:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  minio_data:
