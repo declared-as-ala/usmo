@@ -83,7 +83,7 @@ export const Palmares: React.FC = () => {
         <div className="absolute -top-20 -right-20 w-[420px] h-[420px] bg-usm-blue-primary/15 rounded-full blur-[130px] pointer-events-none" />
         <div className="relative mx-auto flex min-h-[72vh] max-w-7xl items-end px-4 pb-16 pt-24 sm:px-6 lg:px-8 lg:pb-20">
           <div className="max-w-2xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-usm-blue-primary/40 bg-usm-blue-primary/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-usm-blue-primary backdrop-blur-md"><Crown size={14} /> {pageContent?.heroBadge || 'Salle des trophées'}</span>
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/50 bg-gradient-to-r from-[#D4AF37]/15 via-[#F4D571]/15 to-[#D4AF37]/15 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-[#B8912A] shadow-[0_4px_20px_rgba(212,175,55,0.25)] backdrop-blur-md"><Crown size={14} className="text-[#D4AF37]" /> {pageContent?.heroBadge || 'Salle des trophées'}</span>
             <h1 className="font-display text-5xl font-black uppercase leading-[0.9] tracking-tight text-usm-blue-dark sm:text-7xl lg:text-8xl">
               {(() => {
                 const title = pageContent?.heroTitle?.trim() || 'Notre Palmarès';

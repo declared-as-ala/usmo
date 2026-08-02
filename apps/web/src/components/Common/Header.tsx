@@ -329,7 +329,7 @@ export const Header: React.FC = () => {
                 >
                   <ShoppingBag size={15} />
                   {cart.length > 0 && (
-                    <span className="absolute top-0.5 end-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
+                    <span className="absolute top-0.5 end-0.5 hidden sm:flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
                       {cart.reduce((sum, item) => sum + item.quantity, 0)}
                     </span>
                   )}
@@ -349,7 +349,7 @@ export const Header: React.FC = () => {
                     >
                       <Bell size={15} />
                       {unreadCount > 0 && (
-                        <span className="absolute top-0.5 end-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
+                        <span className="absolute top-0.5 end-0.5 hidden sm:flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}

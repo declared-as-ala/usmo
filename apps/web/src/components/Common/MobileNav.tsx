@@ -17,7 +17,7 @@ export const MobileNav: React.FC = () => {
   const primaryTabs: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
     { screen: 'home', label: t('nav.home'), icon: <Home size={19} strokeWidth={2} /> },
     { screen: 'matches', label: t('nav.matches'), icon: <Trophy size={19} strokeWidth={2} /> },
-    { screen: 'news', label: 'News', icon: <Newspaper size={19} strokeWidth={2} /> },
+    { screen: 'news', label: t('nav.news'), icon: <Newspaper size={19} strokeWidth={2} /> },
     ...(isLoggedIn ? [{ screen: 'fanzone' as const, label: 'Fan Zone', icon: <Sparkles size={19} strokeWidth={2} /> }] : []),
   ];
 
@@ -90,7 +90,7 @@ export const MobileNav: React.FC = () => {
                 showMoreMenu ? 'text-usm-blue-dark' : 'text-slate-600'
               }`}
             >
-              More
+              {t('nav.more')}
             </span>
           </button>
         </div>

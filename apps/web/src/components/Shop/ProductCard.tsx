@@ -186,6 +186,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
 
       {/* Product Information */}
       <div className="p-4 flex flex-col gap-2 flex-grow">
+        {/* Pricing Layout — placed directly under the image */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-usm-blue-primary">
+            {formatMoney(rawPrice)}
+          </span>
+          {rawOldPrice && (
+            <span className="text-[10px] text-slate-500 line-through font-mono">
+              {formatMoney(rawOldPrice)}
+            </span>
+          )}
+          {discountPct !== null && discountPct > 0 && (
+            <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
+              -{discountPct}%
+            </span>
+          )}
+        </div>
+
         <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">
           {product.category}
         </span>
@@ -206,23 +223,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
             ))}
           </div>
         )}
-
-        {/* Pricing Layout */}
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs font-bold text-usm-blue-primary">
-            {formatMoney(rawPrice)}
-          </span>
-          {rawOldPrice && (
-            <span className="text-[10px] text-slate-500 line-through font-mono">
-              {formatMoney(rawOldPrice)}
-            </span>
-          )}
-          {discountPct !== null && discountPct > 0 && (
-            <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
-              -{discountPct}%
-            </span>
-          )}
-        </div>
 
         {/* Low Stock Callout */}
         {lowStock && (
