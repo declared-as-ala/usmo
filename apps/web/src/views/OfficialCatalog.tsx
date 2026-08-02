@@ -34,7 +34,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
   const add = (event: React.MouseEvent) => {
     event.stopPropagation();
     if (soldOut) return;
-    addToCart({ ...product, id, price: formatTND(product.price) }, (sizes[0] as string) || 'Unique');
+    addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, (sizes[0] as string) || 'Unique');
   };
 
   return (
@@ -81,11 +81,23 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
       </div>
       <div className="p-4 sm:p-5">
         <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
-        <h3 className="mt-2 min-h-11 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
+        <h3 className="mt-2 min-h-11 line-clamp-2 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
         {sizes.length > 0 && <div className="mt-3 flex items-center gap-1.5">{sizes.map(size => <span key={String(size)} className="grid min-w-7 place-items-center rounded-md border border-[#dce3ed] px-1.5 py-1 text-[9px] font-bold text-[#53627a]">{String(size)}</span>)}</div>}
-        <div className="mt-4 flex items-end justify-between gap-3 border-t border-[#e6eaf0] pt-4">
-          <div><p className="font-mono text-sm font-black text-[#020814]">{formatTND(product.price)}</p>{product.oldPrice > product.price && <p className="mt-0.5 font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}</div>
-          <button disabled={soldOut} onClick={add} aria-label={`Ajouter ${product.nameFr || product.name} au panier`} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#0D63FF] px-3 text-[10px] font-black uppercase tracking-wide text-white transition hover:bg-[#0052D9] disabled:cursor-not-allowed disabled:opacity-40"><ShoppingBag size={14} /><span className="hidden sm:inline">Ajouter</span></button>
+        <div className="mt-4 border-t border-[#e6eaf0] pt-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-mono text-base font-black text-[#020814] sm:text-lg">{formatTND(product.price)}</p>
+            {product.oldPrice > product.price && <p className="font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}
+          </div>
+          <button
+            type="button"
+            disabled={soldOut}
+            onClick={add}
+            aria-label={`Ajouter ${product.nameFr || product.name} au panier`}
+            className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
+          >
+            <ShoppingBag size={15} className="shrink-0 sm:size-4" />
+            <span className="min-w-0">{soldOut ? 'Épuisé' : 'Ajouter au panier'}</span>
+          </button>
         </div>
       </div>
     </motion.article>

@@ -72,42 +72,47 @@ export const Histoire: React.FC = () => {
   return (
     <div className="usm-premium-bg min-h-screen text-usm-blue-dark pb-20">
 
-      {/* 1. HERO */}
-      <section className="relative overflow-hidden bg-usm-blue-dark">
-        <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} focalPoint="center 35%" fit="cover" animate />
-        <div className="absolute inset-0 bg-gradient-to-t from-usm-blue-dark via-usm-blue-dark/90 to-usm-blue-dark/50" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(13,99,255,0.28),transparent_55%)]" />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-14 sm:pt-36 sm:pb-20 w-full">
-          <span className="inline-flex items-center gap-1.5 text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase mb-4">
-            <Landmark size={11} /> Depuis 1923
-          </span>
-          <h1 className="font-display font-black text-4xl sm:text-6xl text-white uppercase tracking-wide leading-none mb-4">
-            {content.heroTitle}
-          </h1>
-          <p className="text-sm sm:text-base text-white/75 max-w-2xl mb-8">{content.heroSubtitle}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mb-8">
-            {[
-              { label: 'Fondé en', value: '1923' },
-              { label: 'Histoire', value: '100+ ans' },
-              { label: 'Sections', value: 'Foot & Basket' },
-              { label: 'Identité', value: 'Fierté de Monastir' },
-            ].map((s) => (
-              <div key={s.label} className="rounded-xl px-3 py-2.5 bg-white/[.07] border border-white/15 backdrop-blur-sm">
-                <p className="font-display font-black text-lg text-white">{s.value}</p>
-                <p className="text-[9px] text-white/60 uppercase tracking-wide">{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <a href="#chronologie" className="usm-btn-primary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider">
-              Explorer la chronologie
-            </a>
-            <button onClick={() => router.push('/palmares')} className="usm-btn-secondary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider">
-              Voir le palmarès
-            </button>
-            <button onClick={() => router.push('/legendes')} className="usm-btn-secondary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2">
-              <Crown size={14} /> Légendes du club
-            </button>
+      {/* 1. HERO — banner photo shown full & clear, content lives in its own card below/overlapping it */}
+      <section className="relative">
+        <div className="relative h-[220px] sm:h-[320px] lg:h-[400px] overflow-hidden pt-20 sm:pt-0">
+          <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} focalPoint="center 35%" fit="cover" animate />
+          {/* Thin bottom fade only, purely for a clean seam into the card below — the photo itself stays uncovered */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-usm-blue-dark/90 to-transparent" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 sm:-mt-16">
+          <div className="usm-card rounded-3xl p-6 sm:p-10 shadow-2xl">
+            <span className="inline-flex items-center gap-1.5 text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase mb-4">
+              <Landmark size={11} /> Depuis 1923
+            </span>
+            <h1 className="font-display font-black text-3xl sm:text-6xl text-usm-blue-dark uppercase tracking-wide leading-none mb-4">
+              {content.heroTitle}
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 max-w-2xl mb-8">{content.heroSubtitle}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mb-8">
+              {[
+                { label: 'Fondé en', value: '1923' },
+                { label: 'Histoire', value: '100+ ans' },
+                { label: 'Sections', value: 'Foot & Basket' },
+                { label: 'Identité', value: 'Fierté de Monastir' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl px-3 py-2.5 bg-usm-blue-soft border border-usm-border">
+                  <p className="font-display font-black text-lg text-usm-blue-primary">{s.value}</p>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wide">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <a href="#chronologie" className="usm-btn-primary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider">
+                Explorer la chronologie
+              </a>
+              <button onClick={() => router.push('/palmares')} className="usm-btn-secondary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider">
+                Voir le palmarès
+              </button>
+              <button onClick={() => router.push('/legendes')} className="usm-btn-secondary px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                <Crown size={14} /> Légendes du club
+              </button>
+            </div>
           </div>
         </div>
       </section>

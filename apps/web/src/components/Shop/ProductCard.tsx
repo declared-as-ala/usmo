@@ -80,6 +80,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
     addToCart({
       ...product,
       id: id,
+      image: product.coverImage || product.image,
       price: formatMoney(rawPrice), // bridge to legacy cart expectations
     }, defaultSize);
   };

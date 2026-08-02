@@ -143,6 +143,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     addToCart({
       ...product,
       id: product._id,
+      image: product.coverImage || product.image,
       price: formatMoney(product.price),
     }, selectedSize);
     if (quantity > 1) updateCartQuantity(product._id, selectedSize, quantity);
