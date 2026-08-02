@@ -59,6 +59,7 @@ export default function AdminSponsors() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(() => searchParams.get('new') === '1');
   const [form, setForm] = useState(emptyForm);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'sponsors' | 'leads'>('sponsors');
   const [leads, setLeads] = useState<PartnerLead[]>([]);
@@ -346,6 +347,7 @@ export default function AdminSponsors() {
                   currentUrl={form.logo}
                   onUpload={(file) => setForm((f) => ({ ...f, logo: file.url }))}
                   onRemove={() => setForm((f) => ({ ...f, logo: '' }))}
+                  onUploadingChange={setLogoUploading}
                 />
               </div>
               <div>
@@ -362,10 +364,10 @@ export default function AdminSponsors() {
               </div>
               <button
                 type="submit"
-                disabled={saving}
-                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed transition-colors mt-2"
+                disabled={saving || logoUploading}
+                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors mt-2"
               >
-                {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Sponsor'}
+                {logoUploading ? 'Uploading image…' : saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Sponsor'}
               </button>
             </form>
           </div>

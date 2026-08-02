@@ -31,6 +31,7 @@ export default function AdminTimeline() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -192,7 +193,7 @@ export default function AdminTimeline() {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image</label>
-                <MediaUploader compact folder="heritage/timeline" currentUrl={form.image} onUpload={(file) => setForm((f) => ({ ...f, image: file.url }))} onRemove={() => setForm((f) => ({ ...f, image: '' }))} />
+                <MediaUploader compact folder="heritage/timeline" currentUrl={form.image} onUpload={(file) => setForm((f) => ({ ...f, image: file.url }))} onRemove={() => setForm((f) => ({ ...f, image: '' }))} onUploadingChange={setImageUploading} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -221,8 +222,8 @@ export default function AdminTimeline() {
                 <input type="checkbox" checked={form.isHighlighted} onChange={(e) => setForm((f) => ({ ...f, isHighlighted: e.target.checked }))} className="size-4" />
                 Événement mis en avant (icône trophée sur la chronologie)
               </label>
-              <button type="submit" disabled={saving} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed transition-colors mt-2">
-                {saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
+              <button type="submit" disabled={saving || imageUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors mt-2">
+                {imageUploading ? 'Envoi de l’image…' : saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
               </button>
             </form>
           </div>

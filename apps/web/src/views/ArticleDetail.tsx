@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CalendarDays, Clock3, Eye, Link2, Share2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Clock3, Eye, Link2, Share2, ShieldCheck, Trophy } from 'lucide-react';
 import { api } from '../lib/api-client';
 
 const Facebook = Share2;
@@ -22,7 +22,14 @@ export function ArticleDetail({ slug }: { slug: string }) {
   const content = article.contentFr || article.content;
   return <main className="min-h-screen usm-premium-bg text-usm-blue-dark">
     <header className="relative isolate min-h-[460px] overflow-hidden border-b border-[#DDE8F8]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}<img src={article.image} alt={title} className="absolute inset-0 -z-20 h-full w-full object-cover"/>
+      {article.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={article.image} alt={title} className="absolute inset-0 -z-20 h-full w-full object-cover"/>
+      ) : (
+        <div className="absolute inset-0 -z-20 flex items-center justify-center bg-gradient-to-br from-usm-blue-dark to-usm-blue-primary/60">
+          <Trophy size={48} className="text-white/20"/>
+        </div>
+      )}
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-white via-white/80 to-[#061221]/45"/>
       <div className="mx-auto flex min-h-[460px] max-w-5xl flex-col justify-end px-4 py-12 sm:px-6">
         <Link href="/actualites" className="mb-8 flex w-fit items-center gap-2 text-xs font-bold text-[#071A30] hover:text-[#0D63FF]"><ArrowLeft size={15}/> Retour aux actualités</Link>

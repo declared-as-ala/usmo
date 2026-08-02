@@ -27,6 +27,7 @@ export default function AdminHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [heroImageUploading, setHeroImageUploading] = useState(false);
 
   useEffect(() => {
     api.getAdminHistory()
@@ -99,7 +100,7 @@ export default function AdminHistoryPage() {
           </div>
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2 tracking-wider">{tr(language, 'Hero Image', 'Image du hero', 'صورة الواجهة')}</label>
-            <MediaUploader folder="heritage/history" currentUrl={form.heroImage} label={tr(language, 'Drop hero image or click to browse', 'Déposez l’image du hero ou cliquez pour choisir', 'أفلت صورة الواجهة أو انقر للتصفح')} onUpload={(file) => setForm((f) => ({ ...f, heroImage: file.url }))} onRemove={() => setForm((f) => ({ ...f, heroImage: '' }))} />
+            <MediaUploader folder="heritage/history" currentUrl={form.heroImage} label={tr(language, 'Drop hero image or click to browse', 'Déposez l’image du hero ou cliquez pour choisir', 'أفلت صورة الواجهة أو انقر للتصفح')} onUpload={(file) => setForm((f) => ({ ...f, heroImage: file.url }))} onRemove={() => setForm((f) => ({ ...f, heroImage: '' }))} onUploadingChange={setHeroImageUploading} />
           </div>
         </div>
 
@@ -164,8 +165,8 @@ export default function AdminHistoryPage() {
           </label>
         </div>
 
-        <button disabled={saving} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-usm-blue-primary px-6 text-xs font-black uppercase text-white disabled:opacity-50 hover:bg-usm-blue-hover transition-colors shadow-lg shadow-usm-blue-primary/15 cursor-pointer">
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {tr(language, 'Save Page', 'Enregistrer', 'حفظ الصفحة')}
+        <button disabled={saving || heroImageUploading} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-usm-blue-primary px-6 text-xs font-black uppercase text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-usm-blue-hover transition-colors shadow-lg shadow-usm-blue-primary/15 cursor-pointer">
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} {heroImageUploading ? tr(language, 'Uploading image…', 'Envoi de l’image…', 'جارٍ رفع الصورة…') : tr(language, 'Save Page', 'Enregistrer', 'حفظ الصفحة')}
         </button>
       </form>
     </div>

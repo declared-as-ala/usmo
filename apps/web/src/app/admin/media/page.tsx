@@ -1,5 +1,5 @@
-import AdminMediaLibrary from '../../../views/admin/AdminMediaLibrary';
+import AdminMedia from '../../../views/admin/AdminMedia';
 
 export default function AdminMediaRoute() {
-  return <AdminMediaLibrary />;
+  return <AdminMedia />;
 }

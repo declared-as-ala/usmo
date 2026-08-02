@@ -123,14 +123,22 @@ export class StorageController {
   }
 }
 
-@Controller('admin/media')
+// Deliberately NOT "admin/media" — that path belongs to MediaController
+// (apps/api/src/modules/media/media.controller.ts), which manages the
+// MediaItem albums/videos collection powering the public /media page.
+// This controller manages raw uploaded MediaFile/MinIO objects instead —
+// a genuinely different collection. The two used to share the same path,
+// which silently shadowed MediaController's admin routes (this module is
+// registered before MediaModule in app.module.ts) and made the real admin
+// media CRUD (AdminMedia.tsx) unreachable.
+@Controller('admin/media-files')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('Admin', 'Super Admin')
 export class MediaLibraryController {
   constructor(private readonly storageService: StorageService) {}
 
   /**
-   * GET /api/admin/media
+   * GET /api/admin/media-files
    * Paginated media library with optional filters.
    * Query: type, folder, search, page, limit
    */
@@ -152,7 +160,7 @@ export class MediaLibraryController {
   }
 
   /**
-   * PATCH /api/admin/media/:id
+   * PATCH /api/admin/media-files/:id
    * Update altText, caption, or tags on an existing file.
    */
   @Patch(':id')

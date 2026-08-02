@@ -25,7 +25,7 @@ interface TeamInfo {
 const USM_TEAM_ID = '139871';
 
 export const MatchCenter: React.FC = () => {
-  const { language, matches, predictions, submitPrediction, addBluePoints, t } = useApp();
+  const { language, predictions, submitPrediction, addBluePoints, t } = useApp();
   const [sportTab, setSportTab] = useState<'football' | 'basketball'>('football');
 
   // ── Live football data (TheSportsDB) ─────────────────────────────────
@@ -45,10 +45,20 @@ export const MatchCenter: React.FC = () => {
     );
   }, []);
 
-  // ── Basketball: admin-managed matches (no free live feed for this league) ──
-  const basketballMatches = matches.filter((m) => m.sport === 'basketball');
+  // ── Basketball: real matches from the internal Match API (admin-managed —
+  //    there is no free live-data provider covering Tunisian/BAL basketball,
+  //    so this is not TheSportsDB-backed like football above). ──
+  const [basketballMatches, setBasketballMatches] = useState<any[]>([]);
+  const [bbLoading, setBbLoading] = useState(true);
   const [selectedBBMatch, setSelectedBBMatch] = useState<typeof basketballMatches[number] | null>(null);
   const [votedPOM, setVotedPOM] = useState<{ [matchId: string]: string }>({});
+
+  useEffect(() => {
+    api.getMatches('basketball')
+      .then((data: any[]) => setBasketballMatches((data || []).map((m) => ({ ...m, id: m._id }))))
+      .catch(() => setBasketballMatches([]))
+      .finally(() => setBbLoading(false));
+  }, []);
 
   const handlePOMVote = (matchId: string, playerName: string) => {
     setVotedPOM((prev) => ({ ...prev, [matchId]: playerName }));
@@ -290,7 +300,9 @@ export const MatchCenter: React.FC = () => {
         <div className="animate-[fadeIn_0.25s_ease-out]">
           {!selectedBBMatch ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {basketballMatches.length > 0 ? (
+              {bbLoading ? (
+                [0, 1].map((n) => <div key={n} className="skeleton-loader h-56 rounded-2xl" />)
+              ) : basketballMatches.length > 0 ? (
                 basketballMatches.map((m) => {
                   const isLive = m.status === 'live';
                   const isFinished = m.status === 'finished';
@@ -473,7 +485,7 @@ export const MatchCenter: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {selectedBBMatch.lineups.home.slice(0, 3).map((pName) => (
+                      {selectedBBMatch.lineups.home.slice(0, 3).map((pName: string) => (
                         <button
                           key={pName}
                           onClick={() => handlePOMVote(selectedBBMatch.id, pName)}

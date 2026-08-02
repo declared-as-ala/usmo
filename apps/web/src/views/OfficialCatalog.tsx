@@ -52,7 +52,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
             <img
               src={coverImage}
               alt={product.nameFr || product.name}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${hoverImage ? 'group-hover:opacity-0' : 'group-hover:scale-[1.035] duration-500'}`}
+              className={`w-full h-full object-contain p-4 transition-opacity duration-500 ${hoverImage ? 'group-hover:opacity-0' : 'group-hover:scale-[1.035] duration-500'}`}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
             {hoverImage && (
@@ -60,7 +60,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
                 src={hoverImage}
                 alt=""
                 aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                className="absolute inset-0 w-full h-full object-contain p-4 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
               />
             )}
           </>

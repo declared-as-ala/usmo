@@ -39,11 +39,13 @@ export default function AdminStadium() {
   const [savingPage, setSavingPage] = useState(false);
   const [pageMessage, setPageMessage] = useState('');
   const [error, setError] = useState('');
+  const [heroImageUploading, setHeroImageUploading] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyVenueForm);
   const [saving, setSaving] = useState(false);
+  const [venueImageUploading, setVenueImageUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -158,7 +160,7 @@ export default function AdminStadium() {
         </div>
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image héro</label>
-          <MediaUploader compact folder="stadium/hero" currentUrl={pageForm.heroImage} onUpload={(file) => setPageForm((f) => ({ ...f, heroImage: file.url }))} onRemove={() => setPageForm((f) => ({ ...f, heroImage: '' }))} />
+          <MediaUploader compact folder="stadium/hero" currentUrl={pageForm.heroImage} onUpload={(file) => setPageForm((f) => ({ ...f, heroImage: file.url }))} onRemove={() => setPageForm((f) => ({ ...f, heroImage: '' }))} onUploadingChange={setHeroImageUploading} />
         </div>
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Introduction sécurité</label>
@@ -180,8 +182,8 @@ export default function AdminStadium() {
           ))}
         </div>
         {pageMessage && <p className="text-[11px] text-slate-500">{pageMessage}</p>}
-        <button type="submit" disabled={savingPage} className="flex items-center gap-1.5 px-4 py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors">
-          <Save size={13} /> {savingPage ? 'Enregistrement…' : 'Enregistrer la page'}
+        <button type="submit" disabled={savingPage || heroImageUploading} className="flex items-center gap-1.5 px-4 py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors">
+          <Save size={13} /> {heroImageUploading ? 'Envoi de l’image…' : savingPage ? 'Enregistrement…' : 'Enregistrer la page'}
         </button>
       </form>
 
@@ -264,7 +266,7 @@ export default function AdminStadium() {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Photo</label>
-                <MediaUploader compact folder="stadium/venues" currentUrl={form.image} onUpload={(file) => setForm((f) => ({ ...f, image: file.url }))} onRemove={() => setForm((f) => ({ ...f, image: '' }))} />
+                <MediaUploader compact folder="stadium/venues" currentUrl={form.image} onUpload={(file) => setForm((f) => ({ ...f, image: file.url }))} onRemove={() => setForm((f) => ({ ...f, image: '' }))} onUploadingChange={setVenueImageUploading} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -301,8 +303,8 @@ export default function AdminStadium() {
                   </select>
                 </div>
               </div>
-              <button type="submit" disabled={saving} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed transition-colors mt-2">
-                {saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
+              <button type="submit" disabled={saving || venueImageUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors mt-2">
+                {venueImageUploading ? 'Envoi de l’image…' : saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
               </button>
             </form>
           </div>

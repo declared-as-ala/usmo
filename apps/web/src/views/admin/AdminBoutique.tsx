@@ -61,6 +61,9 @@ export default function AdminBoutique() {
   const [boutiqueBanner, setBoutiqueBanner] = useState(DEFAULT_BOUTIQUE_BANNER);
   const [bannerSaveState, setBannerSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [bannerSaveMessage, setBannerSaveMessage] = useState('');
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const isImageUploading = coverUploading || galleryUploading;
 
   // Load products, categories from NestJS backend
   const loadCatalogData = async () => {
@@ -567,7 +570,7 @@ export default function AdminBoutique() {
 
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">Image principale *</label>
-                <MediaUploader compact folder={`products/${editingId || 'new'}/main`} currentUrl={form.coverImage} onUpload={(file) => setForm((current) => ({ ...current, coverImage: file.url }))} onRemove={() => setForm((current) => ({ ...current, coverImage: '' }))} />
+                <MediaUploader compact folder={`products/${editingId || 'new'}/main`} currentUrl={form.coverImage} onUpload={(file) => setForm((current) => ({ ...current, coverImage: file.url }))} onRemove={() => setForm((current) => ({ ...current, coverImage: '' }))} onUploadingChange={setCoverUploading} />
                 <button type="button" onClick={() => setMediaPickerTarget('product')} className="mt-2 min-h-11 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-usm-blue-primary">Choisir une image existante</button>
               </div>
 
@@ -596,6 +599,7 @@ export default function AdminBoutique() {
                   compact
                   folder={`products/${editingId || 'new'}/gallery`}
                   onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images, file.url] }))}
+                  onUploadingChange={setGalleryUploading}
                 />
               </div>
 
@@ -625,8 +629,12 @@ export default function AdminBoutique() {
                 <textarea rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800" />
               </div>
 
-              <button type="submit" className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2">
-                {editingId ? 'Sauvegarder' : 'Ajouter le Produit'}
+              <button
+                type="submit"
+                disabled={isImageUploading}
+                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isImageUploading ? 'Envoi de l’image…' : editingId ? 'Sauvegarder' : 'Ajouter le Produit'}
               </button>
             </form>
           </div>

@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { api } from '../lib/api-client';
-import { MapPin, Users, Shield, Compass, ShieldCheck } from 'lucide-react';
+import { MapPin, Users, Shield, Compass, ShieldCheck, Building2 } from 'lucide-react';
+import { PremiumHeroBackground } from '../components/Common/PremiumHeroBackground';
 
 interface StadiumPageContent {
   heroTitle: string; heroSubtitle: string; heroImage: string;
@@ -45,23 +46,41 @@ export const StadiumGuide: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
 
         {/* HERO */}
-        <section className="relative rounded-3xl overflow-hidden border border-usm-border min-h-[260px] flex items-end p-6 sm:p-10">
-          {content?.heroImage ? (
-            <Image src={content.heroImage} alt="" fill unoptimized className="object-cover brightness-[0.35]" />
-          ) : (
-            <div className="absolute inset-0 bg-usm-blue-dark" />
+        <section className="relative min-h-[420px] overflow-hidden rounded-3xl border border-usm-border sm:h-[56vh] sm:min-h-[440px]">
+          <div className="absolute inset-0 bg-usm-blue-dark" />
+          {content?.heroImage && (
+            <PremiumHeroBackground imageUrl={content.heroImage} fit="cover" animate />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-usm-blue-dark via-usm-blue-dark/40 to-transparent" />
-          <div className="relative z-10">
-            <span className="text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(13,99,255,0.35),transparent_55%)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-usm-blue-dark via-usm-blue-dark/55 to-transparent" />
+          <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-12">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-usm-accent-gold px-3 py-1 text-[10px] font-black uppercase tracking-widest text-usm-blue-dark">
               Guide matchday
             </span>
-            <h1 className="font-display font-black text-3xl sm:text-5xl text-white uppercase tracking-wider mt-3">
+            <h1 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-wide text-white sm:text-6xl">
               {content?.heroTitle || 'Stades & Salles USM'}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-lg">
+            <p className="mt-3 max-w-lg text-xs text-slate-200 sm:text-sm">
               {content?.heroSubtitle || 'Accès, capacité, protocoles de sécurité et itinéraires pour les enceintes du club.'}
             </p>
+            {venues.length > 0 && (
+              <div className="mt-8 grid max-w-md grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/15 bg-white/[.06] px-4 py-3 backdrop-blur-sm">
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                    <Building2 size={12} className="text-usm-accent-gold" /> Sites
+                  </span>
+                  <strong className="mt-1 block text-lg font-black text-white">{venues.length}</strong>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/[.06] px-4 py-3 backdrop-blur-sm">
+                  <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-300">
+                    <Users size={12} className="text-usm-accent-gold" /> Capacité totale
+                  </span>
+                  <strong className="mt-1 block text-lg font-black text-white">
+                    {venues.reduce((sum, v) => sum + (v.capacity || 0), 0).toLocaleString('fr-FR')}
+                  </strong>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

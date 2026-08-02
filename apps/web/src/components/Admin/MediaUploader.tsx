@@ -34,6 +34,9 @@ interface MediaUploaderProps {
   compact?: boolean;
   /** Optional alt text to attach to the upload */
   altText?: string;
+  /** Fires whenever an upload starts/finishes — parent forms use this to
+   *  disable their submit button until the file has actually finished uploading. */
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 type UploadState = 'idle' | 'uploading' | 'success' | 'error';
@@ -47,12 +50,14 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   label = 'Drop image here or click to browse',
   compact = false,
   altText,
+  onUploadingChange,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(currentUrl || null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -63,6 +68,8 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       setPreview(localPreview);
       setState('uploading');
       setError(null);
+      setProgress(0);
+      onUploadingChange?.(true);
 
       try {
         const formData = new FormData();
@@ -70,7 +77,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         formData.append('folder', folder);
         if (altText) formData.append('altText', altText);
 
-        const result = await api.uploadMedia(formData);
+        const result = await api.uploadMediaWithProgress(formData, setProgress);
         setState('success');
         setPreview(result.thumbnailUrl || result.url);
         onUpload(result);
@@ -79,9 +86,11 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         setError(err.message || 'Upload failed');
         setPreview(currentUrl || null);
         URL.revokeObjectURL(localPreview);
+      } finally {
+        onUploadingChange?.(false);
       }
     },
-    [folder, altText, onUpload, currentUrl],
+    [folder, altText, onUpload, currentUrl, onUploadingChange],
   );
 
   useEffect(() => {
@@ -117,8 +126,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="preview" className="w-full h-full object-cover" />
             {state === 'uploading' && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <Loader2 size={16} className="text-usm-blue-dark animate-spin" />
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-0.5">
+                <Loader2 size={14} className="text-white animate-spin" />
+                <span className="text-[9px] font-black text-white">{progress}%</span>
               </div>
             )}
             {state !== 'uploading' && (
@@ -147,7 +157,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             disabled={state === 'uploading'}
             className="text-xs text-usm-blue-primary font-bold hover:underline cursor-pointer disabled:opacity-50"
           >
-            {state === 'uploading' ? 'Uploading…' : preview ? 'Change image' : 'Upload image'}
+            {state === 'uploading' ? `Uploading… ${progress}%` : preview ? 'Change image' : 'Upload image'}
           </button>
           {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
           <p className="text-[10px] text-slate-500 mt-0.5">JPG, PNG, WebP · max 10 MB</p>
@@ -199,9 +209,15 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
         {/* Upload overlay */}
         {state === 'uploading' && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center gap-3 px-10">
             <Loader2 size={28} className="text-usm-blue-primary animate-spin" />
-            <p className="text-sm font-semibold text-slate-700">Uploading to MinIO…</p>
+            <p className="text-sm font-semibold text-slate-700">Envoi en cours… {progress}%</p>
+            <div className="w-full max-w-[220px] h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-usm-blue-primary rounded-full transition-[width] duration-150"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         )}
       </div>

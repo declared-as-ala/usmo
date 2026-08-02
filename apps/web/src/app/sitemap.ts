@@ -6,7 +6,7 @@ const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
 const API_URL = process.env.INTERNAL_API_URL || 'http://localhost:3001/api';
 
 const STATIC_ROUTES = [
-  '', 'football', 'basketball', 'equipe', 'matches', 'actualites', 'media',
+  '', 'football', 'basketball', 'matches', 'actualites', 'media',
   'boutique', 'histoire', 'palmares', 'legendes', 'stadium', 'telechargements',
   'sponsors', 'fanzone', 'contact', 'don', 'dons-donateurs', 'commande',
   'conditions-utilisation', 'confidentialite', 'cookies',

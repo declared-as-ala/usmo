@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { StatCard } from '../../components/Admin/StatCard';
+import { MediaUploader } from '../../components/Admin/MediaUploader';
 import { requestConfirmation } from '../../components/Common/ConfirmDialog';
 import { api } from '../../lib/api-client';
 import {
@@ -46,6 +47,7 @@ export default function AdminMedia() {
   const [albumTitle, setAlbumTitle] = useState('');
   const [albumDesc, setAlbumDesc] = useState('');
   const [albumCover, setAlbumCover] = useState('');
+  const [albumCoverUploading, setAlbumCoverUploading] = useState(false);
   const [albumAccessLevel, setAlbumAccessLevel] = useState<'public' | 'fan' | 'premium'>('public');
   const [albumPhotosText, setAlbumPhotosText] = useState('');
   const [albumTeaserPhotosText, setAlbumTeaserPhotosText] = useState('');
@@ -56,6 +58,7 @@ export default function AdminMedia() {
   const [videoTitle, setVideoTitle] = useState('');
   const [videoDesc, setVideoDesc] = useState('');
   const [videoThumb, setVideoThumb] = useState('');
+  const [videoThumbUploading, setVideoThumbUploading] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
   const [videoTeaserUrl, setVideoTeaserUrl] = useState('');
   const [videoAccessLevel, setVideoAccessLevel] = useState<'public' | 'fan' | 'premium'>('public');
@@ -83,7 +86,7 @@ export default function AdminMedia() {
     setEditingAlbum(null);
     setAlbumTitle('');
     setAlbumDesc('');
-    setAlbumCover('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80');
+    setAlbumCover('');
     setAlbumAccessLevel('public');
     setAlbumPhotosText('');
     setAlbumTeaserPhotosText('');
@@ -107,6 +110,10 @@ export default function AdminMedia() {
 
   const handleSaveAlbum = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!albumCover) {
+      showToast('Ajoutez une image de couverture avant d\'enregistrer.', 'error');
+      return;
+    }
     const photos = albumPhotosText.split('\n').map(p => p.trim()).filter(Boolean);
     const teaserPhotos = albumTeaserPhotosText.split('\n').map(p => p.trim()).filter(Boolean);
 
@@ -145,9 +152,9 @@ export default function AdminMedia() {
     setEditingVideo(null);
     setVideoTitle('');
     setVideoDesc('');
-    setVideoThumb('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80');
-    setVideoUrl('https://www.youtube.com/embed/dQw4w9WgXcQ');
-    setVideoTeaserUrl('https://www.youtube.com/embed/dQw4w9WgXcQ');
+    setVideoThumb('');
+    setVideoUrl('');
+    setVideoTeaserUrl('');
     setVideoAccessLevel('public');
     setVideoDisplayOrder('0');
     setVideoIsActive(true);
@@ -169,6 +176,10 @@ export default function AdminMedia() {
 
   const handleSaveVideo = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!videoThumb) {
+      showToast('Ajoutez une image miniature avant d\'enregistrer.', 'error');
+      return;
+    }
     const payload = {
       title: videoTitle,
       titleFr: videoTitle,
@@ -399,8 +410,8 @@ export default function AdminMedia() {
                   <input required type="text" value={albumTitle} onChange={(e) => setAlbumTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image Couverture (URL) *</label>
-                  <input required type="text" value={albumCover} onChange={(e) => setAlbumCover(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image Couverture *</label>
+                  <MediaUploader compact folder="media/covers" currentUrl={albumCover} onUpload={(f) => setAlbumCover(f.url)} onRemove={() => setAlbumCover('')} onUploadingChange={setAlbumCoverUploading} />
                 </div>
               </div>
 
@@ -441,8 +452,8 @@ export default function AdminMedia() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2">
-                Enregistrer l’Album
+              <button type="submit" disabled={albumCoverUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2 disabled:cursor-not-allowed disabled:opacity-50">
+                {albumCoverUploading ? 'Envoi de l’image…' : 'Enregistrer l’Album'}
               </button>
             </form>
           </div>
@@ -465,8 +476,8 @@ export default function AdminMedia() {
                   <input required type="text" value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image Miniature (URL) *</label>
-                  <input required type="text" value={videoThumb} onChange={(e) => setVideoThumb(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image Miniature *</label>
+                  <MediaUploader compact folder="media/thumbnails" currentUrl={videoThumb} onUpload={(f) => setVideoThumb(f.url)} onRemove={() => setVideoThumb('')} onUploadingChange={setVideoThumbUploading} />
                 </div>
               </div>
 
@@ -478,11 +489,11 @@ export default function AdminMedia() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Lien Vidéo HD (Youtube Embed ou direct URL) *</label>
-                  <input required type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
+                  <input required type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://www.youtube.com/embed/..." className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Lien Vidéo Teaser / Trailer *</label>
-                  <input required type="text" value={videoTeaserUrl} onChange={(e) => setVideoTeaserUrl(e.target.value)} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
+                  <input required type="text" value={videoTeaserUrl} onChange={(e) => setVideoTeaserUrl(e.target.value)} placeholder="https://www.youtube.com/embed/..." className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
                 </div>
               </div>
 
@@ -507,8 +518,8 @@ export default function AdminMedia() {
                 </div>
               </div>
 
-              <button type="submit" className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2">
-                Enregistrer la Vidéo
+              <button type="submit" disabled={videoThumbUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2 disabled:cursor-not-allowed disabled:opacity-50">
+                {videoThumbUploading ? 'Envoi de l’image…' : 'Enregistrer la Vidéo'}
               </button>
             </form>
           </div>

@@ -310,11 +310,11 @@ export const Home: React.FC = () => {
               onClick={() => router.push(`/product/${item.id}`)}
               className="bg-usm-blue-soft border border-usm-border rounded-2xl overflow-hidden shadow-lg group hover:border-usm-blue-primary/30 cursor-pointer transition-all flex flex-col justify-between"
             >
-              <div className="relative overflow-hidden h-60 bg-white">
+              <div className="relative overflow-hidden h-60 bg-white p-4">
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 {!item.available && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">

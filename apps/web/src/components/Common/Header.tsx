@@ -91,7 +91,6 @@ export const Header: React.FC = () => {
       items: [
         { screen: 'football', labelKey: 'nav.football' },
         { screen: 'basketball', labelKey: 'nav.basketball' },
-        { screen: 'equipe', labelKey: 'nav.equipe' },
       ],
     },
     { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },

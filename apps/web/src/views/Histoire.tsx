@@ -74,7 +74,7 @@ export const Histoire: React.FC = () => {
 
       {/* 1. HERO */}
       <section className="relative min-h-[560px] flex items-end sm:h-[70vh] sm:min-h-[520px]">
-        <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} overlayStrength="light" showBlueGlow animate />
+        <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} overlayStrength="light" showBlueGlow animate fit="contain" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-transparent" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 w-full">
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase mb-4">

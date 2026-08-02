@@ -11,6 +11,7 @@ export default function AdminSettings() {
   const { clubSettings, updateClubSettings, language } = useApp();
   const [form, setForm] = useState(clubSettings);
   const [saved, setSaved] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +98,7 @@ export default function AdminSettings() {
               label={tr(language, 'Drop club logo or click to browse', 'Déposer le logo du club ou cliquer pour choisir', 'أفلت شعار النادي أو انقر للتصفح')}
               onUpload={(file) => setForm((f) => ({ ...f, logoUrl: file.url }))}
               onRemove={() => setForm((f) => ({ ...f, logoUrl: '' }))}
+              onUploadingChange={setLogoUploading}
             />
           </div>
         </div>
@@ -139,9 +141,12 @@ export default function AdminSettings() {
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <button
             type="submit"
-            className="px-6 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-usm-blue-primary/15 flex items-center gap-1.5 w-fit"
+            disabled={logoUploading}
+            className="px-6 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-usm-blue-primary/15 flex items-center gap-1.5 w-fit disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saved ? (
+            {logoUploading ? (
+              tr(language, 'Uploading image…', 'Envoi de l’image…', 'جارٍ رفع الصورة…')
+            ) : saved ? (
               <>
                 <Check size={14} /> {tr(language, 'Saved Settings', 'Paramètres enregistrés', 'تم حفظ الإعدادات')}
               </>

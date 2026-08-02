@@ -413,6 +413,36 @@ export const api = {
   }),
 
   /**
+   * Same as uploadMedia, but reports real upload progress via XMLHttpRequest
+   * (fetch has no upload-progress event). Used by MediaUploader for the
+   * percentage bar.
+   */
+  uploadMediaWithProgress: (formData: FormData, onProgress: (pct: number) => void): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_BASE_URL}/admin/storage/upload`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.withCredentials = true;
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        let body: any = null;
+        try { body = JSON.parse(xhr.responseText); } catch {}
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(body);
+        } else {
+          reject(new Error(body?.message || 'Upload failed'));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Upload failed'));
+      xhr.send(formData);
+    });
+  },
+
+  /**
    * Upload multiple files at once.
    * FormData fields: files (multiple), folder
    */
@@ -426,18 +456,18 @@ export const api = {
     method: 'DELETE',
   }),
 
-  /** Paginated media library — type, folder, search, page, limit */
+  /** Paginated raw media file library (MinIO uploads) — type, folder, search, page, limit */
   getMediaLibrary: (params: Record<string, string | number | undefined> = {}) => {
     const query = Object.entries(params)
       .filter(([_, v]) => v !== undefined)
       .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
       .join('&');
-    return fetchJson(`/admin/media?${query}`);
+    return fetchJson(`/admin/media-files?${query}`);
   },
 
   /** Update altText, caption, tags on a MediaFile */
   updateMediaFile: (id: string, data: { altText?: string; caption?: string; tags?: string[] }) =>
-    fetchJson(`/admin/media/${id}`, {
+    fetchJson(`/admin/media-files/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
@@ -544,6 +574,13 @@ export const api = {
   getRecentResults: (limit = 5) => fetchJson(`/sportsdb/results?limit=${limit}`),
 
   getNextLeagueMatch: () => fetchJson('/sportsdb/next'),
+
+  // ── Internal Match model (real matches admins manage directly — used for
+  //    basketball, which has no free live-data provider like TheSportsDB) ──
+  getMatches: (sport?: string) => fetchJson(`/matches${sport ? `?sport=${sport}` : ''}`),
+  getUpcomingMatches: (sport?: string, limit = 10) => fetchJson(`/matches/upcoming?limit=${limit}${sport ? `&sport=${sport}` : ''}`),
+  getMatchResults: (sport?: string, limit = 10) => fetchJson(`/matches/results?limit=${limit}${sport ? `&sport=${sport}` : ''}`),
+  getMatchBySlug: (slug: string) => fetchJson(`/matches/${slug}`),
 
   // Match Predictions
   getPredictionsByMatch: (matchId: string) => fetchJson(`/predictions/match/${matchId}`),

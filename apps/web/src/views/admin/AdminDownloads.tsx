@@ -32,6 +32,7 @@ export default function AdminDownloads() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [fileUploading, setFileUploading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -171,7 +172,7 @@ export default function AdminDownloads() {
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Fichier *</label>
-                <MediaUploader compact folder="downloads" currentUrl={form.fileUrl} onUpload={(file) => setForm((f) => ({ ...f, fileUrl: file.url, fileType: file.url.split('.').pop() || '', fileSizeKb: Math.round((file.size || 0) / 1024) }))} onRemove={() => setForm((f) => ({ ...f, fileUrl: '' }))} />
+                <MediaUploader compact folder="downloads" currentUrl={form.fileUrl} onUpload={(file) => setForm((f) => ({ ...f, fileUrl: file.url, fileType: file.url.split('.').pop() || '', fileSizeKb: Math.round((file.size || 0) / 1024) }))} onRemove={() => setForm((f) => ({ ...f, fileUrl: '' }))} onUploadingChange={setFileUploading} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -192,8 +193,8 @@ export default function AdminDownloads() {
                   <option value="draft">Brouillon</option>
                 </select>
               </div>
-              <button type="submit" disabled={saving} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed transition-colors mt-2">
-                {saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
+              <button type="submit" disabled={saving || fileUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 disabled:bg-slate-300 text-white text-xs font-black uppercase rounded-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors mt-2">
+                {fileUploading ? 'Envoi du fichier…' : saving ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}
               </button>
             </form>
           </div>

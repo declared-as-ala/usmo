@@ -65,6 +65,9 @@ export default function AdminSquad() {
   const [footballBannerUrl, setFootballBannerUrl] = useState('');
   const [basketballBannerUrl, setBasketballBannerUrl] = useState('');
   const [savingBanners, setSavingBanners] = useState(false);
+  const [footballBannerUploading, setFootballBannerUploading] = useState(false);
+  const [basketballBannerUploading, setBasketballBannerUploading] = useState(false);
+  const isBannerImageUploading = footballBannerUploading || basketballBannerUploading;
 
   useEffect(() => {
     api.getHomepageSettings()
@@ -92,10 +95,12 @@ export default function AdminSquad() {
   const [showPlayerForm, setShowPlayerForm] = useState(false);
   const [playerForm, setPlayerForm] = useState(emptyPlayerForm);
   const [playerSearch, setPlayerSearch] = useState('');
+  const [playerImageUploading, setPlayerImageUploading] = useState(false);
 
   const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [staffForm, setStaffForm] = useState(emptyStaffForm);
+  const [staffImageUploading, setStaffImageUploading] = useState(false);
 
   const openAddPlayer = () => {
     setEditingPlayerId(null);
@@ -225,6 +230,7 @@ export default function AdminSquad() {
                 label="Déposer l'image ou cliquer pour choisir la bannière Football"
                 onUpload={(file) => setFootballBannerUrl(file.url)}
                 onRemove={() => setFootballBannerUrl('')}
+                onUploadingChange={setFootballBannerUploading}
               />
             </div>
             <div className="space-y-2">
@@ -235,16 +241,17 @@ export default function AdminSquad() {
                 label="Déposer l'image ou cliquer pour choisir la bannière Basketball"
                 onUpload={(file) => setBasketballBannerUrl(file.url)}
                 onRemove={() => setBasketballBannerUrl('')}
+                onUploadingChange={setBasketballBannerUploading}
               />
             </div>
           </div>
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              disabled={savingBanners}
+              disabled={savingBanners || isBannerImageUploading}
               className="px-4 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-wait"
             >
-              {savingBanners ? 'Enregistrement...' : 'Enregistrer les bannières'}
+              {isBannerImageUploading ? 'Envoi de l’image…' : savingBanners ? 'Enregistrement...' : 'Enregistrer les bannières'}
             </button>
           </div>
         </form>
@@ -411,6 +418,7 @@ export default function AdminSquad() {
                   label="Déposer la photo du joueur ou cliquer pour choisir"
                   onUpload={(file) => setPlayerForm((f) => ({ ...f, image: file.url }))}
                   onRemove={() => setPlayerForm((f) => ({ ...f, image: '' }))}
+                  onUploadingChange={setPlayerImageUploading}
                 />
               </div>
               <div>
@@ -432,8 +440,8 @@ export default function AdminSquad() {
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Bio</label>
                 <textarea rows={3} value={playerForm.bio} onChange={(e) => setPlayerForm((f) => ({ ...f, bio: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none" />
               </div>
-              <button type="submit" className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2">
-                {editingPlayerId ? 'Save Changes' : 'Add Player'}
+              <button type="submit" disabled={playerImageUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 disabled:cursor-not-allowed disabled:opacity-50">
+                {playerImageUploading ? 'Uploading image…' : editingPlayerId ? 'Save Changes' : 'Add Player'}
               </button>
             </form>
           </div>
@@ -465,10 +473,11 @@ export default function AdminSquad() {
                   label="Déposer la photo du membre du staff ou cliquer pour choisir"
                   onUpload={(file) => setStaffForm((f) => ({ ...f, image: file.url }))}
                   onRemove={() => setStaffForm((f) => ({ ...f, image: '' }))}
+                  onUploadingChange={setStaffImageUploading}
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2">
-                {editingStaffId ? 'Save Changes' : 'Add Staff'}
+              <button type="submit" disabled={staffImageUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 disabled:cursor-not-allowed disabled:opacity-50">
+                {staffImageUploading ? 'Uploading image…' : editingStaffId ? 'Save Changes' : 'Add Staff'}
               </button>
             </form>
           </div>

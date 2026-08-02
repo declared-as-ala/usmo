@@ -64,6 +64,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Downloads Center', href: '/admin/downloads', icon: FileText },
       { label: 'Newsroom', href: '/admin/news', icon: Newspaper },
       { label: 'Media Portal', href: '/admin/media', icon: ImageIcon },
+      { label: 'Media Files (MinIO)', href: '/admin/media-files', icon: GalleryHorizontal },
       { label: 'Legal Pages', href: '/admin/pages-legal', icon: Shield },
       { label: 'Custom Pages', href: '/admin/pages', icon: Layers },
     ],

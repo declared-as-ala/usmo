@@ -192,7 +192,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               <img
                 src={gallery[activeImage]}
                 alt={productName}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105"
               />
               {soldOut && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
@@ -218,7 +218,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                       activeImage === idx ? 'border-usm-blue-primary' : 'border-usm-border hover:border-usm-border'
                     }`}
                   >
-                    <img src={img} className="w-full h-full object-cover" alt="" />
+                    <img src={img} className="w-full h-full object-contain p-2" alt="" />
                   </button>
                 ))}
               </div>

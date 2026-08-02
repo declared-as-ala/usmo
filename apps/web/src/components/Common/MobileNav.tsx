@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
-import { Home, Trophy, Newspaper, Sparkles, MoreHorizontal, ShoppingBag, Landmark, Map, Shield, Users, Phone, Image as ImageIcon, Crown, FileText } from 'lucide-react';
+import { Home, Trophy, Newspaper, Sparkles, MoreHorizontal, ShoppingBag, Landmark, Map, Shield, Phone, Image as ImageIcon, Crown, FileText } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const { activeScreen, setActiveScreen, t, isLoggedIn } = useApp();
@@ -24,7 +24,6 @@ export const MobileNav: React.FC = () => {
   const moreItems: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
     { screen: 'football', label: 'Football', icon: <Shield size={17} /> },
     { screen: 'basketball', label: 'Basketball', icon: <Trophy size={17} /> },
-    { screen: 'equipe', label: 'Équipe', icon: <Users size={17} /> },
     { screen: 'media', label: 'USM Media', icon: <ImageIcon size={17} /> },
     { screen: 'histoire', label: 'Histoire', icon: <Landmark size={17} /> },
     { screen: 'palmares', label: 'Palmarès', icon: <Trophy size={17} /> },

@@ -70,7 +70,6 @@ type ActiveScreen =
   | 'press'
   | 'admin'
   | 'boutique'
-  | 'equipe'
   | 'football'
   | 'basketball'
   | 'histoire'
@@ -274,7 +273,6 @@ const translations: { [lang: string]: { [key: string]: string } } = {
     'nav.palmares': 'Palmarès',
     'nav.legendes': 'Legends',
     'nav.downloads': 'Downloads',
-    'nav.equipe': 'Squad',
     'nav.stadium': 'Stadium Guide',
     
     // Header/Search/Buttons
@@ -362,7 +360,6 @@ const translations: { [lang: string]: { [key: string]: string } } = {
     'nav.palmares': 'Palmarès',
     'nav.legendes': 'Légendes',
     'nav.downloads': 'Téléchargements',
-    'nav.equipe': 'Équipe',
     'nav.stadium': 'Guide du stade',
     
     // Header/Search/Buttons
@@ -450,7 +447,6 @@ const translations: { [lang: string]: { [key: string]: string } } = {
     'nav.palmares': 'التتويجات',
     'nav.legendes': 'الأساطير',
     'nav.downloads': 'التنزيلات',
-    'nav.equipe': 'الفريق',
     'nav.stadium': 'دليل الملعب',
     
     // Header/Search/Buttons

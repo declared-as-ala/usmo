@@ -26,6 +26,19 @@ const summaryOf = (article: Article) => article.summaryFr || article.summary;
 const categoryLabel = (category: string) => category === 'Academy' ? 'Académie' : category === 'Announcements' ? 'Communiqué' : category;
 const formatViews = (views = 0) => views >= 1000 ? `${(views / 1000).toFixed(1)}k` : String(views);
 
+/** Falls back to a branded placeholder while an article awaits real photography from the admin Media Library. */
+function ArticleImage({ src, alt, className }: { src?: string; alt: string; className: string }) {
+  if (!src) {
+    return (
+      <div className={`${className} flex items-center justify-center bg-gradient-to-br from-usm-blue-dark to-usm-blue-primary/60`}>
+        <Trophy size={28} className="text-white/25" />
+      </div>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt={alt} className={className} />;
+}
+
 function Badge({ category }: { category: string }) {
   const tones: Record<string, string> = {
     Basketball: 'bg-orange-400 text-white', Academy: 'bg-emerald-400 text-white',
@@ -45,8 +58,7 @@ function Meta({ article, views = false, className = "text-[#5B6B82]" }: { articl
 function NewsCard({ article, editorial = false }: { article: Article; editorial?: boolean }) {
   return <Link href={articleHref(article)} className={`group relative flex min-h-full overflow-hidden rounded-xl border border-[#DDE8F8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#0D63FF] hover:bg-usm-blue-soft ${editorial ? 'min-h-64' : 'flex-col'}`}>
     <div className={`${editorial ? 'absolute inset-0' : 'relative aspect-[16/9]'} overflow-hidden bg-usm-blue-soft`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={article.image} alt={titleOf(article)} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+      <ArticleImage src={article.image} alt={titleOf(article)} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
       <div className={`absolute inset-0 ${editorial ? 'bg-gradient-to-t from-white via-white/55 to-transparent' : 'bg-gradient-to-t from-white/50 to-transparent'}`} />
       <div className="absolute left-3 top-3"><Badge category={editorial ? 'Dossier' : article.category} /></div>
       {article.contentType === 'video' && <span className="absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-[#0D63FF] text-white"><Play size={17} fill="currentColor" /></span>}
@@ -107,7 +119,7 @@ export function Newsroom() {
           <p className="mt-3 max-w-xl text-sm leading-6 text-[#5B6B82] sm:text-base">Toute l’actualité du club, les annonces officielles, les interviews et les temps forts du football et du basketball.</p>
         </div>
         {hero && <Link href={articleHref(hero)} className="group mt-8 grid max-w-5xl overflow-hidden rounded-2xl border border-[#DDE8F8] bg-white hover:border-[#0D63FF]/40 shadow-xl transition-all duration-300 md:grid-cols-[1.2fr_.8fr]">
-          <div className="relative min-h-[280px] md:min-h-[380px] overflow-hidden">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={hero.image} alt={titleOf(hero)} className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"/><div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-transparent via-white/5 to-[#061A3A]/20"/></div>
+          <div className="relative min-h-[280px] md:min-h-[380px] overflow-hidden"><ArticleImage src={hero.image} alt={titleOf(hero)} className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"/><div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-transparent via-white/5 to-[#061A3A]/20"/></div>
           <div className="flex flex-col justify-center p-6 sm:p-10 bg-white"><div><Badge category={hero.category}/></div><h2 className="mt-4 text-xl font-black leading-tight sm:text-2xl text-usm-blue-dark transition duration-300 group-hover:text-[#0D63FF]">{titleOf(hero)}</h2><p className="mt-3 line-clamp-3 text-xs leading-5 text-[#5B6B82]">{summaryOf(hero)}</p><div className="mt-4"><Meta article={hero} className="text-[#5B6B82]" /></div><span className="mt-6 inline-flex w-fit items-center gap-2 rounded-lg bg-[#0D63FF] px-5 py-3 text-xs font-black uppercase text-white transition duration-300 group-hover:bg-[#0052D9] cursor-pointer shadow-md shadow-[#0D63FF]/10">Lire l’article <ArrowRight size={14}/></span></div>
         </Link>}
       </div>
@@ -137,8 +149,8 @@ export function Newsroom() {
         </div>
 
         <aside className="space-y-5">
-          {hero && <SidebarBlock title="ARTICLE VEDETTE"><Link href={articleHref(hero)} className="group block"><div className="relative aspect-video overflow-hidden rounded-lg">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={hero.image} alt={titleOf(hero)} className="h-full w-full object-cover transition group-hover:scale-105"/><div className="absolute left-2 top-2"><Badge category={hero.category}/></div></div><h3 className="mt-3 text-sm font-extrabold leading-snug group-hover:text-[#0D63FF]">{titleOf(hero)}</h3><div className="mt-2"><Meta article={hero}/></div></Link></SidebarBlock>}
-          <SidebarBlock title="LES PLUS LUS"><ol className="space-y-3">{mostRead.map((a, i) => <li key={a._id || a.id}><Link href={articleHref(a)} className="group grid grid-cols-[30px_56px_1fr] items-center gap-2"><span className={`text-xl font-black ${i === 0 ? 'text-[#0D63FF]' : 'text-[#1d7cff]'}`}>{i + 1}</span>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={a.image} alt="" className="h-11 w-14 rounded object-cover"/><span className="min-w-0"><b className="line-clamp-2 text-[11px] leading-4 group-hover:text-[#0D63FF]">{titleOf(a)}</b><small className="mt-1 flex items-center gap-1 text-[9px] text-[#5B6B82]"><Eye size={9}/>{formatViews(a.views)}</small></span></Link></li>)}</ol></SidebarBlock>
+          {hero && <SidebarBlock title="ARTICLE VEDETTE"><Link href={articleHref(hero)} className="group block"><div className="relative aspect-video overflow-hidden rounded-lg"><ArticleImage src={hero.image} alt={titleOf(hero)} className="h-full w-full object-cover transition group-hover:scale-105"/><div className="absolute left-2 top-2"><Badge category={hero.category}/></div></div><h3 className="mt-3 text-sm font-extrabold leading-snug group-hover:text-[#0D63FF]">{titleOf(hero)}</h3><div className="mt-2"><Meta article={hero}/></div></Link></SidebarBlock>}
+          <SidebarBlock title="LES PLUS LUS"><ol className="space-y-3">{mostRead.map((a, i) => <li key={a._id || a.id}><Link href={articleHref(a)} className="group grid grid-cols-[30px_56px_1fr] items-center gap-2"><span className={`text-xl font-black ${i === 0 ? 'text-[#0D63FF]' : 'text-[#1d7cff]'}`}>{i + 1}</span><ArticleImage src={a.image} alt="" className="h-11 w-14 rounded object-cover"/><span className="min-w-0"><b className="line-clamp-2 text-[11px] leading-4 group-hover:text-[#0D63FF]">{titleOf(a)}</b><small className="mt-1 flex items-center gap-1 text-[9px] text-[#5B6B82]"><Eye size={9}/>{formatViews(a.views)}</small></span></Link></li>)}</ol></SidebarBlock>
           <SidebarBlock title="CATÉGORIES"><ul className="space-y-2">{categories.slice(1, 7).map(c => <li key={c} className="flex justify-between border-b border-[#DDE8F8]/60 pb-2 text-[11px]"><span className="text-[#071A30]">{categoryLabel(c)}</span><span className="rounded-full bg-usm-blue-soft px-2 text-[#5B6B82]">{articles.filter(a => a.category === c).length}</span></li>)}</ul></SidebarBlock>
           <MatchWidget/>
           <SidebarBlock title="NEWSLETTER OFFICIELLE"><Mail size={24} className="text-[#0D63FF]"/><p className="mt-3 text-xs leading-5 text-[#5B6B82]">Recevez toute l’actualité de l’USM directement dans votre boîte mail.</p><form className="mt-4 flex" onSubmit={e => e.preventDefault()}><label htmlFor="news-email" className="sr-only">Adresse e-mail</label><input id="news-email" type="email" required placeholder="Votre adresse e-mail" className="min-w-0 flex-1 rounded-l-md border border-[#DDE8F8] bg-white px-3 text-xs outline-none focus:border-[#0D63FF]"/><button className="min-h-11 rounded-r-md bg-[#0D63FF] px-3 text-[10px] font-black text-white">S’abonner</button></form></SidebarBlock>
