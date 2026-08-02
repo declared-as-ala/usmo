@@ -174,13 +174,13 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
             href="https://ibrandtunisia.tn/"
             target="_blank"
             rel="noreferrer"
-            className="group inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[.03] py-1.5 pe-4 ps-1.5 transition-all hover:-translate-y-0.5 hover:border-usm-accent-gold/40 hover:bg-white/[.06]"
+            className="group inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[.03] py-2 pe-5 ps-2 transition-all hover:-translate-y-0.5 hover:border-usm-accent-gold/40 hover:bg-white/[.06]"
           >
-            <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/ibrand-footer.jpg" alt="" className="h-full w-full object-cover" />
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               {tr(language, 'Powered by', 'Propulsé par', 'بدعم من')}{' '}
               <span className="font-black text-slate-300 group-hover:text-usm-accent-gold transition-colors">iBrand Tunisia</span>
             </span>

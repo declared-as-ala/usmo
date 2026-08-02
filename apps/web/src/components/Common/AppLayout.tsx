@@ -100,13 +100,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             href="https://ibrandtunisia.tn/"
             target="_blank"
             rel="noreferrer"
-            className="group absolute bottom-7 left-1/2 flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-white/15 bg-white/[.06] py-1.5 pe-4 ps-1.5 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-usm-accent-gold/50 hover:bg-white/10"
+            className="group absolute bottom-7 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/15 bg-white/[.06] py-2 pe-5 ps-2 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-usm-accent-gold/50 hover:bg-white/10"
           >
-            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
+            <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/ibrand-footer.jpg" alt="" className="h-full w-full object-cover" />
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-white/60">
+            <span className="text-xs font-semibold uppercase tracking-widest text-white/60">
               Powered by <span className="font-black text-white group-hover:text-usm-accent-gold transition-colors">iBrand Tunisia</span>
             </span>
           </a>
