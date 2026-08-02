@@ -123,7 +123,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides, intervalMs =
       {/* Neutral contrast only: preserves the photograph's hue while keeping copy legible. */}
       <div className={`pointer-events-none absolute inset-0 z-[1] ${READABILITY_SCRIMS[textPosition]}`} />
 
-      <div className="relative h-full flex items-center z-10">
+      <div className="relative h-full flex items-center z-10 pt-20 lg:pt-0">
         <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16">
           <AnimatePresence mode="wait">
             <motion.div

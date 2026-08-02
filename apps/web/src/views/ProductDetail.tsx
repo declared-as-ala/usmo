@@ -499,17 +499,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
       {/* Mobile Sticky Add-To-Cart bar */}
       {!soldOut && (
-        <div className="lg:hidden fixed bottom-24 left-3 right-3 z-30 bg-white border border-usm-border rounded-2xl shadow-2xl p-3 flex items-center justify-between">
-          <div className="min-w-0">
+        <div className="lg:hidden fixed bottom-24 left-3 right-3 z-30 bg-white border border-usm-border rounded-2xl shadow-2xl p-3 flex flex-col gap-2.5">
+          <div className="min-w-0 flex items-center justify-between">
             <p className="text-[9px] text-slate-500 font-bold uppercase truncate">{productName}</p>
-            <p className="font-mono font-black text-usm-blue-primary text-sm">{formatMoney(product.price)}</p>
+            <p className="font-mono font-black text-usm-blue-primary text-sm shrink-0">{formatMoney(product.price)}</p>
           </div>
           <button
             onClick={handleAddToCart}
-            className="shrink-0 px-5 py-2.5 bg-usm-blue-primary text-white text-[11px] font-black uppercase rounded-xl cursor-pointer flex items-center gap-1.5"
+            className="w-full px-5 py-3 bg-usm-blue-primary text-white text-[11px] font-black uppercase rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
           >
             <ShoppingBag size={14} />
-            {tr(language, 'Add', 'Ajouter', 'أضف')}
+            {tr(language, 'Add to Cart', 'Ajouter au Panier', 'أضف للسلة')}
           </button>
         </div>
       )}

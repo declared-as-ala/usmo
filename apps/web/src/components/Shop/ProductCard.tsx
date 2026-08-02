@@ -208,7 +208,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
 
         {/* Pricing Layout */}
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs font-black text-usm-blue-primary font-mono">
+          <span className="text-xs font-bold text-usm-blue-primary">
             {formatMoney(rawPrice)}
           </span>
           {rawOldPrice && (

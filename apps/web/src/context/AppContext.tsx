@@ -520,7 +520,7 @@ const translations: { [lang: string]: { [key: string]: string } } = {
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('fr');
   const router = useRouter();
   const [activeScreen, setActiveScreenState] = useState<ActiveScreen>('home');
 

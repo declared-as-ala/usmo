@@ -419,25 +419,25 @@ export const FanZone: React.FC = () => {
                     <Flame size={10} /> USM Supporter Experience
                   </span>
                   <h1 className="font-display italic font-black uppercase leading-[0.95] tracking-wide">
-                    <span className="block text-2xl sm:text-3xl text-usm-blue-dark">Bienvenue dans la</span>
+                    <span className="block text-2xl sm:text-3xl text-white">Bienvenue dans la</span>
                     <span className="block text-5xl sm:text-7xl mt-1">
-                      <span className="text-usm-blue-dark">Fan </span>
+                      <span className="text-white">Fan </span>
                       <span className="text-usm-blue-primary">Zone</span>
                     </span>
                   </h1>
-                  <p className="text-sm text-slate-700/90 leading-relaxed max-w-md">
+                  <p className="text-sm text-white/80 leading-relaxed max-w-md">
                     Pronostiquez le score du prochain match, gagnez des points, et générez votre carte fan officielle.
                   </p>
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button
                       onClick={() => scrollTo(cardPanelRef)}
-                      className="px-5 py-3 bg-gradient-to-r from-usm-blue-primary to-yellow-500 text-usm-blue-dark text-[11px] font-black uppercase tracking-wider rounded-lg cursor-pointer shadow-[0_4px_20px_rgba(212,175,55,0.3)]"
+                      className="px-5 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-[11px] font-black uppercase tracking-wider rounded-lg cursor-pointer shadow-[0_4px_20px_rgba(13,99,255,0.35)] transition-colors"
                     >
                       Générer ma carte fan
                     </button>
                     <button
                       onClick={() => scrollTo(missionsRef)}
-                      className="px-5 py-3 border border-white/25 hover:border-usm-border0 text-usm-blue-dark text-[11px] font-black uppercase tracking-wider rounded-lg cursor-pointer transition-colors"
+                      className="px-5 py-3 border border-white/25 hover:border-white/50 text-white text-[11px] font-black uppercase tracking-wider rounded-lg cursor-pointer transition-colors"
                     >
                       Pronostiquer le match
                     </button>

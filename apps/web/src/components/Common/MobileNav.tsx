@@ -38,8 +38,8 @@ export const MobileNav: React.FC = () => {
     <>
       {/* Floating premium dock */}
       <div className="lg:hidden fixed bottom-3 left-3 right-3 z-40">
-        <div className="relative flex items-center justify-around bg-white/90 backdrop-blur-xl border border-usm-teal-accent/15 rounded-[26px] shadow-[0_16px_40px_-12px_rgba(13,99,255,0.20)] px-1 py-2">
-          <div className="absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-usm-teal-accent/40 to-transparent" />
+        <div className="relative flex items-center justify-around bg-white/90 backdrop-blur-xl border border-usm-blue-dark/15 rounded-[26px] shadow-[0_16px_40px_-12px_rgba(13,99,255,0.20)] px-1 py-2">
+          <div className="absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-usm-blue-dark/40 to-transparent" />
 
           {primaryTabs.map((tab) => {
             const isActive = activeScreen === tab.screen;
@@ -54,18 +54,18 @@ export const MobileNav: React.FC = () => {
                     initial={{ opacity: 0, scale: 0.4 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    className="absolute -top-0.5 h-1 w-1 rounded-full bg-usm-teal-accent shadow-[0_0_8px_2px_rgba(13,99,255,0.45)]"
+                    className="absolute -top-0.5 h-1 w-1 rounded-full bg-usm-blue-dark shadow-[0_0_8px_2px_rgba(13,99,255,0.45)]"
                   />
                 )}
                 <motion.span
-                  animate={{ scale: isActive ? 1.08 : 1, color: isActive ? '#3ed6d0' : '#5B6B82' }}
+                  animate={{ scale: isActive ? 1.08 : 1, color: isActive ? '#061A3A' : '#5B6B82' }}
                   transition={{ duration: 0.25 }}
                 >
                   {tab.icon}
                 </motion.span>
                 <span
                   className={`text-[9px] mt-1 font-semibold tracking-wide transition-colors duration-300 ${
-                    isActive ? 'text-usm-teal-accent' : 'text-slate-600'
+                    isActive ? 'text-usm-blue-dark' : 'text-slate-600'
                   }`}
                 >
                   {tab.label}
@@ -80,14 +80,14 @@ export const MobileNav: React.FC = () => {
             className="relative flex flex-col items-center justify-center flex-1 py-1.5 cursor-pointer"
           >
             <motion.span
-              animate={{ rotate: showMoreMenu ? 90 : 0, color: showMoreMenu ? '#3ed6d0' : '#5B6B82' }}
+              animate={{ rotate: showMoreMenu ? 90 : 0, color: showMoreMenu ? '#061A3A' : '#5B6B82' }}
               transition={{ duration: 0.25 }}
             >
               <MoreHorizontal size={19} />
             </motion.span>
             <span
               className={`text-[9px] mt-1 font-semibold tracking-wide transition-colors duration-300 ${
-                showMoreMenu ? 'text-usm-teal-accent' : 'text-slate-600'
+                showMoreMenu ? 'text-usm-blue-dark' : 'text-slate-600'
               }`}
             >
               More
@@ -112,7 +112,7 @@ export const MobileNav: React.FC = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.97 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:hidden fixed bottom-24 left-3 right-3 z-40 bg-white/95 border border-usm-teal-accent/20 rounded-3xl shadow-2xl p-4 backdrop-blur-xl"
+              className="lg:hidden fixed bottom-24 left-3 right-3 z-40 bg-white/95 border border-usm-blue-dark/20 rounded-3xl shadow-2xl p-4 backdrop-blur-xl"
             >
               <div className="w-8 h-1 rounded-full bg-usm-border mx-auto mb-3" />
               <div className="grid grid-cols-2 gap-2.5">
@@ -123,9 +123,9 @@ export const MobileNav: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 }}
                     onClick={() => handleTabClick(item.screen)}
-                    className="flex items-center gap-2.5 p-3 rounded-2xl bg-usm-blue-soft border border-usm-border hover:border-usm-teal-accent/30 hover:bg-usm-teal-accent/10 text-slate-700 hover:text-usm-teal-accent text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center gap-2.5 p-3 rounded-2xl bg-usm-blue-soft border border-usm-border hover:border-usm-blue-dark/30 hover:bg-usm-blue-dark/10 text-slate-700 hover:text-usm-blue-dark text-xs font-semibold cursor-pointer transition-all"
                   >
-                    <span className="h-8 w-8 rounded-full bg-usm-teal-accent/10 border border-usm-teal-accent/25 flex items-center justify-center text-usm-teal-accent shrink-0">
+                    <span className="h-8 w-8 rounded-full bg-usm-blue-dark/10 border border-usm-blue-dark/25 flex items-center justify-center text-usm-blue-dark shrink-0">
                       {item.icon}
                     </span>
                     <span>{item.label}</span>
