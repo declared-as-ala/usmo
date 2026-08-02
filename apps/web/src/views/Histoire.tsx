@@ -73,17 +73,18 @@ export const Histoire: React.FC = () => {
     <div className="usm-premium-bg min-h-screen text-usm-blue-dark pb-20">
 
       {/* 1. HERO */}
-      <section className="relative min-h-[560px] flex items-end sm:h-[70vh] sm:min-h-[520px]">
-        <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} overlayStrength="light" showBlueGlow animate fit="contain" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-transparent" />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 w-full">
+      <section className="relative overflow-hidden bg-usm-blue-dark">
+        <PremiumHeroBackground imageUrl={content.heroImage || '/fans.png'} focalPoint="center 35%" fit="cover" animate />
+        <div className="absolute inset-0 bg-gradient-to-t from-usm-blue-dark via-usm-blue-dark/90 to-usm-blue-dark/50" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(13,99,255,0.28),transparent_55%)]" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-14 sm:pt-36 sm:pb-20 w-full">
           <span className="inline-flex items-center gap-1.5 text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase mb-4">
             <Landmark size={11} /> Depuis 1923
           </span>
-          <h1 className="font-display font-black text-4xl sm:text-6xl text-usm-blue-dark uppercase tracking-wide leading-none mb-4">
+          <h1 className="font-display font-black text-4xl sm:text-6xl text-white uppercase tracking-wide leading-none mb-4">
             {content.heroTitle}
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mb-8">{content.heroSubtitle}</p>
+          <p className="text-sm sm:text-base text-white/75 max-w-2xl mb-8">{content.heroSubtitle}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mb-8">
             {[
               { label: 'Fondé en', value: '1923' },
@@ -91,9 +92,9 @@ export const Histoire: React.FC = () => {
               { label: 'Sections', value: 'Foot & Basket' },
               { label: 'Identité', value: 'Fierté de Monastir' },
             ].map((s) => (
-              <div key={s.label} className="usm-card rounded-xl px-3 py-2.5">
-                <p className="font-display font-black text-lg text-usm-blue-primary">{s.value}</p>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wide">{s.label}</p>
+              <div key={s.label} className="rounded-xl px-3 py-2.5 bg-white/[.07] border border-white/15 backdrop-blur-sm">
+                <p className="font-display font-black text-lg text-white">{s.value}</p>
+                <p className="text-[9px] text-white/60 uppercase tracking-wide">{s.label}</p>
               </div>
             ))}
           </div>
