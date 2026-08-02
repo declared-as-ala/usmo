@@ -35,6 +35,7 @@ interface Album {
   type: 'album';
   accessLevel: 'public' | 'fan' | 'premium';
   coverImage: string;
+  videoUrl?: string;
   photos: string[];
   teaserPhotos: string[];
   locked: boolean;
@@ -224,6 +225,19 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({ slug }) => {
             >
               {album.accessLevel === 'premium' ? "S'abonner" : "Se connecter"}
             </button>
+          </div>
+        )}
+
+        {/* ALBUM VIDEO */}
+        {album.videoUrl && !album.locked && (
+          <div className="mb-10 aspect-video w-full overflow-hidden rounded-2xl border border-usm-border shadow-lg">
+            <iframe
+              src={album.videoUrl}
+              title={`${album.title} — vidéo`}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         )}
 

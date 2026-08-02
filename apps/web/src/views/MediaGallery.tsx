@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
 import { tr } from '../utils/i18n';
-import { PremiumHeroBackground } from '../components/Common/PremiumHeroBackground';
 import {
   Camera,
   Video,
@@ -146,8 +145,8 @@ export const MediaGallery: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 relative z-10">
         {/* HERO SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 relative rounded-3xl overflow-hidden border border-usm-border bg-white/80 backdrop-blur-md flex flex-col justify-between p-6 sm:p-8 min-h-[380px] group shadow-2xl">
-            <PremiumHeroBackground imageUrl="/fans.png" overlayStrength="medium" showBlueGlow showBlueAccent className="group-hover:scale-105 transition-transform duration-700" />
+          <div className="lg:col-span-2 relative rounded-3xl overflow-hidden border border-usm-border bg-usm-blue-dark flex flex-col justify-between p-6 sm:p-8 min-h-[380px] shadow-2xl">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(13,99,255,0.35),transparent_55%),radial-gradient(circle_at_85%_80%,rgba(212,175,55,0.16),transparent_50%)]" />
 
             <div className="relative z-10 space-y-4">
               <span className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-[0.25em] text-usm-teal-accent bg-usm-teal-accent/10 px-3 py-1 rounded-full uppercase border border-usm-teal-accent/25">

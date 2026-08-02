@@ -49,8 +49,11 @@ export default function AdminMedia() {
   const [albumCover, setAlbumCover] = useState('');
   const [albumCoverUploading, setAlbumCoverUploading] = useState(false);
   const [albumAccessLevel, setAlbumAccessLevel] = useState<'public' | 'fan' | 'premium'>('public');
-  const [albumPhotosText, setAlbumPhotosText] = useState('');
-  const [albumTeaserPhotosText, setAlbumTeaserPhotosText] = useState('');
+  const [albumPhotos, setAlbumPhotos] = useState<string[]>([]);
+  const [albumPhotoUploading, setAlbumPhotoUploading] = useState(false);
+  const [albumTeaserPhotos, setAlbumTeaserPhotos] = useState<string[]>([]);
+  const [albumTeaserUploading, setAlbumTeaserUploading] = useState(false);
+  const [albumVideoUrl, setAlbumVideoUrl] = useState('');
   const [albumDisplayOrder, setAlbumDisplayOrder] = useState('0');
   const [albumIsActive, setAlbumIsActive] = useState(true);
 
@@ -88,8 +91,9 @@ export default function AdminMedia() {
     setAlbumDesc('');
     setAlbumCover('');
     setAlbumAccessLevel('public');
-    setAlbumPhotosText('');
-    setAlbumTeaserPhotosText('');
+    setAlbumPhotos([]);
+    setAlbumTeaserPhotos([]);
+    setAlbumVideoUrl('');
     setAlbumDisplayOrder('0');
     setAlbumIsActive(true);
     setShowAlbumModal(true);
@@ -101,8 +105,9 @@ export default function AdminMedia() {
     setAlbumDesc(album.description || '');
     setAlbumCover(album.coverImage);
     setAlbumAccessLevel(album.accessLevel);
-    setAlbumPhotosText(album.photos?.join('\n') || '');
-    setAlbumTeaserPhotosText(album.teaserPhotos?.join('\n') || '');
+    setAlbumPhotos(album.photos || []);
+    setAlbumTeaserPhotos(album.teaserPhotos || []);
+    setAlbumVideoUrl(album.videoUrl || '');
     setAlbumDisplayOrder(String(album.displayOrder || 0));
     setAlbumIsActive(album.isActive !== false);
     setShowAlbumModal(true);
@@ -114,8 +119,6 @@ export default function AdminMedia() {
       showToast('Ajoutez une image de couverture avant d\'enregistrer.', 'error');
       return;
     }
-    const photos = albumPhotosText.split('\n').map(p => p.trim()).filter(Boolean);
-    const teaserPhotos = albumTeaserPhotosText.split('\n').map(p => p.trim()).filter(Boolean);
 
     const payload = {
       title: albumTitle,
@@ -127,8 +130,9 @@ export default function AdminMedia() {
       type: 'album',
       accessLevel: albumAccessLevel,
       coverImage: albumCover,
-      photos,
-      teaserPhotos,
+      photos: albumPhotos,
+      teaserPhotos: albumTeaserPhotos,
+      videoUrl: albumVideoUrl,
       displayOrder: Number(albumDisplayOrder) || 0,
       isActive: albumIsActive,
     };
@@ -304,6 +308,7 @@ export default function AdminMedia() {
                       <th className="py-3 px-4">Niveau d'accès</th>
                       <th className="py-3 px-4">Photos</th>
                       <th className="py-3 px-4">Teasers</th>
+                      <th className="py-3 px-4">Vidéo</th>
                       <th className="py-3 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -319,6 +324,13 @@ export default function AdminMedia() {
                         <td className="py-2.5 px-4 text-slate-600 font-semibold uppercase">{album.accessLevel}</td>
                         <td className="py-2.5 px-4 font-mono text-slate-500">{album.photos?.length || 0}</td>
                         <td className="py-2.5 px-4 font-mono text-slate-500">{album.teaserPhotos?.length || 0}</td>
+                        <td className="py-2.5 px-4">
+                          {album.videoUrl ? (
+                            <Video size={13} className="text-usm-blue-primary" />
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
                         <td className="py-2.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
@@ -441,19 +453,79 @@ export default function AdminMedia() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Photos HD (Une URL par ligne)</label>
-                  <textarea value={albumPhotosText} onChange={(e) => setAlbumPhotosText(e.target.value)} placeholder="https://..." className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary h-24 font-mono resize-none" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Photos Teaser (Une URL par ligne)</label>
-                  <textarea value={albumTeaserPhotosText} onChange={(e) => setAlbumTeaserPhotosText(e.target.value)} placeholder="https://..." className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary h-24 font-mono resize-none" />
-                </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Photos de l’album <span className="font-normal text-slate-400">(galerie complète, accès selon niveau)</span>
+                </label>
+                {albumPhotos.length > 0 && (
+                  <div className="mb-2 grid grid-cols-5 gap-2">
+                    {albumPhotos.map((url, idx) => (
+                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setAlbumPhotos((p) => p.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <MediaUploader
+                  key={`photos-${albumPhotos.length}`}
+                  compact
+                  folder={`media/albums/${editingAlbum?._id || 'new'}/photos`}
+                  label="Ajouter une photo"
+                  onUpload={(f) => setAlbumPhotos((p) => [...p, f.url])}
+                  onUploadingChange={setAlbumPhotoUploading}
+                />
               </div>
 
-              <button type="submit" disabled={albumCoverUploading} className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2 disabled:cursor-not-allowed disabled:opacity-50">
-                {albumCoverUploading ? 'Envoi de l’image…' : 'Enregistrer l’Album'}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Photos teaser <span className="font-normal text-slate-400">(toujours visibles, même verrouillé)</span>
+                </label>
+                {albumTeaserPhotos.length > 0 && (
+                  <div className="mb-2 grid grid-cols-5 gap-2">
+                    {albumTeaserPhotos.map((url, idx) => (
+                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setAlbumTeaserPhotos((p) => p.filter((_, i) => i !== idx))}
+                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <MediaUploader
+                  key={`teasers-${albumTeaserPhotos.length}`}
+                  compact
+                  folder={`media/albums/${editingAlbum?._id || 'new'}/teasers`}
+                  label="Ajouter une photo teaser"
+                  onUpload={(f) => setAlbumTeaserPhotos((p) => [...p, f.url])}
+                  onUploadingChange={setAlbumTeaserUploading}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Vidéo de l’album <span className="font-normal text-slate-400">(optionnel — Youtube embed ou URL directe)</span>
+                </label>
+                <input type="text" value={albumVideoUrl} onChange={(e) => setAlbumVideoUrl(e.target.value)} placeholder="https://www.youtube.com/embed/..." className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono" />
+              </div>
+
+              <button
+                type="submit"
+                disabled={albumCoverUploading || albumPhotoUploading || albumTeaserUploading}
+                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/95 text-white text-xs font-black uppercase rounded-lg transition-colors cursor-pointer mt-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {albumCoverUploading || albumPhotoUploading || albumTeaserUploading ? 'Envoi de l’image…' : 'Enregistrer l’Album'}
               </button>
             </form>
           </div>
