@@ -3,7 +3,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
-import { Home, Trophy, Newspaper, Sparkles, MoreHorizontal, ShoppingBag, Landmark, Map, Shield, Phone, Image as ImageIcon, Crown, FileText } from 'lucide-react';
+import { Home, Trophy, Newspaper, Sparkles, MoreHorizontal, ShoppingBag, Landmark, Map, Phone, Image as ImageIcon, Crown, FileText } from 'lucide-react';
+
+const FootballIcon: React.FC<{ size?: number }> = ({ size = 17 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9.5" />
+    <path d="M12 7.3l3.4 2.5-1.3 4H9.9l-1.3-4L12 7.3z" />
+    <path d="M12 7.3V4.6M15.4 9.8l2.8-1.6M13.9 13.8l1.8 2.7M10.1 13.8l-1.8 2.7M8.6 9.8l-2.8-1.6" />
+  </svg>
+);
 
 export const MobileNav: React.FC = () => {
   const { activeScreen, setActiveScreen, t, isLoggedIn } = useApp();
@@ -22,7 +30,7 @@ export const MobileNav: React.FC = () => {
   ];
 
   const moreItems: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
-    { screen: 'football', label: 'Football', icon: <Shield size={17} /> },
+    { screen: 'football', label: 'Football', icon: <FootballIcon size={17} /> },
     { screen: 'basketball', label: 'Basketball', icon: <Trophy size={17} /> },
     { screen: 'media', label: 'USM Media', icon: <ImageIcon size={17} /> },
     { screen: 'histoire', label: 'Histoire', icon: <Landmark size={17} /> },

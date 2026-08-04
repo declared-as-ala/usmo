@@ -112,7 +112,7 @@ export function Newsroom() {
       <div className="absolute right-0 top-0 -z-10 h-[500px] w-[500px] rounded-full bg-blue-100/40 blur-[120px] pointer-events-none" />
       <div className="absolute left-10 top-20 -z-10 h-[300px] w-[300px] rounded-full bg-indigo-50/30 blur-[80px] pointer-events-none" />
       
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto max-w-7xl px-4 pt-24 pb-10 sm:px-6 sm:pt-28 lg:px-8 lg:pt-32 lg:pb-14">
         <div className="max-w-2xl text-center lg:text-left">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#0D63FF]/20 bg-[#0D63FF]/5 px-3.5 py-1.5 text-[10px] font-black tracking-[.18em] text-[#0D63FF]"><Sparkles size={11}/> NEWSROOM OFFICIELLE</span>
           <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl text-[#071A30]">ACTUALITÉS <span className="text-[#0D63FF]">USM</span></h1>

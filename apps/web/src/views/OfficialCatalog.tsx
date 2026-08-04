@@ -80,14 +80,14 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
         {soldOut && <div className="absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[2px]"><span className="rounded-full border border-white/25 bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-[.15em] text-usm-blue-dark">Épuisé</span></div>}
       </div>
       <div className="p-4 sm:p-5">
-        <p className="text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
-        <h3 className="mt-2 min-h-11 line-clamp-2 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-mono text-base font-black text-[#020814] sm:text-lg">{formatTND(product.price)}</p>
+          {product.oldPrice > product.price && <p className="font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}
+        </div>
+        <p className="mt-2 text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
+        <h3 className="mt-1 min-h-11 line-clamp-2 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
         {sizes.length > 0 && <div className="mt-3 flex items-center gap-1.5">{sizes.map(size => <span key={String(size)} className="grid min-w-7 place-items-center rounded-md border border-[#dce3ed] px-1.5 py-1 text-[9px] font-bold text-[#53627a]">{String(size)}</span>)}</div>}
         <div className="mt-4 border-t border-[#e6eaf0] pt-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-mono text-base font-black text-[#020814] sm:text-lg">{formatTND(product.price)}</p>
-            {product.oldPrice > product.price && <p className="font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}
-          </div>
           <button
             type="button"
             disabled={soldOut}

@@ -523,9 +523,6 @@ export const Header: React.FC = () => {
                           : 'text-usm-blue-dark/85 hover:text-usm-teal-accent'
                       }`}
                     >
-                      <span className="font-serif italic text-xs text-usm-teal-accent/50 w-6">
-                        {String(idx + 1).padStart(2, '0')}
-                      </span>
                       <span className="text-sm font-semibold tracking-wide uppercase">
                         {t(entry.labelKey)}
                       </span>
@@ -547,9 +544,6 @@ export const Header: React.FC = () => {
                       }`}
                     >
                       <span className="flex items-center gap-3">
-                        <span className="font-serif italic text-xs text-usm-teal-accent/50 w-6">
-                          {String(idx + 1).padStart(2, '0')}
-                        </span>
                         <span className="text-sm font-semibold tracking-wide uppercase">{entry.label}</span>
                       </span>
                       <ChevronDown size={16} className={`transition-transform duration-300 ${isGroupOpen ? 'rotate-180' : ''}`} />
