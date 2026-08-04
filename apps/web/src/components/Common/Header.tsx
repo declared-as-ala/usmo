@@ -80,7 +80,7 @@ export const Header: React.FC = () => {
 
   type NavEntry =
     | { kind: 'link'; screen: typeof activeScreen; labelKey: string }
-    | { kind: 'dropdown'; key: string; label: string; items: { screen: typeof activeScreen; labelKey: string }[] };
+    | { kind: 'dropdown'; key: string; label: string; items: { screen: typeof activeScreen; labelKey: string; icon?: string }[] };
 
   const navGroups: NavEntry[] = [
     { kind: 'link', screen: 'home', labelKey: 'nav.home' },
@@ -89,8 +89,8 @@ export const Header: React.FC = () => {
       key: 'teams',
       label: tr(language, 'Teams', 'Équipes', 'الفرق'),
       items: [
-        { screen: 'football', labelKey: 'nav.football' },
-        { screen: 'basketball', labelKey: 'nav.basketball' },
+        { screen: 'football', labelKey: 'nav.football', icon: '/logo foot.png' },
+        { screen: 'basketball', labelKey: 'nav.basketball', icon: '/logo basket.png' },
       ],
     },
     { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },
@@ -239,12 +239,15 @@ export const Header: React.FC = () => {
                               key={item.screen}
                               role="menuitem"
                               onClick={() => handleNavClick(item.screen)}
-                              className={`w-full flex items-center px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left rtl:text-right ${
+                              className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold cursor-pointer transition-colors text-left rtl:text-right ${
                                 activeScreen === item.screen
                                   ? 'text-usm-teal-accent bg-usm-teal-accent/10'
                                   : 'text-white/80 hover:bg-white/5 hover:text-white'
                               }`}
                             >
+                              {item.icon && (
+                                <img src={item.icon} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                              )}
                               {t(item.labelKey)}
                             </button>
                           ))}
@@ -561,10 +564,13 @@ export const Header: React.FC = () => {
                             <button
                               key={item.screen}
                               onClick={() => handleNavClick(item.screen)}
-                              className={`block w-full text-left rtl:text-right py-2.5 text-sm font-semibold tracking-wide cursor-pointer transition-colors ${
+                              className={`flex w-full items-center gap-2.5 text-left rtl:text-right py-2.5 text-sm font-semibold tracking-wide cursor-pointer transition-colors ${
                                 activeScreen === item.screen ? 'text-usm-teal-accent' : 'text-usm-blue-dark/70 hover:text-usm-teal-accent'
                               }`}
                             >
+                              {item.icon && (
+                                <img src={item.icon} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" />
+                              )}
                               {t(item.labelKey)}
                             </button>
                           ))}
