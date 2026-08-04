@@ -307,7 +307,7 @@ export const Home: React.FC = () => {
           {catalogProducts.slice(0, 3).map((item) => (
             <div
               key={item.id}
-              onClick={() => router.push(`/product/${item.id}`)}
+              onClick={() => router.push(`/product/${item.slug || item.id}`)}
               className="bg-usm-blue-soft border border-usm-border rounded-2xl overflow-hidden shadow-lg group hover:border-usm-blue-primary/30 cursor-pointer transition-all flex flex-col justify-between"
             >
               <div className="relative overflow-hidden h-60 bg-white p-4">
@@ -332,7 +332,7 @@ export const Home: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(`/product/${item.id}`);
+                    router.push(`/product/${item.slug || item.id}`);
                   }}
                   className="mt-4 w-full py-2 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-bold uppercase rounded-lg text-center cursor-pointer transition-colors"
                 >

@@ -26,6 +26,7 @@ function mapApiProductToCatalogItem(p: any): CatalogItem {
   const sizes: string[] = [...new Set<string>((p.variants || []).map((v: any) => v.size))];
   return {
     id: p._id || p.id,
+    slug: p.slug || p._id || p.id,
     name: p.name || '',
     nameAr: p.nameAr || '',
     nameFr: p.nameFr || '',

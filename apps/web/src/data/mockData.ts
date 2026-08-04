@@ -158,6 +158,7 @@ export type ProductCollection = 'football' | 'basketball' | 'matchday' | 'kids' 
 
 export interface CatalogItem {
   id: string;
+  slug?: string;
   name: string;
   nameAr: string;
   nameFr: string;
