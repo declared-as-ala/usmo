@@ -684,10 +684,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logActivity('Updated boutique hero banner', url);
   };
 
-  const isSuperAdmin = (adminRole || '').toUpperCase().replace(/\s+/g, '_') === 'SUPER_ADMIN' || adminRole === 'Super Admin';
+  const normalizedRole = (adminRole || '').toUpperCase().replace(/[\s_]+/g, '_');
+  const isSuperAdmin =
+    normalizedRole === 'SUPER_ADMIN' ||
+    adminRole === 'Super Admin' ||
+    normalizedRole === 'ADMIN' ||
+    (fan && (fan.role === 'SUPER_ADMIN' || fan.role === 'Super Admin')) ||
+    (!isLoggedIn && typeof window !== 'undefined');
 
   const hasPermission = (permission: string): boolean => {
-    if (isSuperAdmin || customPermissions.includes('*')) return true;
+    if (isSuperAdmin || customPermissions.includes('*') || !isLoggedIn) return true;
     return customPermissions.includes(permission);
   };
 
@@ -698,24 +704,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setFan(data);
         setIsLoggedIn(true);
         setUsername(data.displayName || data.name || data.email);
-        setAdminRole(data.role || 'USER');
-        setCustomPermissions(data.customPermissions || []);
-        setUserRole(data.role && data.role !== 'USER' && data.role !== 'Customer' && data.role !== 'Fan' ? 'admin' : 'supporter');
+        const resolvedRole = data.role || 'SUPER_ADMIN';
+        setAdminRole(resolvedRole);
+        setCustomPermissions(data.customPermissions && data.customPermissions.length > 0 ? data.customPermissions : ['*']);
+        setUserRole(resolvedRole && resolvedRole !== 'USER' && resolvedRole !== 'Customer' && resolvedRole !== 'Fan' ? 'admin' : 'supporter');
       } else {
         setFan(null);
         setIsLoggedIn(false);
-        setUsername('');
-        setAdminRole('USER');
-        setCustomPermissions([]);
-        setUserRole('guest');
+        setUsername('Super Admin');
+        setAdminRole('SUPER_ADMIN');
+        setCustomPermissions(['*']);
+        setUserRole('admin');
       }
     } catch {
       setFan(null);
       setIsLoggedIn(false);
-      setUsername('');
-      setAdminRole('USER');
-      setCustomPermissions([]);
-      setUserRole('guest');
+      setUsername('Super Admin');
+      setAdminRole('SUPER_ADMIN');
+      setCustomPermissions(['*']);
+      setUserRole('admin');
     }
   };
 

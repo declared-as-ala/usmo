@@ -50,6 +50,7 @@ const getLabelTranslation = (label: string, lang: 'en' | 'fr' | 'ar') => {
     'Membership Plans': { fr: 'Offres d\'adhésion', ar: 'خطط الانخراط' },
     'Donations': { fr: 'Dons', ar: 'التبرعات' },
     'Notifications': { fr: 'Notifications', ar: 'الإشعارات' },
+    'Administrateurs': { fr: 'Administrateurs', ar: 'المشرفون' },
     'Users & Roles': { fr: 'Utilisateurs & Rôles', ar: 'المستخدمون والأدوار' },
     'Settings': { fr: 'Paramètres', ar: 'الإعدادات' },
     'SEO Config': { fr: 'Configuration SEO', ar: 'إعدادات السيو' },

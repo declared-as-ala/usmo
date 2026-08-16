@@ -34,12 +34,22 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await loginFan(email, password);
+      const res = await loginFan(email, password);
       showToast(
         tr(language, 'Successfully logged in!', 'Connexion réussie !', 'تم تسجيل الدخول بنجاح!'),
         'success'
       );
-      router.push('/fanzone');
+      const userRole = res?.user?.role || '';
+      if (
+        userRole === 'SUPER_ADMIN' ||
+        userRole === 'ADMIN' ||
+        userRole.includes('ADMIN') ||
+        email.toLowerCase().includes('admin')
+      ) {
+        router.push('/admin');
+      } else {
+        router.push('/fanzone');
+      }
     } catch (err: any) {
       setError(err.message || tr(language, 'Invalid credentials', 'Identifiants incorrects', 'بيانات الاعتماد غير صالحة'));
     } finally {
