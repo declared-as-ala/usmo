@@ -101,6 +101,18 @@ export class User extends Document {
 
   @Prop({ type: String })
   internalNotes?: string;
+
+  @Prop({ type: String })
+  emailVerificationToken?: string;
+
+  @Prop({ type: Date })
+  emailVerificationExpires?: Date;
+
+  @Prop({ type: String })
+  resetPasswordToken?: string;
+
+  @Prop({ type: Date })
+  resetPasswordExpires?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

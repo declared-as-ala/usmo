@@ -1,5 +1,5 @@
-import AdminLoyalty from '../../../views/admin/AdminLoyalty';
+import { redirect } from 'next/navigation';
 
 export default function AdminLoyaltyRoute() {
-  return <AdminLoyalty />;
+  redirect('/admin');
 }

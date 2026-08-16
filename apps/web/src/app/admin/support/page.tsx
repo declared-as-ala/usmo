@@ -1,5 +1,5 @@
-import AdminSupport from '../../../views/admin/AdminSupport';
+import { redirect } from 'next/navigation';
 
 export default function AdminSupportRoute() {
-  return <AdminSupport />;
+  redirect('/admin');
 }

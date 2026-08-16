@@ -60,6 +60,23 @@ export class AuthController {
     return { success: true, message: 'Déconnecté avec succès' };
   }
 
+  @Post('verify-email')
+  async verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @UseGuards(ThrottlerGuard)
+  @Post('reset-password')
+  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
   @Post('invitations/accept')
   async acceptInvitation(@Body() body: { token: string; password: string }) {
     return this.usersService.acceptInvitation(body.token, body.password);

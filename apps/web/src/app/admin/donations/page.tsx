@@ -1,5 +1,5 @@
-import AdminDonations from '../../../views/admin/AdminDonations';
+import { redirect } from 'next/navigation';
 
 export default function AdminDonationsRoute() {
-  return <AdminDonations />;
+  redirect('/admin');
 }

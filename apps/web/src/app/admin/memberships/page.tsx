@@ -1,5 +1,5 @@
-import AdminMemberships from '../../../views/admin/AdminMemberships';
+import { redirect } from 'next/navigation';
 
 export default function AdminMembershipsRoute() {
-  return <AdminMemberships />;
+  redirect('/admin');
 }

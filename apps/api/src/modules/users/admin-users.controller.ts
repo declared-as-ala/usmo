@@ -154,4 +154,23 @@ export class AdminUsersController {
   revokeSession(@Param('sessionId') sessionId: string, @Req() req: any) {
     return this.usersService.revokeSession(sessionId, req.user._id || req.user.id);
   }
+
+  @Post('campaigns/send')
+  @Roles('SUPER_ADMIN', 'ADMIN')
+  @Permissions('users.edit')
+  sendCampaign(
+    @Body()
+    body: {
+      subject: string;
+      target: 'ALL' | 'ADMINS' | 'USERS';
+      htmlContent: string;
+      testEmail?: string;
+    },
+    @Req() req: any,
+  ) {
+    return this.usersService.sendEmailCampaign({
+      ...body,
+      actorId: req.user._id || req.user.id,
+    });
+  }
 }

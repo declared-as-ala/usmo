@@ -27,6 +27,10 @@ export class UsersService {
     private readonly mailService: MailService,
   ) {}
 
+  async findOne(filter: any): Promise<User | null> {
+    return this.userModel.findOne(filter).exec();
+  }
+
   async findOneByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
   }
@@ -393,5 +397,52 @@ export class UsersService {
     await this.sessionModel.findByIdAndUpdate(sessionId, { isRevoked: true });
     await this.auditLogsService.logAction(actorId, 'admin_session_revoked', 'Session', sessionId);
     return { success: true };
+  }
+
+  async sendEmailCampaign(dto: {
+    subject: string;
+    target: 'ALL' | 'ADMINS' | 'USERS';
+    htmlContent: string;
+    testEmail?: string;
+    actorId: string;
+  }) {
+    if (dto.testEmail) {
+      const sent = await this.mailService.sendCampaignEmail(
+        dto.testEmail,
+        `[TEST] ${dto.subject}`,
+        dto.htmlContent,
+      );
+      return { success: sent, test: true, count: 1, total: 1 };
+    }
+
+    let filter: any = { status: 'Active', isSuspended: false };
+    if (dto.target === 'ADMINS') {
+      filter.role = { $in: ['SUPER_ADMIN', 'ADMIN', 'Super Admin', 'Admin'] };
+    } else if (dto.target === 'USERS') {
+      filter.role = { $in: ['USER', 'User', 'Fan', 'Customer'] };
+    }
+
+    const recipients = await this.userModel.find(filter).select('email').exec();
+    let sentCount = 0;
+
+    for (const user of recipients) {
+      if (user.email) {
+        const ok = await this.mailService.sendCampaignEmail(user.email, dto.subject, dto.htmlContent);
+        if (ok) sentCount++;
+      }
+    }
+
+    await this.auditLogsService.logAction(
+      dto.actorId,
+      'email_campaign_sent',
+      'Campaign',
+      `subject:${dto.subject}`,
+    );
+
+    return {
+      success: true,
+      count: sentCount,
+      total: recipients.length,
+    };
   }
 }

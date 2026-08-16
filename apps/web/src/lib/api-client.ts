@@ -811,6 +811,10 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+  sendEmailCampaign: (data: { subject: string; target: 'ALL' | 'ADMINS' | 'USERS'; htmlContent: string; testEmail?: string }) => fetchJson('/admin/campaigns/send', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 
   // Roles
   getRoles: () => fetchJson('/admin/roles'),
