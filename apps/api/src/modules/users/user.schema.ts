@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User extends Document {
@@ -77,6 +77,31 @@ export class User extends Document {
 
   @Prop({ type: Boolean, default: false })
   emailVerified: boolean;
+
+  @Prop({ type: [String], default: [] })
+  customPermissions: string[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  createdBy?: Types.ObjectId;
+
+  @Prop({ type: Date })
+  lastLogin?: Date;
+
+  @Prop({ type: String })
+  lastLoginIp?: string;
+
+  @Prop({ type: Boolean, default: false })
+  isSuspended: boolean;
+
+  @Prop({ type: Date })
+  suspendedAt?: Date;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  suspendedBy?: Types.ObjectId;
+
+  @Prop({ type: String })
+  internalNotes?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+

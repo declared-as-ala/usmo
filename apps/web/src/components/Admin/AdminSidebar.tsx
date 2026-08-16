@@ -72,7 +72,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { username, logout, language } = useApp();
+  const { username, logout, language, isSuperAdmin, hasPermission, adminRole } = useApp();
 
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
@@ -82,6 +82,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   };
 
   const tLabel = (label: string) => getLabelTranslation(label, language);
+
+  // Filter navigation items by role and permissions
+  const filteredNav = ADMIN_NAV.map((group) => {
+    const items = group.items.filter((item) => {
+      if (item.superAdminOnly && !isSuperAdmin) return false;
+      if (item.permission && !hasPermission(item.permission)) return false;
+      return true;
+    });
+    return { ...group, items };
+  }).filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -128,7 +138,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2.5 pb-4 space-y-5">
-          {ADMIN_NAV.map((group) => (
+          {filteredNav.map((group) => (
             <div key={group.label}>
               {!collapsed && (
                 <p className="px-2 mb-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-600">
@@ -172,7 +182,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold text-usm-blue-dark truncate">{username || 'USM Administrator'}</p>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wide">{tLabel('Super Admin')}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">{adminRole || 'Super Admin'}</p>
               </div>
             )}
             <button

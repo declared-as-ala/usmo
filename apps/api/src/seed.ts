@@ -41,12 +41,16 @@ async function bootstrap() {
       name: 'Super Admin',
       email: adminEmail,
       password: 'adminpassword123',
-      role: 'Super Admin',
+      role: 'SUPER_ADMIN',
+      customPermissions: ['*'],
       status: 'Active',
     });
     console.log('[USM SEEDER] Super Admin account created successfully.');
   } else {
-    console.log('[USM SEEDER] Super Admin account already exists. Skipping...');
+    existingAdmin.role = 'SUPER_ADMIN';
+    existingAdmin.customPermissions = ['*'];
+    await existingAdmin.save();
+    console.log('[USM SEEDER] Super Admin account updated.');
   }
 
   // 2. Seed Categories (upsert — never delete existing ones)

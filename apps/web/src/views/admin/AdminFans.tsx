@@ -6,6 +6,7 @@ import { StatCard } from '../../components/Admin/StatCard';
 import { api } from '../../lib/api-client';
 import { Users, Loader2, X, Search, ShieldCheck, ShieldOff } from 'lucide-react';
 import { requestConfirmation } from '../../components/Common/ConfirmDialog';
+import { useApp } from '../../context/AppContext';
 
 interface Fan {
   _id: string;
@@ -25,6 +26,7 @@ interface FanDetail extends Fan {
 }
 
 export default function AdminFans() {
+  const { isSuperAdmin } = useApp();
   const [fans, setFans] = useState<Fan[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -178,6 +180,28 @@ export default function AdminFans() {
                   <div className="flex justify-between"><span className="text-slate-400 font-bold uppercase text-[10px]">Joueur favori</span><span>{selected.favoritePlayer || '-'}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400 font-bold uppercase text-[10px]">Abonnement</span><span className="capitalize">{selected.membershipSummary?.status || 'Aucun'}</span></div>
                   <div className="flex justify-between"><span className="text-slate-400 font-bold uppercase text-[10px]">Inscription</span><span>{new Date(selected.createdAt).toLocaleDateString('fr-FR')}</span></div>
+
+                  {isSuperAdmin && (
+                    <div className="pt-3 border-t border-slate-100">
+                      <button
+                        onClick={async () => {
+                          const role = prompt('Assigner quel rôle d\'administrateur ? (ex: BOUTIQUE_ADMIN, CONTENT_ADMIN, ADMIN)', 'ADMIN');
+                          if (!role) return;
+                          try {
+                            await api.promoteUserToAdmin(selected._id, role, []);
+                            alert(`${selected.name} a été promu au rôle ${role}.`);
+                            setSelected(null);
+                            load();
+                          } catch (err: any) {
+                            alert(err.message || 'Erreur lors de la promotion.');
+                          }
+                        }}
+                        className="w-full py-2 bg-purple-600 text-white text-xs font-bold rounded-xl hover:bg-purple-700 cursor-pointer transition-colors"
+                      >
+                        Promouvoir en Administrateur (Super Admin Only)
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>

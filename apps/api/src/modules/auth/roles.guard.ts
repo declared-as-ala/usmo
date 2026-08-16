@@ -22,7 +22,14 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Accès refusé : Aucun utilisateur authentifié');
     }
 
-    const hasRole = requiredRoles.includes(user.role);
+    const userRoleNormalized = (user.role || '').toUpperCase().replace(/\s+/g, '_');
+    if (userRoleNormalized === 'SUPER_ADMIN' || user.role === 'Super Admin') {
+      return true;
+    }
+
+    const normalizedRequired = requiredRoles.map((r) => r.toUpperCase().replace(/\s+/g, '_'));
+    const hasRole = requiredRoles.includes(user.role) || normalizedRequired.includes(userRoleNormalized);
+
     if (!hasRole) {
       throw new ForbiddenException(`Accès refusé : Rôle requis parmi [${requiredRoles.join(', ')}]`);
     }

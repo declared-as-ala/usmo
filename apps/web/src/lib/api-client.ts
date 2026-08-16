@@ -748,4 +748,109 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ items }),
   }),
+
+  // ── Administrator Management & Roles (SUPER ADMIN) ──────────────────────────
+  getAdministrateurs: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/administrateurs${query ? '?' + query : ''}`);
+  },
+  getAdminDetail: (id: string) => fetchJson(`/admin/administrateurs/${id}`),
+  inviteAdmin: (data: any) => fetchJson('/admin/administrateurs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateAdminRoleAndPermissions: (id: string, role: string, permissions: string[]) => fetchJson(`/admin/administrateurs/${id}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role, permissions }),
+  }),
+  suspendOrReactivateAdmin: (id: string, suspend: boolean) => fetchJson(`/admin/administrateurs/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ suspend }),
+  }),
+  resetAdminAccess: (id: string) => fetchJson(`/admin/administrateurs/${id}/reset-access`, {
+    method: 'POST',
+  }),
+  deleteAdmin: (id: string) => fetchJson(`/admin/administrateurs/${id}`, {
+    method: 'DELETE',
+  }),
+  revokeAdminSession: (adminId: string, sessionId: string) => fetchJson(`/admin/administrateurs/${adminId}/sessions/${sessionId}`, {
+    method: 'DELETE',
+  }),
+  acceptAdminInvitation: (token: string, pass: string) => fetchJson('/auth/invitations/accept', {
+    method: 'POST',
+    body: JSON.stringify({ token, password: pass }),
+  }),
+  promoteUserToAdmin: (id: string, role: string, permissions: string[]) => fetchJson(`/admin/users/${id}/promote`, {
+    method: 'POST',
+    body: JSON.stringify({ role, permissions }),
+  }),
+  updateUserNotes: (id: string, notes: string) => fetchJson(`/admin/users/${id}/notes`, {
+    method: 'PATCH',
+    body: JSON.stringify({ notes }),
+  }),
+
+  // Roles
+  getRoles: () => fetchJson('/admin/roles'),
+  createRole: (data: any) => fetchJson('/admin/roles', { method: 'POST', body: JSON.stringify(data) }),
+  updateRole: (id: string, data: any) => fetchJson(`/admin/roles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteRole: (id: string) => fetchJson(`/admin/roles/${id}`, { method: 'DELETE' }),
+
+  // ── Visitor Analytics ───────────────────────────────────────────────────────
+  logAnalyticsEvent: (data: any) => fetchJson('/analytics/events', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  getAnalyticsOverview: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/overview${query ? '?' + query : ''}`);
+  },
+  getAnalyticsTraffic: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/traffic${query ? '?' + query : ''}`);
+  },
+  getAnalyticsSources: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/sources${query ? '?' + query : ''}`);
+  },
+  getAnalyticsGeography: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/geography${query ? '?' + query : ''}`);
+  },
+  getAnalyticsDevices: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/devices${query ? '?' + query : ''}`);
+  },
+  getAnalyticsPages: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/pages${query ? '?' + query : ''}`);
+  },
+  getAnalyticsContent: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/analytics/content${query ? '?' + query : ''}`);
+  },
+  getAnalyticsRealtime: () => fetchJson('/admin/analytics/realtime'),
 };

@@ -124,8 +124,8 @@ article count) with one clearly-labeled illustrative traffic chart.
 
 Deferred from this pass:
 
-- [ ] Real backend auth + the 10-role permission matrix enforcement (Users & Roles is a real, editable team-member
-      list + a labeled reference matrix — but role changes don't actually restrict anything, no backend exists).
+- [x] **Real NestJS backend RBAC auth + granular permission matrix enforcement**: Full production-ready role hierarchy (`SUPER_ADMIN`, `ADMIN`, specialized admin roles, `USER`), NestJS JwtAuthGuard, RolesGuard, PermissionsGuard, Super Admin protection safeguards, single-use invitation flow (`/accept-invitation`), and dedicated management UI (`/admin/administrateurs`, `/admin/administrateurs/[id]`, `/admin/users`).
+- [x] **Website Visitor Analytics Dashboard**: Real non-blocking analytics ingestion endpoint (`POST /api/analytics/events`), IP anonymization, UTM tracking (`utm_source`, `utm_medium`, `utm_campaign`, etc.), device & OS analytics, country/diaspora stats, top pages, content performance, real-time active visitors, and interactive dashboard at `/admin/analytics` with CSV export.
 - [ ] Public-facing submission forms that feed the new Academy/Press admin queues (see section 3) — admins can
       review applications/accreditation requests, but nothing on the public site creates new ones yet.
 - [ ] Fan Zone: votes/quiz-authoring CRUD, supporter badges management, fan wall beyond comment approve/reject.

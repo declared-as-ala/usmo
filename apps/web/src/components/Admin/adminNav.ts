@@ -19,6 +19,7 @@ import {
   History,
   CalendarDays,
   Shield,
+  ShieldCheck,
   Heart,
   GalleryHorizontal,
   Crown,
@@ -32,6 +33,8 @@ export interface AdminNavItem {
   label: string;
   href: string;
   icon: LucideIcon;
+  permission?: string;
+  superAdminOnly?: boolean;
 }
 
 export interface AdminNavGroup {
@@ -44,14 +47,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: 'Overview',
     items: [
       { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-      { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+      { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, permission: 'analytics.view' },
     ],
   },
   {
     label: 'Pages Management',
     items: [
-      { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal },
-      { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag },
+      { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal, permission: 'settings.edit' },
+      { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag, permission: 'products.view' },
       { label: 'Football Section', href: '/admin/football', icon: Trophy },
       { label: 'Basketball Section', href: '/admin/basketball', icon: Trophy },
       { label: 'History Page', href: '/admin/history', icon: Landmark },
@@ -62,9 +65,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Season Stats', href: '/admin/season-performance', icon: CalendarDays },
       { label: 'Stadium Guide', href: '/admin/stadium', icon: MapPin },
       { label: 'Downloads Center', href: '/admin/downloads', icon: FileText },
-      { label: 'Newsroom', href: '/admin/news', icon: Newspaper },
-      { label: 'Media Portal', href: '/admin/media', icon: ImageIcon },
-      { label: 'Media Files (MinIO)', href: '/admin/media-files', icon: GalleryHorizontal },
+      { label: 'Newsroom', href: '/admin/news', icon: Newspaper, permission: 'news.view' },
+      { label: 'Media Portal', href: '/admin/media', icon: ImageIcon, permission: 'media.view' },
+      { label: 'Media Files (MinIO)', href: '/admin/media-files', icon: GalleryHorizontal, permission: 'media.view' },
       { label: 'Legal Pages', href: '/admin/pages-legal', icon: Shield },
       { label: 'Custom Pages', href: '/admin/pages', icon: Layers },
     ],
@@ -72,13 +75,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Operations & Community',
     items: [
-      { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart },
+      { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
       { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
       { label: 'Fan Zone', href: '/admin/fanzone', icon: Megaphone },
       { label: 'Memberships', href: '/admin/memberships', icon: Shield },
       { label: 'Membership Plans', href: '/admin/membership-plans', icon: Shield },
       { label: 'Donations', href: '/admin/donations', icon: Heart },
-      { label: 'Fan Accounts', href: '/admin/fans', icon: UserCog },
+      { label: 'Fan Accounts', href: '/admin/fans', icon: UserCog, permission: 'users.view' },
       { label: 'Loyalty & Rewards', href: '/admin/loyalty', icon: Award },
       { label: 'Support Tickets', href: '/admin/support', icon: LifeBuoy },
     ],
@@ -86,9 +89,10 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'System',
     items: [
+      { label: 'Administrateurs', href: '/admin/administrateurs', icon: ShieldCheck, superAdminOnly: true, permission: 'admins.view' },
       { label: 'Notifications', href: '/admin/notifications', icon: Bell },
-      { label: 'Users & Roles', href: '/admin/users', icon: UserCog },
-      { label: 'Settings', href: '/admin/settings', icon: Settings },
+      { label: 'Users & Roles', href: '/admin/users', icon: UserCog, permission: 'users.view' },
+      { label: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
       { label: 'SEO Config', href: '/admin/seo', icon: Search },
     ],
   },

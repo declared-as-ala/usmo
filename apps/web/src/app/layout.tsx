@@ -62,6 +62,8 @@ export const viewport: Viewport = {
 import { SiteChrome } from '../components/Common/SiteChrome';
 import { AppAlertDialog, ConfirmDialog } from '../components/Common/ConfirmDialog';
 import { PwaRegister } from '../components/Common/PwaRegister';
+import { AnalyticsTracker } from '../components/Analytics/AnalyticsTracker';
+import { Suspense } from 'react';
 
 export default function RootLayout({
   children,
@@ -96,6 +98,9 @@ export default function RootLayout({
           }}
         />
         <AppProvider>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           <PwaRegister />
           <SiteChrome>{children}</SiteChrome>
           <ConfirmDialog />

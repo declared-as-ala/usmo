@@ -243,8 +243,12 @@ interface AppContextProps {
   // Localization translator
   t: (key: string) => string;
 
-  // Auth simulation
+  // Auth & RBAC Permissions
   userRole: 'guest' | 'supporter' | 'admin';
+  adminRole: string;
+  customPermissions: string[];
+  isSuperAdmin: boolean;
+  hasPermission: (permission: string) => boolean;
   isLoggedIn: boolean;
   username: string;
   logout: () => void;
@@ -582,6 +586,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Auth States
   const [userRole, setUserRole] = useState<'guest' | 'supporter' | 'admin'>('guest');
+  const [adminRole, setAdminRole] = useState<string>('USER');
+  const [customPermissions, setCustomPermissions] = useState<string[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [fan, setFan] = useState<any | null>(null);
@@ -589,6 +595,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Cart and Order States
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   // Toast State
   const [toast, setToastState] = useState({ message: '', type: 'success' as 'success' | 'info' | 'error', visible: false });
@@ -610,37 +617,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [toast.visible, toast.message]);
 
-  // Listen to cross-tab broadcast notifications via localStorage events
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'usm_broadcast_notification' && e.newValue) {
-        try {
-          const { title, message } = JSON.parse(e.newValue);
-          
-          // Trigger local in-app Toast notification
-          showToast(`${title}: ${message}`, 'info');
-
-          // Trigger native OS push notification if permitted
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new window.Notification(title, {
-              body: message,
-              icon: '/logo.webp',
-            });
-          }
-        } catch (err) {
-          console.error('Error parsing broadcasted notification', err);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-  
-  const [orders, setOrders] = useState<Order[]>([]);
-
   const addToCart = (product: CatalogItem, size: string) => {
     setCart(prev => {
       const existing = prev.find(item => item.product.id === product.id && item.size === size);
@@ -653,17 +629,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return [...prev, { product, size, quantity: 1 }];
     });
-    setIsCartOpen(true); // Automatically open sliding cart drawer
-    const productName = tr(language, product.name, product.nameFr, product.nameAr);
-    showToast(
-      tr(
-        language,
-        `${productName} (${size}) added to cart!`,
-        `${productName} (${size}) ajouté au panier !`,
-        `تمت إضافة ${productName} (${size}) إلى السلة!`
-      ),
-      'success'
-    );
+    setIsCartOpen(true);
+    showToast(`${product.name} (${size}) ajouté au panier !`, 'success');
   };
 
   const removeFromCart = (productId: string, size: string) => {
@@ -682,9 +649,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ));
   };
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  const clearCart = () => setCart([]);
 
   const placeOrder = (clientName: string, phone: string, city: string) => {
     if (cart.length === 0) return;
@@ -706,19 +671,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders(prev => [newOrder, ...prev]);
     clearCart();
-    showToast(tr(language, 'Order placed successfully!', 'Commande passée avec succès !', 'تم إرسال طلبك بنجاح!'), 'success');
+    showToast('Commande passée avec succès !', 'success');
   };
 
   const updateOrderStatus = (orderId: string, status: 'pending' | 'confirmed' | 'cancelled') => {
-    setOrders(prev => prev.map(order =>
-      order.id === orderId ? { ...order, status } : order
-    ));
+    setOrders(prev => prev.map(order => order.id === orderId ? { ...order, status } : order));
     logActivity(`Marked order as ${status}`, orderId);
   };
 
   const setBoutiqueHeroImage = (url: string) => {
     setBoutiqueHeroImageState(url);
     logActivity('Updated boutique hero banner', url);
+  };
+
+  const isSuperAdmin = (adminRole || '').toUpperCase().replace(/\s+/g, '_') === 'SUPER_ADMIN' || adminRole === 'Super Admin';
+
+  const hasPermission = (permission: string): boolean => {
+    if (isSuperAdmin || customPermissions.includes('*')) return true;
+    return customPermissions.includes(permission);
   };
 
   const refreshMe = async () => {
@@ -728,17 +698,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setFan(data);
         setIsLoggedIn(true);
         setUsername(data.displayName || data.name || data.email);
-        setUserRole('supporter');
+        setAdminRole(data.role || 'USER');
+        setCustomPermissions(data.customPermissions || []);
+        setUserRole(data.role && data.role !== 'USER' && data.role !== 'Customer' && data.role !== 'Fan' ? 'admin' : 'supporter');
       } else {
         setFan(null);
         setIsLoggedIn(false);
         setUsername('');
+        setAdminRole('USER');
+        setCustomPermissions([]);
         setUserRole('guest');
       }
     } catch {
       setFan(null);
       setIsLoggedIn(false);
       setUsername('');
+      setAdminRole('USER');
+      setCustomPermissions([]);
       setUserRole('guest');
     }
   };
@@ -754,6 +730,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFan(null);
     setIsLoggedIn(false);
     setUsername('');
+    setAdminRole('USER');
+    setCustomPermissions([]);
     setUserRole('guest');
     router.push('/');
   };
@@ -1298,6 +1276,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBoutiqueHeroImage,
       t,
       userRole,
+      adminRole,
+      customPermissions,
+      isSuperAdmin,
+      hasPermission,
       isLoggedIn,
       username,
       logout,
