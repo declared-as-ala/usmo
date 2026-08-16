@@ -227,11 +227,8 @@ export const AdminAdministrateursView: React.FC = () => {
           >
             <option value="">Tous les Rôles</option>
             <option value="SUPER_ADMIN">Super Admin</option>
-            <option value="ADMIN">Normal Admin</option>
-            <option value="BOUTIQUE_ADMIN">Boutique Admin</option>
-            <option value="ORDER_ADMIN">Order Admin</option>
-            <option value="MEDIA_ADMIN">Media Admin</option>
-            <option value="CONTENT_ADMIN">Content Admin</option>
+            <option value="ADMIN">Admin</option>
+            <option value="USER">Supporter / Fan</option>
           </select>
 
           <select
@@ -432,14 +429,9 @@ export const AdminAdministrateursView: React.FC = () => {
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Rôle Principal *</label>
                   <select value={formRole} onChange={(e) => setFormRole(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary">
-                    <option value="SUPER_ADMIN">SUPER_ADMIN (Accès Total)</option>
-                    <option value="ADMIN">ADMIN (Normal Admin)</option>
-                    <option value="BOUTIQUE_ADMIN">BOUTIQUE_ADMIN</option>
-                    <option value="ORDER_ADMIN">ORDER_ADMIN</option>
-                    <option value="MEDIA_ADMIN">MEDIA_ADMIN</option>
-                    <option value="CONTENT_ADMIN">CONTENT_ADMIN</option>
-                    <option value="SPONSOR_ADMIN">SPONSOR_ADMIN</option>
-                    <option value="ANALYST">ANALYST</option>
+                    <option value="ADMIN">ADMIN (Administrateur)</option>
+                    <option value="SUPER_ADMIN">SUPER_ADMIN (Super Administrateur)</option>
+                    <option value="USER">USER (Supporter / Fan)</option>
                   </select>
                 </div>
 
@@ -487,14 +479,9 @@ export const AdminAdministrateursView: React.FC = () => {
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Rôle Principal</label>
                 <select value={formRole} onChange={(e) => setFormRole(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary">
-                  <option value="SUPER_ADMIN">SUPER_ADMIN (Accès Total)</option>
-                  <option value="ADMIN">ADMIN (Normal Admin)</option>
-                  <option value="BOUTIQUE_ADMIN">BOUTIQUE_ADMIN</option>
-                  <option value="ORDER_ADMIN">ORDER_ADMIN</option>
-                  <option value="MEDIA_ADMIN">MEDIA_ADMIN</option>
-                  <option value="CONTENT_ADMIN">CONTENT_ADMIN</option>
-                  <option value="SPONSOR_ADMIN">SPONSOR_ADMIN</option>
-                  <option value="ANALYST">ANALYST</option>
+                  <option value="ADMIN">ADMIN (Administrateur)</option>
+                  <option value="SUPER_ADMIN">SUPER_ADMIN (Super Administrateur)</option>
+                  <option value="USER">USER (Supporter / Fan)</option>
                 </select>
               </div>
 

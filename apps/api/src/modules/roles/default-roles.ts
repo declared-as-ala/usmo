@@ -66,39 +66,16 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     'analytics.view', 'analytics.export',
     'settings.view', 'settings.edit',
   ],
-  CONTENT_ADMIN: [
-    'news.view', 'news.create', 'news.edit', 'news.publish', 'news.delete',
-    'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
-  ],
-  BOUTIQUE_ADMIN: [
+  Admin: [
+    'users.view', 'users.edit', 'users.suspend', 'users.export',
     'products.view', 'products.create', 'products.edit', 'products.delete',
     'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export',
-    'analytics.view',
-  ],
-  ORDER_ADMIN: [
-    'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export',
-    'users.view',
-  ],
-  MEDIA_ADMIN: [
+    'news.view', 'news.create', 'news.edit', 'news.publish', 'news.delete',
     'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
-    'news.view', 'news.create', 'news.edit',
-  ],
-  FOOTBALL_ADMIN: [
-    'news.view', 'news.create', 'news.edit', 'media.view', 'media.upload',
-  ],
-  BASKETBALL_ADMIN: [
-    'news.view', 'news.create', 'news.edit', 'media.view', 'media.upload',
-  ],
-  FAN_ZONE_ADMIN: [
-    'users.view', 'news.view', 'media.view',
-  ],
-  SPONSOR_ADMIN: [
-    'settings.view', 'analytics.view',
-  ],
-  ANALYST: [
     'analytics.view', 'analytics.export',
+    'settings.view', 'settings.edit',
   ],
   USER: [],
-  Customer: [],
+  User: [],
   Fan: [],
 };

@@ -524,8 +524,15 @@ export const api = {
     method: 'DELETE',
   }),
 
-  // Admin — Fan accounts
-  getAdminFans: (params: { search?: string; status?: string } = {}) => {
+  // Admin — Users & Fan accounts
+  getAdminFans: (params: { search?: string; role?: string; status?: string } = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/users${query ? '?' + query : ''}`);
+  },
+  getAdminUsers: (params: { search?: string; role?: string; status?: string } = {}) => {
     const query = Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== '')
       .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
@@ -537,6 +544,7 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ status }),
   }),
+  deleteAdminUser: (id: string) => fetchJson(`/admin/users/${id}`, { method: 'DELETE' }),
 
   // Admin — Loyalty (badges + rewards)
   getAdminBadges: () => fetchJson('/admin/badges'),
@@ -790,6 +798,18 @@ export const api = {
   updateUserNotes: (id: string, notes: string) => fetchJson(`/admin/users/${id}/notes`, {
     method: 'PATCH',
     body: JSON.stringify({ notes }),
+  }),
+  updateAdminUserNotes: (id: string, notes: string) => fetchJson(`/admin/users/${id}/notes`, {
+    method: 'PATCH',
+    body: JSON.stringify({ notes }),
+  }),
+  updateAdminRole: (id: string, role: string, permissions: string[] = []) => fetchJson(`/admin/administrateurs/${id}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role, permissions }),
+  }),
+  createAdminInvitation: (data: any) => fetchJson('/admin/administrateurs', {
+    method: 'POST',
+    body: JSON.stringify(data),
   }),
 
   // Roles

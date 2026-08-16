@@ -81,7 +81,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Memberships', href: '/admin/memberships', icon: Shield },
       { label: 'Membership Plans', href: '/admin/membership-plans', icon: Shield },
       { label: 'Donations', href: '/admin/donations', icon: Heart },
-      { label: 'Fan Accounts', href: '/admin/fans', icon: UserCog, permission: 'users.view' },
       { label: 'Loyalty & Rewards', href: '/admin/loyalty', icon: Award },
       { label: 'Support Tickets', href: '/admin/support', icon: LifeBuoy },
     ],

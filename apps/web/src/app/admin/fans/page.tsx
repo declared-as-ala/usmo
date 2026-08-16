@@ -1,5 +1,5 @@
-import AdminFans from '../../../views/admin/AdminFans';
+import { redirect } from 'next/navigation';
 
 export default function AdminFansRoute() {
-  return <AdminFans />;
+  redirect('/admin/users');
 }
