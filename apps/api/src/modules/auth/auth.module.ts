@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -9,6 +9,7 @@ import { RequireActiveMembership } from './require-active-membership.guard';
 import { OptionalJwtAuthGuard } from './optional-jwt-auth.guard';
 import { MembershipsModule } from '../memberships/memberships.module';
 
+@Global()
 @Module({
   imports: [
     UsersModule,
@@ -21,6 +22,6 @@ import { MembershipsModule } from '../memberships/memberships.module';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, RolesGuard, RequireActiveMembership, OptionalJwtAuthGuard],
-  exports: [AuthService, JwtAuthGuard, RolesGuard, RequireActiveMembership, OptionalJwtAuthGuard],
+  exports: [AuthService, UsersModule, JwtAuthGuard, RolesGuard, RequireActiveMembership, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

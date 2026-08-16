@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './user.schema';
 import { AdminInvitation, AdminInvitationSchema } from '../auth/admin-invitation.schema';
@@ -10,6 +10,7 @@ import { StorageModule } from '../storage/storage.module';
 import { MembershipsModule } from '../memberships/memberships.module';
 import { AuditLogsModule } from '../auditlogs/auditlogs.module';
 
+@Global()
 @Module({
   imports: [
     MongooseModule.forFeature([
