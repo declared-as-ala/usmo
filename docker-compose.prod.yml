@@ -104,6 +104,14 @@ services:
       # Browser media is always served by the same-origin Nginx proxy. Do not
       # allow a stale VPS .env value (especially localhost) to bypass it.
       MINIO_PUBLIC_URL: /usm-media
+      # ── OVH SMTP Configuration ──────────────────────────────────────────────
+      SMTP_HOST: ${SMTP_HOST:-smtp.mail.ovh.net}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-noreply@usmonastir.tn}
+      SMTP_PASS: ${SMTP_PASS:-Mediausm&2026}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Union Sportive Monastirienne}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@usmonastir.tn}
 
   # ── Next.js Web (internal only — reached via nginx at https://$APP_DOMAIN) ─
   web:

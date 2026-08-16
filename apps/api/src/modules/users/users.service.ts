@@ -14,6 +14,7 @@ import { MembershipsService } from '../memberships/memberships.service';
 import { AdminInvitation } from '../auth/admin-invitation.schema';
 import { AdminSession } from '../auth/admin-session.schema';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,7 @@ export class UsersService {
     @InjectModel(AdminSession.name) private readonly sessionModel: Model<AdminSession>,
     private readonly membershipsService: MembershipsService,
     private readonly auditLogsService: AuditLogsService,
+    private readonly mailService: MailService,
   ) {}
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -211,10 +213,23 @@ export class UsersService {
 
     await this.auditLogsService.logAction(dto.actorId, 'admin_created', 'User', newAdmin._id.toString());
 
+    const relativeUrl = `/accept-invitation?token=${token}`;
+    const fullInvitationUrl = `${process.env.APP_URL || 'http://54.37.226.228'}${relativeUrl}`;
+
+    // Send invitation email asynchronously via OVH SMTP
+    this.mailService.sendAdminInvitationEmail(
+      dto.email.toLowerCase().trim(),
+      `${dto.firstName} ${dto.lastName}`,
+      fullInvitationUrl,
+      dto.role,
+    ).catch((err) => {
+      console.error('[SMTP INVITATION ERROR]', err);
+    });
+
     return {
       admin: newAdmin,
       invitationToken: token,
-      invitationUrl: `/accept-invitation?token=${token}`,
+      invitationUrl: relativeUrl,
     };
   }
 

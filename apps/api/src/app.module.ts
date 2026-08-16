@@ -45,6 +45,7 @@ import { PlayersModule } from './modules/players/players.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { MailModule } from './modules/mail/mail.module';
 import { validateEnvironment } from './config/environment';
 import { PublicMediaUrlInterceptor } from './common/public-media-url.interceptor';
 
@@ -65,6 +66,7 @@ import { PublicMediaUrlInterceptor } from './common/public-media-url.interceptor
       }),
     }),
 
+    MailModule,
     AuthModule,
     UsersModule,
     RolesModule,
