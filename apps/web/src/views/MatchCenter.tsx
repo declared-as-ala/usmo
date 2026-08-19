@@ -301,10 +301,16 @@ export const MatchCenter: React.FC = () => {
 
           {/* Derniers résultats */}
           <div>
-            <h3 className="font-display font-extrabold text-xl uppercase tracking-wider text-usm-blue-dark border-b-2 border-usm-blue-primary/40 pb-2 mb-6 flex items-center gap-2">
-              <TrendingUp size={18} className="text-usm-blue-primary" />
-              {language === 'ar' ? 'آخر النتائج' : 'Derniers résultats'}
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-usm-blue-primary/40 pb-2 mb-6 gap-2">
+              <h3 className="font-display font-extrabold text-xl uppercase tracking-wider text-usm-blue-dark flex items-center gap-2">
+                <TrendingUp size={18} className="text-usm-blue-primary" />
+                {language === 'ar' ? 'آخر نتائج المباريات الرسمية' : 'Derniers Résultats Officiels'}
+              </h3>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-usm-blue-soft border border-usm-border px-3 py-1 rounded-full w-fit">
+                {language === 'ar' ? 'أحدث المباريات المكتملة' : 'Dernières rencontres disputées'}
+              </span>
+            </div>
+
             {liveLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[0, 1, 2].map((n) => <div key={n} className="skeleton-loader h-28 rounded-2xl" />)}
@@ -317,12 +323,18 @@ export const MatchCenter: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentResults.map((r) => {
                   const badge = resultBadgeFor(r);
+                  const year = new Date(r.date).getFullYear();
                   return (
-                    <div key={r.id} className="usm-card rounded-2xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1">
-                          <Clock3 size={10} /> {fmtDate(r.date)}
-                        </span>
+                    <div key={r.id} className="usm-card rounded-2xl p-4 flex flex-col justify-between hover:border-usm-blue-primary/40 transition-colors shadow-md">
+                      <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wide flex items-center gap-1">
+                            <Clock3 size={10} className="text-usm-blue-primary" /> {fmtDate(r.date)}
+                          </span>
+                          <span className="text-[8px] font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {year}
+                          </span>
+                        </div>
                         {badge && (
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${badge.className}`}>
                             {badge.label}
@@ -332,15 +344,15 @@ export const MatchCenter: React.FC = () => {
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           {r.homeBadge && <img src={r.homeBadge} alt="" className="h-6 w-6 object-contain shrink-0" />}
-                          <span className={`text-xs truncate ${r.homeTeamId === USM_TEAM_ID ? 'font-bold text-usm-blue-dark' : 'text-slate-500'}`}>
+                          <span className={`text-xs truncate ${r.homeTeamId === USM_TEAM_ID || r.homeTeam.toLowerCase().includes('monastir') ? 'font-black text-usm-blue-dark' : 'text-slate-500'}`}>
                             {r.homeTeam}
                           </span>
                         </div>
-                        <span className="font-display font-black text-sm text-usm-blue-dark shrink-0 px-2">
+                        <span className="font-display font-black text-base text-usm-blue-dark shrink-0 px-2 py-1 bg-usm-blue-soft rounded-lg border border-usm-border">
                           {r.homeScore} - {r.awayScore}
                         </span>
                         <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                          <span className={`text-xs truncate text-right ${r.awayTeamId === USM_TEAM_ID ? 'font-bold text-usm-blue-dark' : 'text-slate-500'}`}>
+                          <span className={`text-xs truncate text-right ${r.awayTeamId === USM_TEAM_ID || r.awayTeam.toLowerCase().includes('monastir') ? 'font-black text-usm-blue-dark' : 'text-slate-500'}`}>
                             {r.awayTeam}
                           </span>
                           {r.awayBadge && <img src={r.awayBadge} alt="" className="h-6 w-6 object-contain shrink-0" />}
