@@ -229,6 +229,7 @@ export const Home: React.FC = () => {
             <span className="text-[9px] font-bold text-slate-500 normal-case tracking-normal">TheSportsDB</span>
           </h3>
           <LeagueStandingsTable
+            limit={5}
             posLabel={t('table.pos')}
             teamLabel={t('table.team')}
             playedLabel={t('table.played')}
@@ -239,7 +240,10 @@ export const Home: React.FC = () => {
             footer={
               <div className="p-3 bg-usm-blue-soft text-center border-t border-usm-border">
                 <button
-                  onClick={() => setActiveScreen('matches')}
+                  onClick={() => {
+                    setActiveScreen('matches');
+                    router.push('/matchs');
+                  }}
                   className="text-xs text-usm-blue-primary font-bold uppercase hover:underline cursor-pointer"
                 >
                   {t('btn.allStandings')}

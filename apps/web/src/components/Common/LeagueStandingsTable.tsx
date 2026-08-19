@@ -25,13 +25,14 @@ interface LeagueStandingsTableProps {
   pointsLabel: string;
   diffLabel: string;
   emptyLabel: string;
+  limit?: number;
   className?: string;
   footer?: React.ReactNode;
 }
 
 /** Live Tunisian Ligue 1 table sourced from TheSportsDB — shared by Home and Match Center. */
 export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
-  posLabel, teamLabel, playedLabel, wonLabel, pointsLabel, diffLabel, emptyLabel, className = '', footer,
+  posLabel, teamLabel, playedLabel, wonLabel, pointsLabel, diffLabel, emptyLabel, limit, className = '', footer,
 }) => {
   const [standings, setStandings] = useState<StandingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,20 @@ export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Compute displayed rows based on optional limit
+  const getDisplayedRows = () => {
+    if (!limit || standings.length <= limit) return standings;
+    const topRows = standings.slice(0, limit);
+    const usmRow = standings.find((r) => r.isUSM);
+    // If USM is not in the top limit rows, append USM row so it is always visible
+    if (usmRow && !topRows.some((r) => r.isUSM)) {
+      return [...topRows, usmRow];
+    }
+    return topRows;
+  };
+
+  const displayedRows = getDisplayedRows();
 
   return (
     <div className={`bg-usm-blue-soft/70 border border-usm-border rounded-2xl overflow-hidden shadow ${className}`}>
@@ -67,14 +82,18 @@ export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5 font-medium">
-            {standings.map((row) => (
-              <tr key={row.teamId} className={row.isUSM ? 'bg-usm-blue-primary/15 text-usm-blue-dark font-bold' : ''}>
+            {displayedRows.map((row) => (
+              <tr key={row.teamId || row.position} className={row.isUSM ? 'bg-usm-blue-primary/15 text-usm-blue-dark font-bold' : ''}>
                 <td className="px-4 py-3 text-center font-display font-black text-slate-500">
                   {row.position}
                 </td>
                 <td className="px-4 py-3 flex items-center space-x-2 rtl:space-x-reverse">
                   {row.isUSM && <span className="h-1.5 w-1.5 rounded-full bg-usm-blue-primary animate-live-pulse" />}
-                  {row.badge && <img src={row.badge} alt="" className="h-4 w-4 object-contain" />}
+                  {row.badge ? (
+                    <img src={row.badge} alt="" className="h-4 w-4 object-contain" />
+                  ) : row.isUSM ? (
+                    <img src="/logo.png" alt="" className="h-4 w-4 object-contain" />
+                  ) : null}
                   <span>{row.team}</span>
                 </td>
                 <td className="px-4 py-3 text-center">{row.played}</td>
