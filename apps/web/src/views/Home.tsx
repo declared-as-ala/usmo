@@ -8,8 +8,6 @@ import { HeroCarousel, HeroSlideData } from '../components/Common/HeroCarousel';
 import { Play, ArrowRight, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '../lib/api-client';
-import { PublicPollWidget } from '../components/Common/PublicPollWidget';
-import { DonationHighlightWidget } from '../components/Common/DonationHighlightWidget';
 
 interface HomepageConfig {
   heroTitle: string; heroSubtitle: string; heroDescription: string; heroImageUrl: string;
@@ -35,8 +33,6 @@ export const Home: React.FC = () => {
   const router = useRouter();
   const publishedNews = newsArticles.filter((n) => n.published !== false);
 
-  const [pollVoted, setPollVoted] = useState(false);
-  const [pollSelection, setPollSelection] = useState<string | null>(null);
   const [homepage, setHomepage] = useState<HomepageConfig | null>(null);
   const [fanPhotos, setFanPhotos] = useState<FanPhoto[]>([]);
   const [heroSlidesFromApi, setHeroSlidesFromApi] = useState<HeroSlideData[]>([]);
@@ -49,12 +45,6 @@ export const Home: React.FC = () => {
       if (slides.status === 'fulfilled' && Array.isArray(slides.value)) setHeroSlidesFromApi(slides.value);
     });
   }, []);
-
-  const handleVotePoll = (option: string) => {
-    setPollSelection(option);
-    setPollVoted(true);
-    addBluePoints(40);
-  };
 
   // Graceful fallback when the backend has no admin-managed hero slides yet — built from
   // whatever homepage config / translations already exist, no mock data.
@@ -401,10 +391,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
       )}
-
-      <PublicPollWidget />
-
-      <DonationHighlightWidget />
 
     </div>
   );
