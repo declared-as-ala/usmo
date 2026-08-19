@@ -28,7 +28,7 @@ const TEMPLATES = [
 </div>
 <p style="font-size: 14px; line-height: 1.6; color: #334155;">Rejoignez les virages bleu et blanc et faites vibrer les tribunes ! Réservez dès maintenant vos billets sur le portail officiel.</p>
 <div style="text-align: center; margin: 24px 0;">
-  <a href="https://usmonastir.tn/matchs" style="background: #0d63ff; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 10px; display: inline-block;">Réserver Ma Place</a>
+  <a href="https://usmonastir.tn/matches" style="background: #0d63ff; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 10px; display: inline-block;">Réserver Ma Place</a>
 </div>`,
   },
   {

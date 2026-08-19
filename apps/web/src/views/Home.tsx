@@ -242,7 +242,7 @@ export const Home: React.FC = () => {
                 <button
                   onClick={() => {
                     setActiveScreen('matches');
-                    router.push('/matchs');
+                    router.push('/matches');
                   }}
                   className="text-xs text-usm-blue-primary font-bold uppercase hover:underline cursor-pointer"
                 >
