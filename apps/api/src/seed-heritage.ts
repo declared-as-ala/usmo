@@ -83,29 +83,43 @@ const historyContent = {
 };
 
 const timelineEvents = [
-  { year: '1923', title: 'Fondation de l’USM', sport: 'club', isHighlighted: true, displayOrder: 1,
-    description: 'Le club est officiellement fondé le 17 mars 1923 par décret royal sous le protectorat français, et devient rapidement plus qu’une institution sportive : un symbole culturel et social pour Monastir.' },
+  { year: '1923', title: 'Fondation de l’USM (Ruspina Sports)', sport: 'club', isHighlighted: true, displayOrder: 1,
+    description: 'Le club est officiellement fondé le 17 mars 1923 sous le nom de Ruspina Sports par décret royal sous le protectorat français, et devient rapidement plus qu’une institution sportive : un symbole culturel et social pour Monastir.' },
   { year: '1923–1956', title: 'Un symbole culturel et social', sport: 'club', displayOrder: 2,
-    description: 'À travers les grandes étapes de l’histoire tunisienne, de l’époque coloniale à l’indépendance menée par Habib Bourguiba, natif de Monastir, le club incarne la persévérance, l’unité et l’ambition.' },
-  { year: '2009', title: 'Finaliste de la Coupe de Tunisie', sport: 'football', displayOrder: 3,
-    description: 'L’USM s’incline en finale de la Coupe de Tunisie, une première étape vers la consécration de 2020.' },
-  { year: '2018–2019', title: 'Champion de Tunisie de basketball', sport: 'basketball', displayOrder: 4,
-    description: 'Première étape d’une nouvelle ère dorée pour la section basketball.' },
-  { year: '2020', title: 'Coupe de Tunisie : premier sacre historique', sport: 'football', isHighlighted: true, displayOrder: 5,
-    description: 'L’USM remporte la Coupe de Tunisie pour la première fois de son histoire, ouvrant la voie aux compétitions continentales.' },
-  { year: '2020', title: 'Super Coupe de Tunisie', sport: 'football', displayOrder: 6,
-    description: 'Le club complète un doublé historique en remportant également la Super Coupe.' },
-  { year: '2021', title: 'Finaliste de la BAL', sport: 'basketball', displayOrder: 7,
+    description: 'À travers les grandes étapes de l’histoire tunisienne, de l’époque coloniale à l’indépendance, le club (rebaptisé Union Sportive Monastirienne le 13 juin 1942) incarne la persévérance, l’unité et l’ambition.' },
+  { year: '1956–1960', title: 'Indépendance & soutien d’Habib Bourguiba', sport: 'club', isHighlighted: true, displayOrder: 3,
+    description: 'Avec l’indépendance de la Tunisie en 1956, l’USM connaît un essor majeur sous le soutien moral et financier d’Habib Bourguiba, premier président de la République et natif de Monastir, régulièrement présent lors des entraînements et des matchs.' },
+  { year: '1961–1962', title: 'Première accession en Division Nationale (Ligue 1)', sport: 'football', isHighlighted: true, displayOrder: 4,
+    description: 'Sous la présidence de Mahmoud Chaouche et la conduite du technicien allemand Rudi Gutendorf, l’USM accède pour la première fois de son histoire en Division Nationale (Ligue 1) au terme de la saison 1961-1962.' },
+  { year: '1976 & 1980', title: 'Titres de Champion de Tunisie D2 (Poule Sud)', sport: 'football', displayOrder: 5,
+    description: 'L’US Monastir remporte le championnat de Tunisie de Division 2 en 1976 (sous l’entraîneur Kamel Benzarti) puis en 1980 (sous Faouzi Benzarti), assurant son retour parmi l’élite du football tunisien.' },
+  { year: '1980–1994', title: 'Ère de la stabilité : 14 ans consécutifs en Ligue 1', sport: 'football', isHighlighted: true, displayOrder: 6,
+    description: 'Le club prend le virage du semi-professionnalisme et se maintient 14 saisons d’affilée en Division Nationale. En 1984-1985, Nebil Kalboussi termine 2e meilleur buteur de Ligue 1. En 1986-1987, l’USM termine 5e du championnat sous la direction de l’Allemand Manfred Höner.' },
+  { year: '1998', title: 'Sacre en Championnat D2 & Retour parmi l’Élite', sport: 'football', displayOrder: 7,
+    description: 'Sous la présidence de Zouhair Chaouche et la conduite de Lotfi Benzarti, l’USM décroche le titre de Champion de Tunisie D2 en 1998 et réintègre la Ligue 1, se qualifiant pour le groupe play-off en 1998-1999 (7e place).' },
+  { year: '2006–2008', title: 'Ascension dans le Top 4 du Football Tunisien', sport: 'football', displayOrder: 8,
+    description: 'Sous la présidence de Néji Stambouli et les entraîneurs Samir Jouili et Lotfi Rhim, l’USM enchaîne les 4e et 5e places en Ligue 1 (2006-2007 et 2007-2008) et atteint les demi-finales de la Coupe de Tunisie.' },
+  { year: '2009', title: 'Finaliste de la Coupe de Tunisie', sport: 'football', isHighlighted: true, displayOrder: 9,
+    description: 'Le 3 mai 2009, après une victoire 3–2 contre l’Espérance de Tunis à El Menzah, l’USM se qualifie pour la première finale de Coupe de Tunisie de son histoire, disputée le 24 mai à Rades face au CS Sfaxien.' },
+  { year: '2011', title: 'Champion de Tunisie Ligue 2 & Remontée Immédiate', sport: 'football', displayOrder: 10,
+    description: 'Sous la présidence de Hédi Benzarti et les entraîneurs Jalel Kadri puis Fayçal Ezzidi, l’USM termine 1er de Ligue 2 en 2011 et remonte immédiatement parmi l’élite.' },
+  { year: '2018–2019', title: 'Champion de Tunisie de basketball', sport: 'basketball', displayOrder: 11,
+    description: 'Première étape d’une nouvelle ère dorée pour la section basketball qui entame sa suprématie nationale.' },
+  { year: '2020', title: 'Coupe de Tunisie : premier sacre historique', sport: 'football', isHighlighted: true, displayOrder: 12,
+    description: 'L’USM remporte la Coupe de Tunisie pour la première fois de son histoire en battant l’Espérance de Tunis 2–0 (buts d’Elyess Jelassi et Yassine El Amri) au terme d’un parcours mémorable.' },
+  { year: '2020', title: 'Super Coupe de Tunisie', sport: 'football', displayOrder: 13,
+    description: 'Sous la conduite de Mourad Okbi, le club complète un doublé historique en remportant également la Super Coupe de Tunisie 2019-2020.' },
+  { year: '2021', title: 'Finaliste de la BAL', sport: 'basketball', displayOrder: 14,
     description: 'L’USM atteint sa première finale continentale de Basketball Africa League.' },
-  { year: '2022', title: 'Champion d’Afrique (BAL)', sport: 'basketball', isHighlighted: true, displayOrder: 8,
+  { year: '2022', title: 'Champion d’Afrique (BAL)', sport: 'basketball', isHighlighted: true, displayOrder: 15,
     description: 'L’Union Sportive Monastirienne devient championne d’Afrique en battant Petro de Luanda 83–72, un sacre continental historique pour Monastir.' },
-  { year: '2024', title: 'Super Coupe de Tunisie de basketball', sport: 'basketball', displayOrder: 9,
+  { year: '2024', title: 'Super Coupe de Tunisie de basketball', sport: 'basketball', displayOrder: 16,
     description: 'Nouveau titre national, symbole de la suprématie du club.' },
-  { year: '2024–2025', title: 'Une des meilleures saisons de l’histoire', sport: 'football', displayOrder: 10,
-    description: 'Le club termine à la 2e place de la Ligue Professionnelle 1, confirmant son statut de puissance montante.' },
-  { year: '2025', title: '5e participation consécutive en BAL', sport: 'basketball', displayOrder: 11,
+  { year: '2024–2025', title: 'Une des meilleures saisons de l’histoire', sport: 'football', displayOrder: 17,
+    description: 'Le club termine à la 2e place de la Ligue Professionnelle 1 pour la deuxième fois consécutive, confirmant son statut de puissance majeure du football tunisien.' },
+  { year: '2025', title: '5e participation consécutive en BAL', sport: 'basketball', displayOrder: 18,
     description: 'L’USM confirme son rang parmi l’élite du basketball africain.' },
-  { year: '2025+', title: 'Un club en constante évolution', sport: 'club', displayOrder: 12,
+  { year: '2025+', title: 'Un club en constante évolution', sport: 'club', displayOrder: 19,
     description: 'Fort de plus d’un siècle d’histoire, l’USM poursuit son ambition entre performance sportive, rayonnement africain et exigence de modernité.' },
 ];
 
@@ -113,11 +127,13 @@ const trophies = [
   { sport: 'football', competition: 'Coupe de Tunisie', achievementType: 'Winner', titleCount: 1, years: '2020',
     description: 'Premier trophée majeur de l’histoire du club, ouvrant la voie aux compétitions africaines.', isFeatured: true, displayOrder: 1 },
   { sport: 'football', competition: 'Coupe de Tunisie', achievementType: 'Runner-up', titleCount: 1, years: '2009',
-    description: 'Première finale de Coupe de Tunisie du club.', displayOrder: 2 },
+    description: 'Première finale de Coupe de Tunisie de l’histoire du club.', displayOrder: 2 },
   { sport: 'football', competition: 'Super Coupe de Tunisie', achievementType: 'Winner', titleCount: 1, years: '2020',
     description: 'Doublé historique la même année que la Coupe de Tunisie.', isFeatured: true, displayOrder: 3 },
+  { sport: 'football', competition: 'Championnat de Tunisie D2', achievementType: 'Winner', titleCount: 4, years: '1976, 1980, 1998, 2011',
+    description: 'Titres de champion de deuxième division assurant les remontées parmi l’élite.', displayOrder: 4 },
   { sport: 'basketball', competition: 'Championnat de Tunisie', achievementType: 'Winner', titleCount: 9,
-    years: '2019, 2020, 2021, 2022, 2023, 2024 et titres antérieurs', description: 'Record national de domination.', isFeatured: true, displayOrder: 4 },
+    years: '2019, 2020, 2021, 2022, 2023, 2024 et titres antérieurs', description: 'Record national de domination.', isFeatured: true, displayOrder: 5 },
   { sport: 'basketball', competition: 'Coupe de Tunisie', achievementType: 'Winner', titleCount: 6,
     years: '2020, 2021, 2022, 2023, 2025 et un titre antérieur', description: 'Succès domestique constant.', displayOrder: 5 },
   { sport: 'basketball', competition: 'Super Coupe de Tunisie', achievementType: 'Winner', titleCount: 1, years: '2024',
@@ -172,11 +188,9 @@ const seasonPerformances = [
 ];
 
 async function main() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) { console.error('MONGODB_URI not set'); process.exit(1); }
-
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/usmo';
   await mongoose.connect(uri);
-  console.log('[seed-heritage] Connected to MongoDB');
+  console.log('[seed-heritage] Connected to MongoDB at ' + uri);
 
   await HistoryPageModel.deleteMany({});
   await HistoryPageModel.create(historyContent);
