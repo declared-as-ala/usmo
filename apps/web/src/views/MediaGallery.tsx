@@ -173,7 +173,7 @@ export const MediaGallery: React.FC = () => {
                   onClick={() => setActiveFilter('Vidéos')}
                   className="px-5 py-3 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all cursor-pointer flex items-center gap-2"
                 >
-                  <Play size={14} fill="currentColor" /> Vidéos Premium
+                  <Play size={14} fill="currentColor" /> Vidéos
                 </button>
               </div>
             </div>
@@ -209,7 +209,7 @@ export const MediaGallery: React.FC = () => {
                 ) : (
                   <div className="flex flex-col items-center gap-1.5 text-center text-slate-400 py-6">
                     <Video size={24} className="text-slate-350" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">{tr(language, 'No featured media', 'Aucun média vedette', 'لا يوجد محتوى مميز')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{tr(language, 'No media published by admin yet', 'Aucun média publié par l\'administration', 'لا يوجد محتوى منشور من الإدارة بعد')}</span>
                   </div>
                 )}
               </div>
@@ -290,6 +290,19 @@ export const MediaGallery: React.FC = () => {
             <Loader2 className="animate-spin text-usm-blue-primary mb-3" size={32} />
             <span className="text-xs text-slate-500 uppercase tracking-widest font-bold">Chargement de la médiathèque...</span>
           </div>
+        ) : mediaItems.length === 0 ? (
+          <div className="bg-white/80 border border-dashed border-usm-border rounded-3xl p-12 text-center space-y-3">
+            <Camera className="mx-auto text-usm-blue-primary" size={40} />
+            <h3 className="text-base font-black uppercase text-usm-blue-dark">Médiathèque Officielle</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              {tr(
+                language,
+                'No photos or videos published by admin yet. New media uploaded via the admin dashboard will appear here.',
+                'Aucune photo ni vidéo publiée par l\'administration pour le moment. Les nouveaux médias ajoutés via le panneau admin apparaîtront ici.',
+                'لم يتم نشر أي صور أو مقاطع فيديو من الإدارة بعد. المحتوى الجديد سيظهر هنا فور إضافته.'
+              )}
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-12">
@@ -300,46 +313,52 @@ export const MediaGallery: React.FC = () => {
                     <span className="h-4 w-1 bg-usm-blue-primary rounded-full" />
                     Albums Photos
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {filteredAlbums.map((album) => (
-                      <div
-                        key={album._id}
-                        onClick={() => handleMediaClick(album)}
-                        className="group bg-white/80 border border-usm-border rounded-2xl overflow-hidden shadow-lg hover:border-usm-blue-primary/40 transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
-                      >
-                        <div className="relative aspect-[16/10] overflow-hidden bg-white">
-                          <img
-                            src={album.coverImage}
-                            alt={album.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                          
-                          {/* Locked state overlay */}
-                          {album.locked && (
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
-                              <div className="h-10 w-10 rounded-full bg-usm-blue-soft border border-usm-blue-primary/40 flex items-center justify-center text-usm-blue-primary mb-1">
-                                <Lock size={15} />
+                  {filteredAlbums.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-4 italic">
+                      {tr(language, 'No photo albums published yet.', 'Aucun album photo publié pour le moment.', 'لا توجد ألبومات صور منشورة حالياً.')}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {filteredAlbums.map((album) => (
+                        <div
+                          key={album._id}
+                          onClick={() => handleMediaClick(album)}
+                          className="group bg-white/80 border border-usm-border rounded-2xl overflow-hidden shadow-lg hover:border-usm-blue-primary/40 transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
+                        >
+                          <div className="relative aspect-[16/10] overflow-hidden bg-white">
+                            <img
+                              src={album.coverImage}
+                              alt={album.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            
+                            {/* Locked state overlay */}
+                            {album.locked && (
+                              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
+                                <div className="h-10 w-10 rounded-full bg-usm-blue-soft border border-usm-blue-primary/40 flex items-center justify-center text-usm-blue-primary mb-1">
+                                  <Lock size={15} />
+                                </div>
+                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
+                                  {album.accessLevel === 'premium' ? 'Abonnement Requis' : 'Connexion Requise'}
+                                </span>
                               </div>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                                {album.accessLevel === 'premium' ? 'Abonnement Requis' : 'Connexion Requise'}
-                              </span>
-                            </div>
-                          )}
+                            )}
 
-                          <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
-                            {album.accessLevel.toUpperCase()}
-                          </span>
-                        </div>
+                            <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
+                              {album.accessLevel.toUpperCase()}
+                            </span>
+                          </div>
 
-                        <div className="p-4 space-y-1">
-                          <h3 className="text-xs font-bold text-usm-blue-dark group-hover:text-usm-blue-primary transition-colors leading-tight">
-                            {language === 'ar' ? album.titleAr : album.title}
-                          </h3>
+                          <div className="p-4 space-y-1">
+                            <h3 className="text-xs font-bold text-usm-blue-dark group-hover:text-usm-blue-primary transition-colors leading-tight">
+                              {language === 'ar' ? album.titleAr : album.title}
+                            </h3>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -348,45 +367,51 @@ export const MediaGallery: React.FC = () => {
                 <div className="space-y-6">
                   <h2 className="font-display font-black text-xl text-usm-blue-dark uppercase tracking-wider flex items-center gap-2">
                     <span className="h-4 w-1 bg-usm-blue-primary rounded-full" />
-                    Vidéos Premium
+                    Vidéos
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {filteredVideos.map((video) => (
-                      <div
-                        key={video._id}
-                        onClick={() => handleMediaClick(video)}
-                        className="group bg-white/80 border border-usm-border rounded-2xl overflow-hidden shadow-lg hover:border-usm-blue-primary/40 transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
-                      >
-                        <div className="relative aspect-video overflow-hidden bg-white">
-                          <img
-                            src={video.coverImage}
-                            alt={video.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/55 transition-colors">
-                            <div className="h-11 w-11 rounded-full bg-usm-blue-primary text-white flex items-center justify-center shadow-lg">
-                              {video.locked ? <Lock size={14} /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                  {filteredVideos.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-4 italic">
+                      {tr(language, 'No videos published yet.', 'Aucune vidéo publiée pour le moment.', 'لا توجد مقاطع فيديو منشورة حالياً.')}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {filteredVideos.map((video) => (
+                        <div
+                          key={video._id}
+                          onClick={() => handleMediaClick(video)}
+                          className="group bg-white/80 border border-usm-border rounded-2xl overflow-hidden shadow-lg hover:border-usm-blue-primary/40 transition-all duration-300 flex flex-col justify-between cursor-pointer relative"
+                        >
+                          <div className="relative aspect-video overflow-hidden bg-white">
+                            <img
+                              src={video.coverImage}
+                              alt={video.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/55 transition-colors">
+                              <div className="h-11 w-11 rounded-full bg-usm-blue-primary text-white flex items-center justify-center shadow-lg">
+                                {video.locked ? <Lock size={14} /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                              </div>
                             </div>
+
+                            {/* Lock Overlay */}
+                            {video.locked && (
+                              <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
+                            )}
+
+                            <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
+                              {video.accessLevel.toUpperCase()}
+                            </span>
                           </div>
 
-                          {/* Lock Overlay */}
-                          {video.locked && (
-                            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
-                          )}
-
-                          <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
-                            {video.accessLevel.toUpperCase()}
-                          </span>
+                          <div className="p-4 space-y-1">
+                            <h3 className="text-xs font-bold text-usm-blue-dark group-hover:text-usm-blue-primary transition-colors leading-tight">
+                              {language === 'ar' ? video.titleAr : video.title}
+                            </h3>
+                          </div>
                         </div>
-
-                        <div className="p-4 space-y-1">
-                          <h3 className="text-xs font-bold text-usm-blue-dark group-hover:text-usm-blue-primary transition-colors leading-tight">
-                            {language === 'ar' ? video.titleAr : video.title}
-                          </h3>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
