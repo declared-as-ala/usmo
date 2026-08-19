@@ -43,7 +43,7 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
     const fetchRoster = async () => {
       try {
         const dbPlayers: RosterPlayer[] = await api.getPlayers(sport).catch(() => []);
-        let merged = [...(dbPlayers || [])];
+        const merged = [...(dbPlayers || [])];
 
         if (sport === 'football') {
           const extPlayers: any[] = await api.getSportsDbPlayers().catch(() => []);
