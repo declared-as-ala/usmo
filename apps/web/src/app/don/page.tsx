@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api-client';
 import { Logo } from '../../components/Common/Logo';
-import { Heart, Coins, ShieldAlert, CheckCircle2, User, Mail, CreditCard, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { Coins, CheckCircle2, User, Mail, CreditCard, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function DonationPage() {
@@ -13,8 +13,8 @@ export default function DonationPage() {
 
   // Form states
   const [amount, setAmount] = useState('50');
-  const [donorName, setDonorName] = useState('');
-  const [donorEmail, setDonorEmail] = useState('');
+  const [donorName, setDonorName] = useState(() => fan?.name || '');
+  const [donorEmail, setDonorEmail] = useState(() => fan?.email || '');
   const [visibility, setVisibility] = useState<'public' | 'anonymous'>('public');
   const [message, setMessage] = useState('');
 
@@ -22,13 +22,6 @@ export default function DonationPage() {
   const [step, setStep] = useState<'input' | 'payment' | 'success'>('input');
   const [loading, setLoading] = useState(false);
   const [createdDonation, setCreatedDonation] = useState<any | null>(null);
-
-  useEffect(() => {
-    if (fan) {
-      setDonorName(fan.name || '');
-      setDonorEmail(fan.email || '');
-    }
-  }, [fan]);
 
   const handleSubmitDetails = async (e: React.FormEvent) => {
     e.preventDefault();

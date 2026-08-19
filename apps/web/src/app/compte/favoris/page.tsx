@@ -18,19 +18,13 @@ export default function MyWishlistPage() {
   const [items, setItems] = useState<WishlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchWishlist = async () => {
-    try {
-      const data = await api.getMyWishlist();
-      setItems(Array.isArray(data) ? data : []);
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchWishlist();
+    let active = true;
+    api.getMyWishlist()
+      .then((data) => { if (active) setItems(Array.isArray(data) ? data : []); })
+      .catch(() => { if (active) setItems([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleRemove = (productId: string) => {

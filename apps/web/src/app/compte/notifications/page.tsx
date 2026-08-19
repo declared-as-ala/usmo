@@ -19,19 +19,13 @@ export default function MyNotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await api.getMyNotifications();
-      setNotifications(Array.isArray(data) ? data : []);
-    } catch {
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchNotifications();
+    let active = true;
+    api.getMyNotifications()
+      .then((data) => { if (active) setNotifications(Array.isArray(data) ? data : []); })
+      .catch(() => { if (active) setNotifications([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleMarkRead = async (id: string) => {
@@ -39,7 +33,7 @@ export default function MyNotificationsPage() {
     try {
       await api.markNotificationRead(id);
     } catch {
-      fetchNotifications();
+      api.getMyNotifications().then((d) => setNotifications(Array.isArray(d) ? d : [])).catch(() => {});
     }
   };
 
@@ -48,7 +42,7 @@ export default function MyNotificationsPage() {
     try {
       await api.markAllNotificationsRead();
     } catch {
-      fetchNotifications();
+      api.getMyNotifications().then((d) => setNotifications(Array.isArray(d) ? d : [])).catch(() => {});
     }
   };
 

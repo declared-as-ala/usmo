@@ -34,8 +34,32 @@ export default function MyRewardsPage() {
   const [redeemingId, setRedeemingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAll = async () => {
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      api.getRewards(),
+      api.getMyRewardRedemptions(),
+      api.getMyPointsHistory(),
+    ])
+      .then(([rewardsData, redemptionsData, history]) => {
+        if (!active) return;
+        setRewards(Array.isArray(rewardsData) ? rewardsData : []);
+        setRedemptions(Array.isArray(redemptionsData) ? redemptionsData : []);
+        const total = (Array.isArray(history) ? history : []).reduce((sum: number, h: any) => sum + h.points, 0);
+        setBalance(total);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const handleRedeem = async (id: string) => {
+    setError(null);
+    setRedeemingId(id);
     try {
+      await api.redeemReward(id);
       const [rewardsData, redemptionsData, history] = await Promise.all([
         api.getRewards(),
         api.getMyRewardRedemptions(),
@@ -45,23 +69,6 @@ export default function MyRewardsPage() {
       setRedemptions(Array.isArray(redemptionsData) ? redemptionsData : []);
       const total = (Array.isArray(history) ? history : []).reduce((sum: number, h: any) => sum + h.points, 0);
       setBalance(total);
-    } catch {
-      // keep defaults
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const handleRedeem = async (id: string) => {
-    setError(null);
-    setRedeemingId(id);
-    try {
-      await api.redeemReward(id);
-      await fetchAll();
     } catch (err: any) {
       setError(err.message || 'Impossible d\'échanger cette récompense');
     } finally {

@@ -45,7 +45,14 @@ export default function AdminTrophies() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    api.getAdminTrophies()
+      .then((data) => { if (active) setTrophies(data || []); })
+      .catch(() => { if (active) setError('Impossible de charger les trophées'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const openAdd = () => { setEditingId(null); setForm(emptyForm); setShowForm(true); };
   const openEdit = (t: TrophyRow) => {

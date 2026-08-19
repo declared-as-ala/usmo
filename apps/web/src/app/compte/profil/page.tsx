@@ -4,59 +4,33 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { tr } from '../../../utils/i18n';
 import { api } from '../../../lib/api-client';
-import { User, Shield, MapPin, Trophy, Camera, Loader2, Save } from 'lucide-react';
+import { User, Camera, Loader2, Save } from 'lucide-react';
 
 export default function ProfilPage() {
   const { fan, language, refreshMe, showToast } = useApp();
 
-  const [profileForm, setProfileForm] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    city: '',
-    country: 'Tunisie',
-    favoriteSport: 'both' as 'football' | 'basketball' | 'both',
-    favoritePlayer: '',
-  });
+  const [profileForm, setProfileForm] = useState(() => ({
+    firstName: fan?.firstName || '',
+    lastName: fan?.lastName || '',
+    phone: fan?.phone || '',
+    city: fan?.city || '',
+    country: fan?.country || 'Tunisie',
+    favoriteSport: (fan?.favoriteSport || 'both') as 'football' | 'basketball' | 'both',
+    favoritePlayer: fan?.favoritePlayer || '',
+  }));
 
-  const [privacyForm, setPrivacyForm] = useState({
-    showProfilePublicly: false,
-    showCity: false,
-    showRanking: false,
-    showDonationBadge: false,
-    showDonationAmount: false,
-    useNickname: false,
-  });
+  const [privacyForm, setPrivacyForm] = useState(() => ({
+    showProfilePublicly: !!fan?.privacySettings?.showProfilePublicly,
+    showCity: !!fan?.privacySettings?.showCity,
+    showRanking: !!fan?.privacySettings?.showRanking,
+    showDonationBadge: !!fan?.privacySettings?.showDonationBadge,
+    showDonationAmount: !!fan?.privacySettings?.showDonationAmount,
+    useNickname: !!fan?.privacySettings?.useNickname,
+  }));
 
   const [uploading, setUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [privacyLoading, setPrivacyLoading] = useState(false);
-
-  // Sync state with fan data on mount/change
-  useEffect(() => {
-    if (fan) {
-      setProfileForm({
-        firstName: fan.firstName || '',
-        lastName: fan.lastName || '',
-        phone: fan.phone || '',
-        city: fan.city || '',
-        country: fan.country || 'Tunisie',
-        favoriteSport: fan.favoriteSport || 'both',
-        favoritePlayer: fan.favoritePlayer || '',
-      });
-
-      if (fan.privacySettings) {
-        setPrivacyForm({
-          showProfilePublicly: !!fan.privacySettings.showProfilePublicly,
-          showCity: !!fan.privacySettings.showCity,
-          showRanking: !!fan.privacySettings.showRanking,
-          showDonationBadge: !!fan.privacySettings.showDonationBadge,
-          showDonationAmount: !!fan.privacySettings.showDonationAmount,
-          useNickname: !!fan.privacySettings.useNickname,
-        });
-      }
-    }
-  }, [fan]);
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

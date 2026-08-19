@@ -11,18 +11,10 @@ export default function OnboardingPage() {
   const { fan, language, refreshMe, showToast } = useApp();
   const router = useRouter();
 
-  const [favoriteSport, setFavoriteSport] = useState<'football' | 'basketball' | 'both'>('both');
-  const [favoritePlayer, setFavoritePlayer] = useState('');
-  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
+  const [favoriteSport, setFavoriteSport] = useState<'football' | 'basketball' | 'both'>(() => fan?.favoriteSport || 'both');
+  const [favoritePlayer, setFavoritePlayer] = useState(() => fan?.favoritePlayer || '');
+  const [newsletterOptIn, setNewsletterOptIn] = useState(() => fan?.newsletterOptIn ?? true);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (fan) {
-      setFavoriteSport(fan.favoriteSport || 'both');
-      setFavoritePlayer(fan.favoritePlayer || '');
-      setNewsletterOptIn(fan.newsletterOptIn ?? true);
-    }
-  }, [fan]);
 
   const finish = async () => {
     setSaving(true);

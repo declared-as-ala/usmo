@@ -12,19 +12,13 @@ export default function MyDonationsPage() {
   const [donations, setDonations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMyDonations = async () => {
-    try {
-      const data = await api.getMyDonations();
-      setDonations(data || []);
-    } catch (err) {
-      console.error('Error fetching my donations:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchMyDonations();
+    let active = true;
+    api.getMyDonations()
+      .then((data) => { if (active) setDonations(data || []); })
+      .catch((err) => { console.error('Error fetching my donations:', err); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const completedDonations = donations.filter(d => d.paymentStatus === 'completed');

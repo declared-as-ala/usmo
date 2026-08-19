@@ -76,13 +76,48 @@ export default function AbonnementPage() {
   };
 
   useEffect(() => {
-    fetchPlansAndStatus();
+    let active = true;
+    (async () => {
+      try {
+        const plansData = await api.getMembershipPlans();
+        if (active) setPlans(plansData || []);
+
+        if (isLoggedIn) {
+          const memData = await api.getMyMembership();
+          if (active) setMyMembership(memData);
+        }
+      } catch (err) {
+        console.error('Error fetching subscription data:', err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, [isLoggedIn]);
 
   useEffect(() => {
+    let active = true;
     if (isLoggedIn && myMembership?.active) {
-      fetchMemberPerks();
+      setPerksLoading(true);
+      Promise.all([
+        api.getFanZoneDashboard(),
+        api.getFanRanking(),
+        api.getMyBadges(),
+      ])
+        .then(([dashboard, rankingList, badgeList]) => {
+          if (!active) return;
+          setPoints(dashboard?.points || 0);
+          setRankings(Array.isArray(rankingList) ? rankingList : []);
+          setBadges(Array.isArray(badgeList) ? badgeList : []);
+        })
+        .catch((err) => {
+          console.error('Error fetching member perks:', err);
+        })
+        .finally(() => {
+          if (active) setPerksLoading(false);
+        });
     }
+    return () => { active = false; };
   }, [isLoggedIn, myMembership?.active]);
 
   const handleSubscribeClick = (plan: Plan) => {

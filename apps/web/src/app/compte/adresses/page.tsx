@@ -35,7 +35,12 @@ export default function MyAddressesPage() {
   };
 
   useEffect(() => {
-    fetchAddresses();
+    let active = true;
+    api.getMyAddresses()
+      .then((data) => { if (active) setAddresses(Array.isArray(data) ? data : []); })
+      .catch(() => { if (active) setAddresses([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

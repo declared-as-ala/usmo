@@ -110,17 +110,22 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
           <div className="relative flex flex-col md:flex-row items-center justify-between gap-6 z-10">
             <div className="text-center md:text-left rtl:text-right">
               <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-usm-blue-primary flex items-center justify-center md:justify-start gap-1.5 mb-2">
-                <Shield size={12} /> {tr(language, 'Club Roster', 'Effectif Officiel', 'قائمة اللاعبين الرسمية')}
+                <Shield size={12} /> {tr(language, 'Season 2026–2027 • Official Roster', 'Saison 2026–2027 • Effectif Officiel', 'الموسم 2026-2027 • قائمة اللاعبين الرسمية')}
               </span>
-              <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-wider text-usm-blue-dark">
-                {sport === 'football'
-                  ? tr(language, 'Football Squad', 'Effectif Football', 'فريق كرة القدم')
-                  : tr(language, 'Basketball Squad', 'Effectif Basketball', 'فريق كرة السلة')}
-              </h1>
+              <div className="flex items-center gap-3 justify-center md:justify-start flex-wrap">
+                <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-wider text-usm-blue-dark">
+                  {sport === 'football'
+                    ? tr(language, 'Football Squad', 'Effectif Football', 'فريق كرة القدم')
+                    : tr(language, 'Basketball Squad', 'Effectif Basketball', 'فريق كرة السلة')}
+                </h1>
+                <span className="bg-usm-blue-primary text-white text-[10px] font-black uppercase px-3 py-1 rounded-full tracking-wider shadow">
+                  2026 / 2027
+                </span>
+              </div>
               <p className="text-xs text-slate-500 max-w-xl mt-3 leading-relaxed">
                 {sport === 'football'
-                  ? tr(language, 'Discover the elite football athletes representing the blue and white colors of US Monastir in the Tunisian Ligue 1.', 'Découvrez les footballeurs d\'élite représentant l\'US Monastir en Ligue 1 Tunisienne.', 'اكتشف نخبة لاعبي كرة القدم الذين يمثلون ألوان الاتحاد الرياضي المنستيري في الرابطة المحترفة الأولى.')
-                  : tr(language, 'Meet the historic BAL champions and dominant forces of Tunisian Pro A basketball.', 'Rencontrez les champions historiques de la BAL et forces dominantes du basketball tunisien.', 'تعرّف على أبطال إفريقيا التاريخيين والعملاق المسيطر على كرة السلة التونسية.')}
+                  ? tr(language, 'Discover the elite football athletes representing US Monastir for the 2026-2027 Tunisian Ligue 1 season.', 'Découvrez les footballeurs d\'élite représentant l\'US Monastir pour la saison 2026-2027 de Ligue 1 Tunisienne.', 'اكتشف نخبة لاعبي كرة القدم الذين يمثلون ألوان الاتحاد الرياضي المنستيري لموسم 2026-2027.')
+                  : tr(language, 'Meet the elite basketball squad representing US Monastir for the 2026-2027 Tunisian Pro A and continental campaigns.', 'Rencontrez l\'effectif d\'élite basketball représentant l\'US Monastir pour la saison 2026-2027 en Pro A et compétitions continentales.', 'تعرّف على نخبة لاعبي كرة السلة الذين يمثلون الاتحاد الرياضي المنستيري لموسم 2026-2027.')}
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0 bg-black/35 border border-usm-border px-6 py-4 rounded-2xl backdrop-blur">

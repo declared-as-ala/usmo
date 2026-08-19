@@ -43,19 +43,13 @@ export default function MySupportPage() {
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
 
-  const fetchTickets = async () => {
-    try {
-      const data = await api.getMySupportTickets();
-      setTickets(Array.isArray(data) ? data : []);
-    } catch {
-      setTickets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchTickets();
+    let active = true;
+    api.getMySupportTickets()
+      .then((data) => { if (active) setTickets(Array.isArray(data) ? data : []); })
+      .catch(() => { if (active) setTickets([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -66,7 +60,8 @@ export default function MySupportPage() {
       await api.createSupportTicket(form);
       setForm({ subject: '', category: 'other', message: '' });
       setShowForm(false);
-      await fetchTickets();
+      const data = await api.getMySupportTickets().catch(() => []);
+      setTickets(Array.isArray(data) ? data : []);
     } catch {
       // keep form open for retry
     } finally {
@@ -82,7 +77,8 @@ export default function MySupportPage() {
       const updated = await api.replySupportTicket(selected._id, replyText);
       setSelected(updated as Ticket);
       setReplyText('');
-      fetchTickets();
+      const data = await api.getMySupportTickets().catch(() => []);
+      setTickets(Array.isArray(data) ? data : []);
     } catch {
       // no-op
     } finally {
