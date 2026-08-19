@@ -46,13 +46,35 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
         const merged = [...(dbPlayers || [])];
 
         if (sport === 'football') {
-          const extPlayers: any[] = await api.getSportsDbPlayers().catch(() => []);
-          if (extPlayers && extPlayers.length > 0) {
-            const existingSlugs = new Set(merged.map((p) => p.slug));
-            const existingNames = new Set(merged.map((p) => p.name.toLowerCase()));
+          const apiFootballRes = await api.getFootballSquad().catch(() => null);
+          if (apiFootballRes && apiFootballRes.players && apiFootballRes.players.length > 0) {
+            for (const p of apiFootballRes.players) {
+              const pSlug = p.name ? p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `player-${p.id}`;
+              const pImage = p.photo || '/moez_ben_cherifia.png';
+              merged.push({
+                _id: `apifootball_${p.id}`,
+                slug: pSlug,
+                sport: 'football',
+                name: p.name,
+                nameAr: p.name,
+                number: p.number || 0,
+                position: p.positionGroup || p.position || 'Milieux',
+                positionAr: p.positionGroup || p.position || 'Milieux',
+                nationality: 'Tunisian',
+                nationalityAr: 'تونسي',
+                image: pImage,
+                stats: {
+                  Age: p.age ? `${p.age} ans` : '-',
+                  Poste: p.position || '-',
+                },
+              });
+            }
+          }
 
-            for (const ext of extPlayers) {
-              if (!existingSlugs.has(ext.slug) && !existingNames.has(ext.name.toLowerCase())) {
+          if (merged.length === 0) {
+            const extPlayers: any[] = await api.getSportsDbPlayers().catch(() => []);
+            if (extPlayers && extPlayers.length > 0) {
+              for (const ext of extPlayers) {
                 merged.push({
                   _id: ext._id || `ext_${ext.name}`,
                   slug: ext.slug,

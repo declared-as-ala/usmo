@@ -35,14 +35,91 @@ export const MatchCenter: React.FC = () => {
   const [liveLoading, setLiveLoading] = useState(true);
 
   useEffect(() => {
-    Promise.allSettled([api.getUsmTeamInfo(), api.getNextLeagueMatch(), api.getRecentResults(6)]).then(
-      ([team, next, results]) => {
-        if (team.status === 'fulfilled') setTeamInfo(team.value);
-        if (next.status === 'fulfilled') setNextMatch(next.value);
-        if (results.status === 'fulfilled') setRecentResults(results.value || []);
-        setLiveLoading(false);
-      }
-    );
+    let cancelled = false;
+
+    // 1. Fetch API-Football Fixtures (Upcoming & Recent Results)
+    api.getFootballFixtures()
+      .then((res: any) => {
+        if (cancelled) return;
+        if (res && Array.isArray(res.previous) && res.previous.length > 0) {
+          const mappedPrevious: ResultRow[] = res.previous.slice(0, 10).map((f: any) => ({
+            id: String(f.id),
+            date: f.date ? f.date.split('T')[0] : f.formattedDate,
+            time: f.formattedTime || '16:00',
+            competition: f.competition || 'Ligue 1',
+            round: null,
+            homeTeam: f.homeTeam.name,
+            awayTeam: f.awayTeam.name,
+            homeTeamId: String(f.homeTeam.id),
+            awayTeamId: String(f.awayTeam.id),
+            homeScore: f.score.home,
+            awayScore: f.score.away,
+            homeBadge: f.homeTeam.logo,
+            awayBadge: f.awayTeam.logo,
+            venue: f.venue,
+          }));
+          setRecentResults(mappedPrevious);
+        } else {
+          api.getRecentResults(6).then((rows) => { if (!cancelled) setRecentResults(rows || []); }).catch(() => {});
+        }
+
+        if (res && Array.isArray(res.upcoming) && res.upcoming.length > 0) {
+          const f = res.upcoming[0];
+          setNextMatch({
+            id: String(f.id),
+            date: f.date ? f.date.split('T')[0] : f.formattedDate,
+            time: f.formattedTime || '17:00',
+            competition: f.competition || 'Ligue 1',
+            round: null,
+            homeTeam: f.homeTeam.name,
+            awayTeam: f.awayTeam.name,
+            homeTeamId: String(f.homeTeam.id),
+            awayTeamId: String(f.awayTeam.id),
+            homeScore: f.score.home,
+            awayScore: f.score.away,
+            homeBadge: f.homeTeam.logo,
+            awayBadge: f.awayTeam.logo,
+            venue: f.venue,
+          });
+        } else {
+          api.getNextLeagueMatch().then((nm) => { if (!cancelled) setNextMatch(nm); }).catch(() => {});
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          api.getNextLeagueMatch().then(setNextMatch).catch(() => {});
+          api.getRecentResults(6).then((rows) => setRecentResults(rows || [])).catch(() => {});
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLiveLoading(false);
+      });
+
+    // 2. Fetch API-Football Team Information
+    api.getFootballTeam()
+      .then((tInfo: any) => {
+        if (!cancelled && tInfo && tInfo.name) {
+          setTeamInfo({
+            id: String(tInfo.id),
+            name: tInfo.name,
+            shortName: tInfo.code || 'USMO',
+            badge: tInfo.logo || 'https://media.api-sports.io/football/teams/992.png',
+            stadium: tInfo.venue?.name || 'Stade Mustapha Ben Jannet',
+            stadiumCapacity: tInfo.venue?.capacity || 15000,
+            formedYear: tInfo.founded || 1923,
+            league: 'Ligue 1',
+            description: 'Union Sportive Monastirienne - Fondé en 1923',
+            website: 'https://usmonastir.tn',
+          });
+        } else {
+          api.getUsmTeamInfo().then((ti) => { if (!cancelled) setTeamInfo(ti); }).catch(() => {});
+        }
+      })
+      .catch(() => {
+        api.getUsmTeamInfo().then((ti) => { if (!cancelled) setTeamInfo(ti); }).catch(() => {});
+      });
+
+    return () => { cancelled = true; };
   }, []);
 
   // ── Basketball: real matches from the internal Match API (admin-managed —

@@ -38,10 +38,39 @@ export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getStandings()
-      .then((rows: StandingRow[]) => setStandings(rows || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    let active = true;
+    api.getFootballStandings()
+      .then((res: any) => {
+        if (!active) return;
+        if (res && res.standings && res.standings.length > 0) {
+          const mapped: StandingRow[] = res.standings.map((r: any) => ({
+            position: r.rank,
+            teamId: String(r.teamId),
+            team: r.team,
+            badge: r.logo,
+            played: r.played,
+            won: r.win,
+            drawn: r.draw,
+            lost: r.lose,
+            goalDiff: r.goalDifference,
+            points: r.points,
+            isUSM: r.isUSM,
+          }));
+          setStandings(mapped);
+        } else {
+          api.getStandings()
+            .then((rows: StandingRow[]) => { if (active) setStandings(rows || []); })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {
+        api.getStandings()
+          .then((rows: StandingRow[]) => { if (active) setStandings(rows || []); })
+          .catch(() => {});
+      })
+      .finally(() => { if (active) setLoading(false); });
+
+    return () => { active = false; };
   }, []);
 
   // Compute displayed rows based on optional limit

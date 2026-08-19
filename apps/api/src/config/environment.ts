@@ -43,6 +43,8 @@ const environmentSchema = z.object({
   MINIO_SECRET_KEY: z.string().min(8),
   MINIO_BUCKET: z.string().regex(/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/),
   MINIO_PUBLIC_URL: publicMediaUrl,
+  API_FOOTBALL_KEY: z.string().optional().default('a8fdbbee6ec41f67af25add57631e1a1'),
+  API_FOOTBALL_BASE_URL: z.string().optional().default('https://v3.football.api-sports.io'),
 });
 
 export function validateEnvironment(config: Record<string, unknown>) {

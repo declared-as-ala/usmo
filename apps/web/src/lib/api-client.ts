@@ -39,6 +39,13 @@ async function fetchJson(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  // ── API-Football / Sports (Public) ───────────────────────────────────────
+  getFootballStandings: () => fetchJson('/sports/football/standings'),
+  getFootballSquad: () => fetchJson('/sports/football/squad'),
+  getFootballPlayer: (id: number | string) => fetchJson(`/sports/football/players/${id}`),
+  getFootballFixtures: () => fetchJson('/sports/football/fixtures'),
+  getFootballTeam: () => fetchJson('/sports/football/team'),
+
   // Editorial homepage
   getHomepageSettings: () => fetchJson('/settings/homepage'),
   updateHomepageSettings: (data: Record<string, unknown>) => fetchJson('/admin/settings/homepage', {

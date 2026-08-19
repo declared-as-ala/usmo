@@ -36,9 +36,42 @@ export function PlayerProfile({ sport, slug }: { sport: 'football' | 'basketball
     let cancelled = false;
     api.getPlayerBySlug(slug)
       .then((data: PlayerDetail) => { if (!cancelled) setPlayer(data); })
-      .catch(() => { if (!cancelled) setError(true); });
+      .catch(async () => {
+        if (sport === 'football') {
+          try {
+            const squad = await api.getFootballSquad();
+            const p = squad?.players?.find((item: any) => {
+              const itemSlug = item.name ? item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `player-${item.id}`;
+              return itemSlug === slug || String(item.id) === slug;
+            });
+            if (p && !cancelled) {
+              setPlayer({
+                _id: String(p.id),
+                slug: slug,
+                sport: 'football',
+                name: p.name,
+                nameAr: p.name,
+                number: p.number || 0,
+                position: p.position || 'Player',
+                positionAr: p.position || 'لاعب',
+                nationality: 'Tunisian',
+                nationalityAr: 'تونسي',
+                image: p.photo || '/moez_ben_cherifia.png',
+                stats: { Age: p.age ? `${p.age} ans` : '-' },
+                bio: `Joueur professionnel de l'US Monastir (Saison 2026-2027).`,
+                bioAr: `لاعب محترف في الاتحاد الرياضي المنستيري (الموسم 2026-2027).`,
+                height: '—',
+                weight: '—',
+                age: p.age || null,
+              });
+              return;
+            }
+          } catch {}
+        }
+        if (!cancelled) setError(true);
+      });
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, sport]);
 
   const backHref = `/${sport}`;
 

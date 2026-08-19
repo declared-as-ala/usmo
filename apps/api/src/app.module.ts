@@ -16,6 +16,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { SponsorsModule } from './modules/sponsors/sponsors.module';
 import { NewsModule } from './modules/news/news.module';
 import { SportsDbModule } from './modules/sportsdb/sportsdb.module';
+import { ApiFootballModule } from './modules/api-football/api-football.module';
 import { HistoryModule } from './modules/history/history.module';
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { TrophiesModule } from './modules/trophies/trophies.module';
@@ -81,6 +82,7 @@ import { PublicMediaUrlInterceptor } from './common/public-media-url.interceptor
     SponsorsModule,
     NewsModule,
     SportsDbModule,
+    ApiFootballModule,
     HistoryModule,
     TimelineModule,
     TrophiesModule,
