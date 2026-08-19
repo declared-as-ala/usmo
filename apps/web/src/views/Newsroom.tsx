@@ -154,7 +154,6 @@ export function Newsroom() {
           <SidebarBlock title="CATÉGORIES"><ul className="space-y-2">{categories.slice(1, 7).map(c => <li key={c} className="flex justify-between border-b border-[#DDE8F8]/60 pb-2 text-[11px]"><span className="text-[#071A30]">{categoryLabel(c)}</span><span className="rounded-full bg-usm-blue-soft px-2 text-[#5B6B82]">{articles.filter(a => a.category === c).length}</span></li>)}</ul></SidebarBlock>
           <MatchWidget/>
           <SidebarBlock title="NEWSLETTER OFFICIELLE"><Mail size={24} className="text-[#0D63FF]"/><p className="mt-3 text-xs leading-5 text-[#5B6B82]">Recevez toute l’actualité de l’USM directement dans votre boîte mail.</p><form className="mt-4 flex" onSubmit={e => e.preventDefault()}><label htmlFor="news-email" className="sr-only">Adresse e-mail</label><input id="news-email" type="email" required placeholder="Votre adresse e-mail" className="min-w-0 flex-1 rounded-l-md border border-[#DDE8F8] bg-white px-3 text-xs outline-none focus:border-[#0D63FF]"/><button className="min-h-11 rounded-r-md bg-[#0D63FF] px-3 text-[10px] font-black text-white">S’abonner</button></form></SidebarBlock>
-          <SidebarBlock title="PARTENAIRE OFFICIEL"><div className="flex items-center gap-3"><div className="grid h-12 w-12 place-items-center rounded-full border border-[#0D63FF] bg-white"><Trophy size={24} className="text-[#0D63FF]"/></div><div><b className="text-lg">Maestro</b><p className="text-[10px] text-[#5B6B82]">Engagé pour la performance</p></div></div></SidebarBlock>
         </aside>
       </div>
     </main>
@@ -170,5 +169,80 @@ function SidebarBlock({ title, children }: { title: string; children: React.Reac
 }
 
 function MatchWidget() {
-  return <SidebarBlock title="PROCHAIN MATCH"><div className="text-center"><span className="text-[9px] font-bold text-[#5B6B82]">LIGUE 1 • J26</span><div className="my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2"><div><img src="/logo.webp" alt="US Monastir" className="mx-auto h-12 w-12 object-contain"/><b className="mt-1 block text-[10px]">US MONASTIR</b></div><span className="text-lg font-black text-[#0D63FF]">VS</span><div><div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-[#DDE8F8] bg-usm-blue-soft"><Users size={22}/></div><b className="mt-1 block text-[10px]">CS SFAXIEN</b></div></div><div className="grid grid-cols-4 gap-1">{[['02','JOURS'],['08','HEURES'],['15','MIN'],['34','SEC']].map(([n,l]) => <div key={l} className="rounded bg-white py-2"><b className="block text-sm text-[#0D63FF]">{n}</b><small className="text-[7px] text-[#5B6B82]">{l}</small></div>)}</div><p className="mt-3 flex items-center justify-center gap-1 text-[9px] text-[#5B6B82]"><MapPin size={9}/> Stade Mustapha Ben Jannet</p></div></SidebarBlock>;
+  const [nextMatch, setNextMatch] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    api.getFootballFixtures()
+      .then((data) => {
+        if (!active) return;
+        if (data && data.upcoming && data.upcoming.length > 0) {
+          setNextMatch(data.upcoming[0]);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, []);
+
+  const home = nextMatch?.homeTeam || { name: 'US MONASTIR', logo: '/logo.webp' };
+  const away = nextMatch?.awayTeam || { name: 'CS SFAXIEN', logo: null };
+
+  return (
+    <SidebarBlock title="PROCHAIN MATCH">
+      {loading ? (
+        <div className="py-8 text-center text-xs text-slate-400">Chargement du prochain match...</div>
+      ) : (
+        <div className="text-center">
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#0D63FF] block">
+            {nextMatch?.competition || 'Ligue 1 Tunisienne'} • {nextMatch?.formattedDate || 'À venir'}
+          </span>
+          <div className="my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={home.logo || '/logo.webp'}
+                alt={home.name}
+                className="mx-auto h-12 w-12 object-contain drop-shadow-sm"
+              />
+              <b className="mt-1.5 block text-[10px] uppercase font-black text-usm-blue-dark truncate max-w-[90px] mx-auto">
+                {home.name}
+              </b>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-lg font-black text-[#0D63FF]">VS</span>
+              <span className="text-[9px] font-mono font-bold text-slate-400">
+                {nextMatch?.formattedTime || '16:00'}
+              </span>
+            </div>
+            <div>
+              {away.logo ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={away.logo}
+                  alt={away.name}
+                  className="mx-auto h-12 w-12 object-contain drop-shadow-sm"
+                />
+              ) : (
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-[#DDE8F8] bg-usm-blue-soft text-usm-blue-primary">
+                  <Users size={22} />
+                </div>
+              )}
+              <b className="mt-1.5 block text-[10px] uppercase font-black text-usm-blue-dark truncate max-w-[90px] mx-auto">
+                {away.name}
+              </b>
+            </div>
+          </div>
+          <p className="mt-3 flex items-center justify-center gap-1 text-[9px] text-[#5B6B82] truncate">
+            <MapPin size={10} className="text-[#0D63FF] shrink-0" />
+            <span>{nextMatch?.venue || 'Stade Mustapha Ben Jannet'}</span>
+          </p>
+        </div>
+      )}
+    </SidebarBlock>
+  );
 }
