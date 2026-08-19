@@ -5,7 +5,17 @@ import Link from 'next/link';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
 import { tr } from '../utils/i18n';
+import { footballPlayers, basketballPlayers } from '../data/mockData';
 import { ArrowLeft, BarChart3, User, Loader2, ShieldAlert } from 'lucide-react';
+
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 interface PlayerDetail {
   _id: string;
@@ -35,10 +45,34 @@ export function PlayerProfile({ sport, slug }: { sport: 'football' | 'basketball
   useEffect(() => {
     let cancelled = false;
     api.getPlayerBySlug(slug)
-      .then((data: PlayerDetail) => { if (!cancelled) setPlayer(data); })
-      .catch(() => { if (!cancelled) setError(true); });
+      .then((data: PlayerDetail) => {
+        if (!cancelled) {
+          if (data && data.name) {
+            setPlayer(data);
+          } else {
+            const list = sport === 'football' ? footballPlayers : basketballPlayers;
+            const match = list.find((p) => p.id === slug || slugify(p.name) === slug);
+            if (match) {
+              setPlayer({ ...match, _id: match.id, slug: slugify(match.name), sport } as any);
+            } else {
+              setError(true);
+            }
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          const list = sport === 'football' ? footballPlayers : basketballPlayers;
+          const match = list.find((p) => p.id === slug || slugify(p.name) === slug);
+          if (match) {
+            setPlayer({ ...match, _id: match.id, slug: slugify(match.name), sport } as any);
+          } else {
+            setError(true);
+          }
+        }
+      });
     return () => { cancelled = true; };
-  }, [slug]);
+  }, [slug, sport]);
 
   const backHref = `/${sport}`;
 

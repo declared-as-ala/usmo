@@ -4,8 +4,18 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
+import { footballPlayers, basketballPlayers } from '../data/mockData';
 import { tr } from '../utils/i18n';
 import { Shield, Loader2, Users, ArrowRight } from 'lucide-react';
+
+function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 interface RosterPlayer {
   _id: string;
@@ -40,8 +50,34 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
   useEffect(() => {
     let cancelled = false;
     api.getPlayers(sport)
-      .then((data: RosterPlayer[]) => { if (!cancelled) setRoster(data || []); })
-      .catch(() => {})
+      .then((data: RosterPlayer[]) => {
+        if (!cancelled) {
+          if (Array.isArray(data) && data.length > 0) {
+            setRoster(data);
+          } else {
+            const list = sport === 'football' ? footballPlayers : basketballPlayers;
+            const mapped = list.map((p) => ({
+              ...p,
+              _id: p.id,
+              slug: slugify(p.name),
+              sport,
+            })) as any;
+            setRoster(mapped);
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          const list = sport === 'football' ? footballPlayers : basketballPlayers;
+          const mapped = list.map((p) => ({
+            ...p,
+            _id: p.id,
+            slug: slugify(p.name),
+            sport,
+          })) as any;
+          setRoster(mapped);
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     api.getHomepageSettings()
       .then((settings) => {
