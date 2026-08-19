@@ -188,42 +188,46 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
               ))}
             </div>
 
-            {/* Players Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* Enhanced Compact Players Cards Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
               {filteredRoster.map((player) => (
                 <Link
                   key={player._id}
                   href={`/${sport}/joueurs/${player.slug}`}
-                  className="bg-white border border-usm-border rounded-2xl overflow-hidden group hover:border-usm-blue-primary/40 shadow-lg cursor-pointer transition-all duration-300 flex flex-col justify-between"
+                  className="bg-white/95 border border-slate-200/90 rounded-2xl overflow-hidden group hover:border-usm-blue-primary/60 hover:shadow-xl hover:-translate-y-1 shadow-md cursor-pointer transition-all duration-300 flex flex-col justify-between"
                 >
-                  <div className="relative overflow-hidden aspect-[4/5] bg-white">
+                  <div className="relative overflow-hidden aspect-[4/4.5] bg-gradient-to-b from-slate-50 to-usm-blue-soft/30">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={player.image}
                       alt={player.name}
-                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
-                    <div className="absolute top-4 right-4 h-10 w-10 rounded-full bg-white/80 border border-usm-blue-primary/30 flex items-center justify-center font-mono font-black text-usm-blue-primary text-sm">
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                    
+                    {/* Compact Jersey Badge */}
+                    <div className="absolute top-2.5 right-2.5 h-7 w-7 rounded-full bg-usm-blue-primary text-white flex items-center justify-center font-mono font-black text-xs shadow-md border border-white/20">
                       #{player.number}
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                      <div>
-                        <span className="text-[9px] uppercase font-bold tracking-widest text-usm-blue-primary block">
-                          {language === 'ar' ? player.positionAr : player.position}
-                        </span>
-                        <h3 className="text-sm font-bold text-usm-blue-dark mt-0.5 line-clamp-1">
-                          {language === 'ar' ? player.nameAr : player.name}
-                        </h3>
-                      </div>
+
+                    {/* Name & Position Overlay */}
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 space-y-0.5">
+                      <span className="inline-block text-[8px] uppercase font-black tracking-wider text-white bg-usm-blue-primary/80 border border-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
+                        {language === 'ar' ? player.positionAr : player.position}
+                      </span>
+                      <h3 className="text-xs font-black text-white truncate drop-shadow-sm group-hover:text-amber-300 transition-colors">
+                        {language === 'ar' ? player.nameAr : player.name}
+                      </h3>
                     </div>
                   </div>
-                  <div className="p-4 bg-white border-t border-usm-border grid grid-cols-3 gap-2 text-center">
-                    {Object.entries(player.stats).slice(0, 3).map(([key, val]) => (
-                      <div key={key}>
-                        <span className="text-[9px] text-slate-500 block uppercase font-semibold">{key}</span>
-                        <span className="text-xs font-mono font-black text-usm-blue-dark">{val}</span>
-                      </div>
+
+                  {/* Compact Stats Bar */}
+                  <div className="px-2.5 py-1.5 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono font-bold text-slate-600">
+                    {Object.entries(player.stats).slice(0, 2).map(([key, val]) => (
+                      <span key={key} className="truncate">
+                        <span className="text-slate-400 font-normal uppercase text-[8px] mr-1">{key}:</span>
+                        <span className="text-usm-blue-dark font-black">{val}</span>
+                      </span>
                     ))}
                   </div>
                 </Link>
