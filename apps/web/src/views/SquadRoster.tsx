@@ -4,18 +4,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
-import { footballPlayers, basketballPlayers } from '../data/mockData';
 import { tr } from '../utils/i18n';
 import { Shield, Loader2, Users, ArrowRight } from 'lucide-react';
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 interface RosterPlayer {
   _id: string;
@@ -49,36 +39,49 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
 
   useEffect(() => {
     let cancelled = false;
-    api.getPlayers(sport)
-      .then((data: RosterPlayer[]) => {
-        if (!cancelled) {
-          if (Array.isArray(data) && data.length > 0) {
-            setRoster(data);
-          } else {
-            const list = sport === 'football' ? footballPlayers : basketballPlayers;
-            const mapped = list.map((p) => ({
-              ...p,
-              _id: p.id,
-              slug: slugify(p.name),
-              sport,
-            })) as any;
-            setRoster(mapped);
+
+    const fetchRoster = async () => {
+      try {
+        const dbPlayers: RosterPlayer[] = await api.getPlayers(sport).catch(() => []);
+        let merged = [...(dbPlayers || [])];
+
+        if (sport === 'football') {
+          const extPlayers: any[] = await api.getSportsDbPlayers().catch(() => []);
+          if (extPlayers && extPlayers.length > 0) {
+            const existingSlugs = new Set(merged.map((p) => p.slug));
+            const existingNames = new Set(merged.map((p) => p.name.toLowerCase()));
+
+            for (const ext of extPlayers) {
+              if (!existingSlugs.has(ext.slug) && !existingNames.has(ext.name.toLowerCase())) {
+                merged.push({
+                  _id: ext._id || `ext_${ext.name}`,
+                  slug: ext.slug,
+                  sport: 'football',
+                  name: ext.name,
+                  nameAr: ext.nameAr || ext.name,
+                  number: ext.number || 0,
+                  position: ext.position || 'Player',
+                  positionAr: ext.positionAr || 'لاعب',
+                  nationality: ext.nationality || 'Tunisian',
+                  nationalityAr: ext.nationalityAr || 'تونسي',
+                  image: ext.image || '/moez_ben_cherifia.png',
+                  stats: ext.stats || {},
+                });
+              }
+            }
           }
         }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          const list = sport === 'football' ? footballPlayers : basketballPlayers;
-          const mapped = list.map((p) => ({
-            ...p,
-            _id: p.id,
-            slug: slugify(p.name),
-            sport,
-          })) as any;
-          setRoster(mapped);
-        }
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
+
+        if (!cancelled) setRoster(merged);
+      } catch (err) {
+        if (!cancelled) setRoster([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchRoster();
+
     api.getHomepageSettings()
       .then((settings) => {
         if (cancelled) return;
@@ -86,6 +89,7 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
         else if (sport === 'basketball' && settings?.basketballBannerUrl) setBannerUrl(settings.basketballBannerUrl);
       })
       .catch(() => {});
+
     return () => { cancelled = true; };
   }, [sport]);
 

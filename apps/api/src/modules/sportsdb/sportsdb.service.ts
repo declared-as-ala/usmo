@@ -265,4 +265,38 @@ export class SportsDbService {
       website: 'usmonastir.tn',
     };
   }
+
+  async getPlayers(): Promise<any[]> {
+    const json = await this.fetchCached<{ player: any[] | null }>(
+      'external_players',
+      `${SPORTSDB_BASE}/lookup_all_players.php?id=${USM_TEAM_ID}`,
+      30 * 60 * 1000,
+      { player: null },
+    );
+    const players = json.player || [];
+    return players.map((p) => ({
+      _id: `ext_${p.idPlayer}`,
+      slug: (p.strPlayer || 'player')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''),
+      sport: 'football',
+      name: p.strPlayer,
+      nameAr: p.strPlayerAlternate || p.strPlayer,
+      number: p.strNumber ? Number(p.strNumber) : 0,
+      position: p.strPosition || 'Player',
+      positionAr: p.strPosition || 'لاعب',
+      nationality: p.strNationality || 'Tunisian',
+      nationalityAr: p.strNationality === 'Tunisia' ? 'تونسي' : p.strNationality,
+      image: p.strCutout || p.strRender || p.strThumb || '/moez_ben_cherifia.png',
+      stats: {
+        Nationality: p.strNationality || 'Tunisia',
+        Born: p.dateBorn || 'N/A',
+        Number: p.strNumber ? `#${p.strNumber}` : '-',
+      },
+      bio: p.strDescriptionFR || p.strDescriptionEN || `Joueur de l'US Monastir en Ligue 1 Tunisienne.`,
+      bioAr: `لاعب الاتحاد الرياضي المنستيري في الرابطة المحترفة الأولى.`,
+      source: 'thesportsdb',
+    }));
+  }
 }

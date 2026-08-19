@@ -24,4 +24,9 @@ export class SportsDbController {
   async getTeam() {
     return this.sportsDbService.getTeamInfo();
   }
+
+  @Get('players')
+  async getPlayers() {
+    return this.sportsDbService.getPlayers();
+  }
 }

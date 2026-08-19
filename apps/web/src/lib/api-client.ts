@@ -599,6 +599,7 @@ export const api = {
   }),
 
   getUsmTeamInfo: () => fetchJson('/sportsdb/team'),
+  getSportsDbPlayers: () => fetchJson('/sportsdb/players'),
 
   // ── History page ────────────────────────────────────────────────────
   getHistory: () => fetchJson('/history'),
