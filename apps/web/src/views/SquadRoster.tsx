@@ -42,16 +42,16 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
 
     const fetchRoster = async () => {
       try {
-        const dbPlayers: RosterPlayer[] = await api.getPlayers(sport).catch(() => []);
-        const merged = [...(dbPlayers || [])];
-
         if (sport === 'football') {
+          // STRICT DIRECTIVE: Only display players from external API-Football, do NOT show database players
           const apiFootballRes = await api.getFootballSquad().catch(() => null);
+          const externalRoster: RosterPlayer[] = [];
+
           if (apiFootballRes && apiFootballRes.players && apiFootballRes.players.length > 0) {
             for (const p of apiFootballRes.players) {
               const pSlug = p.name ? p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : `player-${p.id}`;
               const pImage = p.photo || '/moez_ben_cherifia.png';
-              merged.push({
+              externalRoster.push({
                 _id: `apifootball_${p.id}`,
                 slug: pSlug,
                 sport: 'football',
@@ -71,30 +71,13 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
             }
           }
 
-          if (merged.length === 0) {
-            const extPlayers: any[] = await api.getSportsDbPlayers().catch(() => []);
-            if (extPlayers && extPlayers.length > 0) {
-              for (const ext of extPlayers) {
-                merged.push({
-                  _id: ext._id || `ext_${ext.name}`,
-                  slug: ext.slug,
-                  sport: 'football',
-                  name: ext.name,
-                  nameAr: ext.nameAr || ext.name,
-                  number: ext.number || 0,
-                  position: ext.position || 'Player',
-                  positionAr: ext.positionAr || 'لاعب',
-                  nationality: ext.nationality || 'Tunisian',
-                  nationalityAr: ext.nationalityAr || 'تونسي',
-                  image: ext.image || '/moez_ben_cherifia.png',
-                  stats: ext.stats || {},
-                });
-              }
-            }
-          }
+          if (!cancelled) setRoster(externalRoster);
+          return;
         }
 
-        if (!cancelled) setRoster(merged);
+        // Basketball or default: fetch DB players
+        const dbPlayers: RosterPlayer[] = await api.getPlayers(sport).catch(() => []);
+        if (!cancelled) setRoster(dbPlayers || []);
       } catch (err) {
         if (!cancelled) setRoster([]);
       } finally {
