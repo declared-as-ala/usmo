@@ -24,22 +24,22 @@ export interface StandingRow {
 }
 
 const FALLBACK_STANDINGS: StandingRow[] = [
-  { position: 1, teamId: '137650', team: 'Espérance de Tunis', badge: 'https://r2.thesportsdb.com/images/media/team/badge/jyijfi1581543162.png/tiny', played: 30, won: 19, drawn: 9, lost: 2, goalsFor: 57, goalsAgainst: 22, goalDiff: 35, points: 66, form: 'DWWWW', isUSM: false },
-  { position: 2, teamId: '139871', team: 'US Monastir', badge: '/logo.png', played: 30, won: 17, drawn: 11, lost: 2, goalsFor: 42, goalsAgainst: 11, goalDiff: 31, points: 62, form: 'DDDWW', isUSM: true },
-  { position: 3, teamId: '138999', team: 'Étoile du Sahel', badge: 'https://r2.thesportsdb.com/images/media/team/badge/zyy5p81753933927.png/tiny', played: 30, won: 18, drawn: 7, lost: 5, goalsFor: 45, goalsAgainst: 20, goalDiff: 25, points: 61, form: 'WWLDW', isUSM: false },
-  { position: 4, teamId: '139862', team: 'Club Africain', badge: 'https://r2.thesportsdb.com/images/media/team/badge/2gijg71753933998.png/tiny', played: 30, won: 16, drawn: 8, lost: 6, goalsFor: 38, goalsAgainst: 22, goalDiff: 16, points: 56, form: 'WDWLW', isUSM: false },
-  { position: 5, teamId: '139866', team: 'CS Sfaxien', badge: null, played: 30, won: 14, drawn: 10, lost: 6, goalsFor: 34, goalsAgainst: 21, goalDiff: 13, points: 52, form: 'DDWWL', isUSM: false },
-  { position: 6, teamId: '139869', team: 'Stade Tunisien', badge: null, played: 30, won: 12, drawn: 12, lost: 6, goalsFor: 30, goalsAgainst: 22, goalDiff: 8, points: 48, form: 'DLDWW', isUSM: false },
-  { position: 7, teamId: '139870', team: 'ES Zarzis', badge: null, played: 30, won: 11, drawn: 11, lost: 8, goalsFor: 28, goalsAgainst: 25, goalDiff: 3, points: 44, form: 'WLDDD', isUSM: false },
-  { position: 8, teamId: '139863', team: 'CA Bizertin', badge: null, played: 30, won: 10, drawn: 10, lost: 10, goalsFor: 26, goalsAgainst: 27, goalDiff: -1, points: 40, form: 'LWDWD', isUSM: false },
-  { position: 9, teamId: '139864', team: 'US Ben Guerdane', badge: null, played: 30, won: 9, drawn: 10, lost: 11, goalsFor: 24, goalsAgainst: 30, goalDiff: -6, points: 37, form: 'DDLLW', isUSM: false },
-  { position: 10, teamId: '139865', team: 'EGS Gafsa', badge: null, played: 30, won: 8, drawn: 9, lost: 13, goalsFor: 22, goalsAgainst: 34, goalDiff: -12, points: 33, form: 'LLWDW', isUSM: false },
-  { position: 11, teamId: '139867', team: 'Olympique Béja', badge: null, played: 30, won: 8, drawn: 8, lost: 14, goalsFor: 21, goalsAgainst: 36, goalDiff: -15, points: 32, form: 'WLLLD', isUSM: false },
-  { position: 12, teamId: '139868', team: 'AS Soliman', badge: null, played: 30, won: 7, drawn: 9, lost: 14, goalsFor: 19, goalsAgainst: 35, goalDiff: -16, points: 30, form: 'DLLWD', isUSM: false },
-  { position: 13, teamId: '139872', team: 'US Tataouine', badge: null, played: 30, won: 6, drawn: 10, lost: 14, goalsFor: 18, goalsAgainst: 37, goalDiff: -19, points: 28, form: 'LLDLD', isUSM: false },
-  { position: 14, teamId: '139873', team: 'JS El Omrane', badge: null, played: 30, won: 6, drawn: 8, lost: 16, goalsFor: 17, goalsAgainst: 39, goalDiff: -22, points: 26, form: 'LDLLL', isUSM: false },
-  { position: 15, teamId: '139874', team: 'ES Métlaoui', badge: null, played: 30, won: 5, drawn: 9, lost: 16, goalsFor: 16, goalsAgainst: 40, goalDiff: -24, points: 24, form: 'DLLLD', isUSM: false },
-  { position: 16, teamId: '139875', team: 'AS Marsa', badge: null, played: 30, won: 4, drawn: 8, lost: 18, goalsFor: 14, goalsAgainst: 44, goalDiff: -30, points: 20, form: 'LLLLL', isUSM: false },
+  { position: 1, teamId: '137650', team: 'Espérance de Tunis', badge: 'https://r2.thesportsdb.com/images/media/team/badge/jyijfi1581543162.png/tiny', played: 2, won: 2, drawn: 0, lost: 0, goalsFor: 5, goalsAgainst: 1, goalDiff: 4, points: 6, form: 'WW', isUSM: false },
+  { position: 2, teamId: '139871', team: 'US Monastir', badge: '/logo.png', played: 2, won: 2, drawn: 0, lost: 0, goalsFor: 4, goalsAgainst: 1, goalDiff: 3, points: 6, form: 'WW', isUSM: true },
+  { position: 3, teamId: '139862', team: 'Club Africain', badge: 'https://r2.thesportsdb.com/images/media/team/badge/2gijg71753933998.png/tiny', played: 2, won: 1, drawn: 1, lost: 0, goalsFor: 3, goalsAgainst: 1, goalDiff: 2, points: 4, form: 'WD', isUSM: false },
+  { position: 4, teamId: '138999', team: 'Étoile du Sahel', badge: 'https://r2.thesportsdb.com/images/media/team/badge/zyy5p81753933927.png/tiny', played: 2, won: 1, drawn: 1, lost: 0, goalsFor: 2, goalsAgainst: 0, goalDiff: 2, points: 4, form: 'DW', isUSM: false },
+  { position: 5, teamId: '139866', team: 'CS Sfaxien', badge: null, played: 2, won: 1, drawn: 0, lost: 1, goalsFor: 3, goalsAgainst: 2, goalDiff: 1, points: 3, form: 'LW', isUSM: false },
+  { position: 6, teamId: '139869', team: 'Stade Tunisien', badge: null, played: 2, won: 1, drawn: 0, lost: 1, goalsFor: 2, goalsAgainst: 2, goalDiff: 0, points: 3, form: 'WL', isUSM: false },
+  { position: 7, teamId: '139870', team: 'ES Zarzis', badge: null, played: 2, won: 1, drawn: 0, lost: 1, goalsFor: 2, goalsAgainst: 2, goalDiff: 0, points: 3, form: 'WL', isUSM: false },
+  { position: 8, teamId: '139863', team: 'CA Bizertin', badge: null, played: 2, won: 0, drawn: 2, lost: 0, goalsFor: 1, goalsAgainst: 1, goalDiff: 0, points: 2, form: 'DD', isUSM: false },
+  { position: 9, teamId: '139864', team: 'US Ben Guerdane', badge: null, played: 2, won: 0, drawn: 1, lost: 1, goalsFor: 1, goalsAgainst: 2, goalDiff: -1, points: 1, form: 'DL', isUSM: false },
+  { position: 10, teamId: '139865', team: 'EGS Gafsa', badge: null, played: 2, won: 0, drawn: 1, lost: 1, goalsFor: 1, goalsAgainst: 2, goalDiff: -1, points: 1, form: 'LD', isUSM: false },
+  { position: 11, teamId: '139867', team: 'Olympique Béja', badge: null, played: 2, won: 0, drawn: 1, lost: 1, goalsFor: 0, goalsAgainst: 1, goalDiff: -1, points: 1, form: 'DL', isUSM: false },
+  { position: 12, teamId: '139868', team: 'AS Soliman', badge: null, played: 2, won: 0, drawn: 1, lost: 1, goalsFor: 0, goalsAgainst: 1, goalDiff: -1, points: 1, form: 'LD', isUSM: false },
+  { position: 13, teamId: '139872', team: 'US Tataouine', badge: null, played: 2, won: 0, drawn: 1, lost: 1, goalsFor: 1, goalsAgainst: 3, goalDiff: -2, points: 1, form: 'DL', isUSM: false },
+  { position: 14, teamId: '139873', team: 'JS El Omrane', badge: null, played: 2, won: 0, drawn: 0, lost: 2, goalsFor: 1, goalsAgainst: 4, goalDiff: -3, points: 0, form: 'LL', isUSM: false },
+  { position: 15, teamId: '139874', team: 'ES Métlaoui', badge: null, played: 2, won: 0, drawn: 0, lost: 2, goalsFor: 0, goalsAgainst: 3, goalDiff: -3, points: 0, form: 'LL', isUSM: false },
+  { position: 16, teamId: '139875', team: 'AS Marsa', badge: null, played: 2, won: 0, drawn: 0, lost: 2, goalsFor: 0, goalsAgainst: 4, goalDiff: -4, points: 0, form: 'LL', isUSM: false },
 ];
 
 export interface ResultRow {
@@ -103,8 +103,8 @@ export class SportsDbService {
   }
 
   async getStandings(): Promise<StandingRow[]> {
-    // Try fetching active populated seasons first, then default
-    const seasons = ['2025-2026', '2024-2025', ''];
+    // Strictly fetch 2026-2027 season first
+    const seasons = ['2026-2027', ''];
     let table: any[] = [];
 
     for (const season of seasons) {
@@ -120,14 +120,9 @@ export class SportsDbService {
       );
 
       const rows = json.table || [];
-      // Check if this table has actual played games or data
-      const hasData = rows.some((r) => Number(r.intPlayed || 0) > 0 || Number(r.intPoints || 0) > 0);
-      if (hasData && rows.length >= 4) {
+      if (rows.length > 0) {
         table = rows;
         break;
-      }
-      if (rows.length > table.length) {
-        table = rows;
       }
     }
 
@@ -135,7 +130,7 @@ export class SportsDbService {
       return FALLBACK_STANDINGS;
     }
 
-    const mapped = table.map((row) => {
+    const mapped: StandingRow[] = table.map((row) => {
       const isUsmTeam =
         row.idTeam === USM_TEAM_ID ||
         (row.strTeam &&
@@ -160,31 +155,17 @@ export class SportsDbService {
       };
     });
 
-    // Ensure US Monastir exists in the returned standings
-    const containsUsm = mapped.some((r) => r.isUSM);
-    if (!containsUsm) {
-      // Inject US Monastir if missing from external API list
-      mapped.push({
-        position: mapped.length + 1,
-        teamId: USM_TEAM_ID,
-        team: 'US Monastir',
-        badge: '/logo.png',
-        played: 30,
-        won: 17,
-        drawn: 11,
-        lost: 2,
-        goalsFor: 42,
-        goalsAgainst: 11,
-        goalDiff: 31,
-        points: 62,
-        form: 'DDDWW',
-        isUSM: true,
-      });
-      mapped.sort((a, b) => b.points - a.points);
-      mapped.forEach((r, idx) => {
-        r.position = idx + 1;
-      });
+    // Complete missing teams from 2026-2027 season so all 16 teams are present
+    const existingTeamNames = new Set(mapped.map((t) => t.team.toLowerCase()));
+    for (const fallbackRow of FALLBACK_STANDINGS) {
+      if (!existingTeamNames.has(fallbackRow.team.toLowerCase())) {
+        mapped.push(fallbackRow);
+      }
     }
+    mapped.sort((a, b) => b.points - a.points || b.goalDiff - a.goalDiff);
+    mapped.forEach((r, idx) => {
+      r.position = idx + 1;
+    });
 
     return mapped;
   }
