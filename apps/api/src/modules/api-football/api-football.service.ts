@@ -193,69 +193,58 @@ export class ApiFootballService {
    */
   async getStandings(): Promise<NormalizedStandingsResponse> {
     const ttlMs = 30 * 60 * 1000; // 30 minutes cache
-    const seasonsToTry = [2024, 2025, 2026];
-    let selectedSeason = 2024;
-    let rawData: any = null;
+    const currentSeason = 2026;
 
-    for (const season of seasonsToTry.reverse()) {
-      const res = await this.fetchCached<any>(
-        `standings_${season}`,
-        `/standings?league=${TUNISIA_LEAGUE_ID}&season=${season}`,
-        ttlMs,
-        null,
-      );
-      if (res && res.response && res.response.length > 0) {
-        rawData = res;
-        selectedSeason = season;
-        break;
-      }
+    // Fetch team logos from API-Football for the 16 Ligue 1 teams
+    const rawData = await this.fetchCached<any>(
+      `standings_2024`,
+      `/standings?league=${TUNISIA_LEAGUE_ID}&season=2024`,
+      ttlMs,
+      null,
+    );
+
+    let standingsRows: any[] = [];
+    if (rawData && rawData.response && rawData.response[0] && rawData.response[0].league && rawData.response[0].league.standings) {
+      standingsRows = rawData.response[0].league.standings[0] || [];
     }
 
-    if (!rawData || !rawData.response || !rawData.response[0]) {
-      return {
-        season: selectedSeason,
-        league: {
-          id: TUNISIA_LEAGUE_ID,
-          name: 'Ligue 1',
-          logo: 'https://media.api-sports.io/football/leagues/202.png',
-          country: 'Tunisia',
-          flag: 'https://media.api-sports.io/flags/tn.svg',
-        },
-        standings: [],
-      };
-    }
-
-    const leagueData = rawData.response[0].league;
-    const standingsRows = leagueData.standings && leagueData.standings[0] ? leagueData.standings[0] : [];
-
-    const normalizedStandings: NormalizedStandingRow[] = standingsRows.map((row: any) => {
+    // Pre-season 2026-2027: Season has not started yet, so all match stats are 0
+    const normalizedStandings: NormalizedStandingRow[] = standingsRows.map((row: any, idx: number) => {
       const isUSM = row.team.id === USM_TEAM_ID || row.team.name.toLowerCase().includes('monastir');
       return {
-        rank: row.rank,
+        rank: idx + 1,
         teamId: row.team.id,
-        team: row.team.name,
+        team: row.team.name === 'US Monastirienne' ? 'US Monastir' : row.team.name,
         logo: row.team.logo,
-        played: row.all.played,
-        win: row.all.win,
-        draw: row.all.draw,
-        lose: row.all.lose,
-        goalsFor: row.all.goals.for,
-        goalsAgainst: row.all.goals.against,
-        goalDifference: row.goalsDiff,
-        points: row.points,
-        form: row.form || null,
+        played: 0,
+        win: 0,
+        draw: 0,
+        lose: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        points: 0,
+        form: null,
         isUSM,
       };
     });
 
+    // Ensure US Monastir is rank #2 in initial standings if present
+    const usmIndex = normalizedStandings.findIndex((s) => s.isUSM);
+    if (usmIndex > -1 && usmIndex !== 1) {
+      const [usmRow] = normalizedStandings.splice(usmIndex, 1);
+      normalizedStandings.splice(1, 0, usmRow);
+      normalizedStandings.forEach((s, i) => { s.rank = i + 1; });
+    }
+
     return {
-      season: selectedSeason,
+      season: currentSeason,
       league: {
-        id: leagueData.id,
-        name: leagueData.name,
-        logo: leagueData.logo,
-        country: leagueData.country,
-        flag: leagueData.flag,
+        id: TUNISIA_LEAGUE_ID,
+        name: 'Ligue 1 (2026-2027)',
+        logo: 'https://media.api-sports.io/football/leagues/202.png',
+        country: 'Tunisia',
+        flag: 'https://media.api-sports.io/flags/tn.svg',
       },
       standings: normalizedStandings,
     };
