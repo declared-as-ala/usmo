@@ -21,10 +21,10 @@ interface TimelineEvent {
 }
 
 const SPORT_BADGE: Record<TimelineEvent['sport'], { label: string; className: string }> = {
-  club: { label: 'Club', className: 'bg-usm-blue-primary/15 text-usm-blue-primary border-usm-blue-primary/30' },
-  football: { label: 'Football', className: 'bg-usm-blue-primary/15 text-usm-blue-light border-usm-blue-primary/30' },
-  basketball: { label: 'Basketball', className: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
-  city: { label: 'Monastir', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+  club: { label: 'Club', className: 'bg-usm-blue-dark text-white font-extrabold' },
+  football: { label: 'Football', className: 'bg-blue-600 text-white font-extrabold' },
+  basketball: { label: 'Basketball', className: 'bg-amber-600 text-white font-extrabold' },
+  city: { label: 'Monastir', className: 'bg-emerald-700 text-white font-extrabold' },
 };
 
 const VALUE_ICONS: Record<string, React.ElementType> = {
