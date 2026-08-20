@@ -29,7 +29,6 @@ export const MobileNav: React.FC = () => {
     { screen: 'palmares', label: 'Palmarès', icon: <Trophy size={17} /> },
     { screen: 'legendes', label: 'Légendes', icon: <Crown size={17} /> },
     { screen: 'telechargements', label: 'Téléchargements', icon: <FileText size={17} /> },
-    { screen: 'boutique', label: 'Boutique', icon: <ShoppingBag size={17} /> },
     { screen: 'stadium', label: 'Guide du stade', icon: <Map size={17} /> },
     { screen: 'contact', label: 'Nous contacter', icon: <Phone size={17} /> },
   ];
