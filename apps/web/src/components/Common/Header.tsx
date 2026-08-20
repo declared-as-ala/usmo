@@ -96,7 +96,6 @@ export const Header: React.FC = () => {
     { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },
     { kind: 'link', screen: 'news', labelKey: 'nav.news' },
     { kind: 'link', screen: 'media', labelKey: 'nav.media' },
-    { kind: 'link', screen: 'boutique', labelKey: 'nav.catalog' },
     {
       kind: 'dropdown',
       key: 'club',
@@ -261,52 +260,7 @@ export const Header: React.FC = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-              {/* Language selector */}
-              <div className="relative" ref={langRef}>
-                <button
-                  onClick={() => {
-                    setLangOpen(!langOpen);
-                    setProfileOpen(false);
-                  }}
-                  className="h-9 px-3 rounded-full border border-white/12 bg-white/[0.03] hover:border-usm-teal-accent/50 flex items-center gap-1.5 text-white/75 hover:text-usm-teal-accent transition-all duration-300 cursor-pointer"
-                >
-                  <Globe size={14} />
-                  <span className="text-[10px] font-bold tracking-wider">{currentLang.native}</span>
-                </button>
-                <AnimatePresence>
-                  {langOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                      transition={{ duration: 0.18 }}
-                      className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-40 bg-[#050d1e] border border-usm-teal-accent/25 rounded-xl shadow-2xl overflow-hidden z-50"
-                    >
-                      {LANGUAGES.map((l) => (
-                        <button
-                          key={l.code}
-                          onClick={() => {
-                            setLanguage(l.code);
-                            setLangOpen(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-4 py-2.5 text-xs font-medium cursor-pointer transition-colors ${
-                            language === l.code
-                              ? 'text-usm-teal-accent bg-usm-teal-accent/10'
-                              : 'text-white/80 hover:bg-white/5 hover:text-white'
-                          }`}
-                        >
-                          <span>{l.label}</span>
-                          {language === l.code && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-usm-teal-accent" />
-                          )}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Utility cluster — one segmented pill instead of separate circles */}
+              {/* Utility cluster — search & notifications */}
               <div className="flex items-center h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
                 {/* Search */}
                 <button
@@ -318,24 +272,6 @@ export const Header: React.FC = () => {
                   title="Search"
                 >
                   <Search size={15} />
-                </button>
-                <span className="w-px h-4 bg-white/10" />
-
-                {/* Boutique / cart */}
-                <button
-                  onClick={() => {
-                    setIsCartOpen(!isCartOpen);
-                    setProfileOpen(false);
-                  }}
-                  className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-teal-accent hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
-                  title="Boutique"
-                >
-                  <ShoppingBag size={15} />
-                  {cart.length > 0 && (
-                    <span className="absolute top-0.5 end-0.5 hidden sm:flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                    </span>
-                  )}
                 </button>
 
                 {/* Notifications — logged-in fans only */}
