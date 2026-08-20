@@ -454,18 +454,29 @@ export default function AdminMedia() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-                  Photos de l’album <span className="font-normal text-slate-400">(galerie complète, accès selon niveau)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Photos de l’album <span className="font-normal text-slate-400">({albumPhotos.length} photo{albumPhotos.length > 1 ? 's' : ''})</span>
+                  </label>
+                  {albumPhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAlbumPhotos([])}
+                      className="text-[10px] text-red-500 hover:underline cursor-pointer"
+                    >
+                      Tout effacer
+                    </button>
+                  )}
+                </div>
                 {albumPhotos.length > 0 && (
-                  <div className="mb-2 grid grid-cols-5 gap-2">
+                  <div className="mb-2 grid grid-cols-5 gap-2 max-h-48 overflow-y-auto p-1 bg-slate-50 border border-slate-200 rounded-lg">
                     {albumPhotos.map((url, idx) => (
-                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
                         <img src={url} alt="" className="h-full w-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setAlbumPhotos((p) => p.filter((_, i) => i !== idx))}
-                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/95 text-red-600 shadow cursor-pointer"
                         >
                           <X size={11} />
                         </button>
@@ -475,27 +486,40 @@ export default function AdminMedia() {
                 )}
                 <MediaUploader
                   key={`photos-${albumPhotos.length}`}
+                  multiple
                   compact
                   folder={`media/albums/${editingAlbum?._id || 'new'}/photos`}
-                  label="Ajouter une photo"
+                  label="Sélectionner plusieurs photos"
                   onUpload={(f) => setAlbumPhotos((p) => [...p, f.url])}
+                  onMultipleUpload={(files) => setAlbumPhotos((p) => [...p, ...files.map((f) => f.url)])}
                   onUploadingChange={setAlbumPhotoUploading}
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-                  Photos teaser <span className="font-normal text-slate-400">(toujours visibles, même verrouillé)</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">
+                    Photos teaser <span className="font-normal text-slate-400">({albumTeaserPhotos.length} photo{albumTeaserPhotos.length > 1 ? 's' : ''})</span>
+                  </label>
+                  {albumTeaserPhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setAlbumTeaserPhotos([])}
+                      className="text-[10px] text-red-500 hover:underline cursor-pointer"
+                    >
+                      Tout effacer
+                    </button>
+                  )}
+                </div>
                 {albumTeaserPhotos.length > 0 && (
-                  <div className="mb-2 grid grid-cols-5 gap-2">
+                  <div className="mb-2 grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 bg-slate-50 border border-slate-200 rounded-lg">
                     {albumTeaserPhotos.map((url, idx) => (
-                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
                         <img src={url} alt="" className="h-full w-full object-cover" />
                         <button
                           type="button"
                           onClick={() => setAlbumTeaserPhotos((p) => p.filter((_, i) => i !== idx))}
-                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/95 text-red-600 shadow cursor-pointer"
                         >
                           <X size={11} />
                         </button>
@@ -505,10 +529,12 @@ export default function AdminMedia() {
                 )}
                 <MediaUploader
                   key={`teasers-${albumTeaserPhotos.length}`}
+                  multiple
                   compact
                   folder={`media/albums/${editingAlbum?._id || 'new'}/teasers`}
-                  label="Ajouter une photo teaser"
+                  label="Sélectionner plusieurs photos teaser"
                   onUpload={(f) => setAlbumTeaserPhotos((p) => [...p, f.url])}
+                  onMultipleUpload={(files) => setAlbumTeaserPhotos((p) => [...p, ...files.map((f) => f.url)])}
                   onUploadingChange={setAlbumTeaserUploading}
                 />
               </div>

@@ -20,8 +20,12 @@ interface UploadedFile {
 interface MediaUploaderProps {
   /** MinIO folder prefix where files will be stored */
   folder: string;
-  /** Called when upload completes successfully */
-  onUpload: (file: UploadedFile) => void;
+  /** Called when single upload completes successfully */
+  onUpload?: (file: UploadedFile) => void;
+  /** Called when multiple uploads complete successfully */
+  onMultipleUpload?: (files: UploadedFile[]) => void;
+  /** Allow selecting multiple files at once */
+  multiple?: boolean;
   /** Called when user removes a pending file */
   onRemove?: () => void;
   /** Current value (existing URL) to show as preview */
@@ -44,10 +48,12 @@ type UploadState = 'idle' | 'uploading' | 'success' | 'error';
 export const MediaUploader: React.FC<MediaUploaderProps> = ({
   folder,
   onUpload,
+  onMultipleUpload,
+  multiple = false,
   onRemove,
   currentUrl,
   accept = 'image/jpeg,image/png,image/webp,image/avif',
-  label = 'Drop image here or click to browse',
+  label = 'Drop image(s) here or click to browse',
   compact = false,
   altText,
   onUploadingChange,
@@ -58,39 +64,87 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   const [preview, setPreview] = useState<string | null>(currentUrl || null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [uploadStatusText, setUploadStatusText] = useState('');
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      if (!file) return;
+  const handleFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const fileArray = Array.from(files).filter(Boolean);
+      if (fileArray.length === 0) return;
 
-      // Local preview
-      const localPreview = URL.createObjectURL(file);
-      setPreview(localPreview);
-      setState('uploading');
-      setError(null);
-      setProgress(0);
-      onUploadingChange?.(true);
+      if (!multiple || fileArray.length === 1) {
+        const file = fileArray[0];
+        const localPreview = URL.createObjectURL(file);
+        setPreview(localPreview);
+        setState('uploading');
+        setError(null);
+        setProgress(0);
+        setUploadStatusText('Envoi en cours…');
+        onUploadingChange?.(true);
 
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', folder);
-        if (altText) formData.append('altText', altText);
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('folder', folder);
+          if (altText) formData.append('altText', altText);
 
-        const result = await api.uploadMediaWithProgress(formData, setProgress);
-        setState('success');
-        setPreview(result.thumbnailUrl || result.url);
-        onUpload(result);
-      } catch (err: any) {
-        setState('error');
-        setError(err.message || 'Upload failed');
-        setPreview(currentUrl || null);
-        URL.revokeObjectURL(localPreview);
-      } finally {
-        onUploadingChange?.(false);
+          const result = await api.uploadMediaWithProgress(formData, setProgress);
+          setState('success');
+          setPreview(result.thumbnailUrl || result.url);
+          onUpload?.(result);
+        } catch (err: any) {
+          setState('error');
+          setError(err.message || 'Upload failed');
+          setPreview(currentUrl || null);
+          URL.revokeObjectURL(localPreview);
+        } finally {
+          onUploadingChange?.(false);
+        }
+      } else {
+        // Multiple files batch upload
+        setState('uploading');
+        setError(null);
+        setProgress(0);
+        onUploadingChange?.(true);
+
+        const results: UploadedFile[] = [];
+        let completedCount = 0;
+
+        try {
+          for (let i = 0; i < fileArray.length; i++) {
+            const file = fileArray[i];
+            setUploadStatusText(`Envoi de la photo ${i + 1}/${fileArray.length}…`);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', folder);
+            if (altText) formData.append('altText', altText);
+
+            const res = await api.uploadMediaWithProgress(formData, (p) => {
+              const overall = Math.round(((i + p / 100) / fileArray.length) * 100);
+              setProgress(overall);
+            });
+            results.push(res);
+            completedCount++;
+            setProgress(Math.round((completedCount / fileArray.length) * 100));
+          }
+
+          setState('success');
+          if (results.length > 0) {
+            setPreview(results[results.length - 1].thumbnailUrl || results[results.length - 1].url);
+          }
+          onMultipleUpload?.(results);
+          if (results.length > 0 && onUpload) {
+            onUpload(results[results.length - 1]);
+          }
+        } catch (err: any) {
+          setState('error');
+          setError(err.message || 'Batch upload failed');
+        } finally {
+          onUploadingChange?.(false);
+        }
       }
     },
-    [folder, altText, onUpload, currentUrl, onUploadingChange],
+    [folder, altText, onUpload, onMultipleUpload, multiple, currentUrl, onUploadingChange],
   );
 
   useEffect(() => {
@@ -98,15 +152,17 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   }, [currentUrl]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    if (e.target.files && e.target.files.length > 0) {
+      handleFiles(e.target.files);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
   };
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -157,12 +213,12 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             disabled={state === 'uploading'}
             className="text-xs text-usm-blue-primary font-bold hover:underline cursor-pointer disabled:opacity-50"
           >
-            {state === 'uploading' ? `Uploading… ${progress}%` : preview ? 'Change image' : 'Upload image'}
+            {state === 'uploading' ? (uploadStatusText || `Envoi… ${progress}%`) : preview ? (multiple ? 'Ajouter des photos' : 'Changer l’image') : (multiple ? 'Ajouter des photos (multiples)' : 'Choisir une image')}
           </button>
           {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
-          <p className="text-[10px] text-slate-500 mt-0.5">JPG, PNG, WebP · max 10 MB</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">JPG, PNG, WebP · max 10 MB {multiple ? '· Sélection multiple autorisée' : ''}</p>
         </div>
-        <input ref={inputRef} type="file" accept={accept} onChange={handleInputChange} className="hidden" />
+        <input ref={inputRef} type="file" multiple={multiple} accept={accept} onChange={handleInputChange} className="hidden" />
       </div>
     );
   }
@@ -191,7 +247,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             />
             <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all flex items-center justify-center opacity-0 hover:opacity-100">
               <p className="text-usm-blue-dark font-bold text-sm bg-black/60 px-3 py-1.5 rounded-full">
-                Click to replace
+                {multiple ? 'Cliquer pour ajouter d’autres photos' : 'Cliquer pour remplacer'}
               </p>
             </div>
           </>
@@ -203,7 +259,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
               <Upload size={22} className={isDragOver ? 'text-usm-blue-primary' : 'text-slate-500'} />
             </div>
             <p className="text-sm font-semibold text-slate-700">{label}</p>
-            <p className="text-xs text-slate-500 mt-1">JPG, PNG, WebP, AVIF · max 10 MB</p>
+            <p className="text-xs text-slate-500 mt-1">
+              JPG, PNG, WebP, AVIF · max 10 MB {multiple ? '· (Vous pouvez sélectionner plusieurs photos à la fois)' : ''}
+            </p>
           </div>
         )}
 
@@ -211,7 +269,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         {state === 'uploading' && (
           <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center gap-3 px-10">
             <Loader2 size={28} className="text-usm-blue-primary animate-spin" />
-            <p className="text-sm font-semibold text-slate-700">Envoi en cours… {progress}%</p>
+            <p className="text-sm font-semibold text-slate-700">{uploadStatusText || 'Envoi en cours…'} ({progress}%)</p>
             <div className="w-full max-w-[220px] h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-usm-blue-primary rounded-full transition-[width] duration-150"
@@ -228,7 +286,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           {state === 'success' && (
             <>
               <CheckCircle2 size={13} className="text-emerald-500" />
-              <span className="text-xs text-emerald-600 font-semibold">Uploaded successfully</span>
+              <span className="text-xs text-emerald-600 font-semibold">Téléchargement réussi</span>
             </>
           )}
           {state === 'error' && (
@@ -245,7 +303,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             onClick={handleRemove}
             className="text-xs text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <X size={12} /> Remove
+            <X size={12} /> Réinitialiser
           </button>
         )}
       </div>
@@ -253,6 +311,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       <input
         ref={inputRef}
         type="file"
+        multiple={multiple}
         accept={accept}
         onChange={handleInputChange}
         className="hidden"
