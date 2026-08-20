@@ -75,11 +75,6 @@ export const MediaGallery: React.FC = () => {
   }, [isLoggedIn]);
 
   const handleMediaClick = (item: MediaItem) => {
-    if (item.locked) {
-      setPaywallItem({ title: item.title, level: item.accessLevel as 'fan' | 'premium' });
-      return;
-    }
-
     if (item.type === 'video') {
       setActiveVideoUrl(item.videoUrl || null);
     } else {
@@ -332,22 +327,6 @@ export const MediaGallery: React.FC = () => {
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            
-                            {/* Locked state overlay */}
-                            {album.locked && (
-                              <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center">
-                                <div className="h-10 w-10 rounded-full bg-usm-blue-soft border border-usm-blue-primary/40 flex items-center justify-center text-usm-blue-primary mb-1">
-                                  <Lock size={15} />
-                                </div>
-                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                                  {album.accessLevel === 'premium' ? 'Abonnement Requis' : 'Connexion Requise'}
-                                </span>
-                              </div>
-                            )}
-
-                            <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
-                              {album.accessLevel.toUpperCase()}
-                            </span>
                           </div>
 
                           <div className="p-4 space-y-1">
@@ -389,18 +368,9 @@ export const MediaGallery: React.FC = () => {
                             />
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/55 transition-colors">
                               <div className="h-11 w-11 rounded-full bg-usm-blue-primary text-white flex items-center justify-center shadow-lg">
-                                {video.locked ? <Lock size={14} /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
+                                <Play size={16} fill="currentColor" className="ml-0.5" />
                               </div>
                             </div>
-
-                            {/* Lock Overlay */}
-                            {video.locked && (
-                              <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" />
-                            )}
-
-                            <span className="absolute top-3 left-3 bg-usm-blue-dark/85 text-usm-blue-primary text-[8px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider border border-usm-blue-primary/20">
-                              {video.accessLevel.toUpperCase()}
-                            </span>
                           </div>
 
                           <div className="p-4 space-y-1">
@@ -433,11 +403,6 @@ export const MediaGallery: React.FC = () => {
                       <span className="text-xs font-black text-usm-blue-primary w-4 text-center">{idx + 1}</span>
                       <div className="relative h-10 w-16 rounded-lg overflow-hidden border border-usm-border shrink-0 bg-white">
                         <img src={item.coverImage} className="w-full h-full object-cover" />
-                        {item.locked && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-usm-blue-primary">
-                            <Lock size={10} />
-                          </div>
-                        )}
                       </div>
                       <div className="flex-grow min-w-0">
                         <p className="text-xs font-bold text-usm-blue-dark group-hover:text-usm-blue-primary truncate">{item.title}</p>
@@ -467,52 +432,6 @@ export const MediaGallery: React.FC = () => {
               allow="autoplay; fullscreen"
               allowFullScreen
             />
-          </div>
-        </div>
-      )}
-
-      {/* Paywall Dialog Modal */}
-      {paywallItem && (
-        <div className="fixed inset-0 z-[120] bg-white/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-sm bg-white border-2 border-usm-blue-primary/40 rounded-2xl shadow-2xl p-6 text-center overflow-hidden">
-            <button
-              onClick={() => setPaywallItem(null)}
-              className="absolute top-4 right-4 p-1 text-slate-500 hover:text-usm-blue-primary rounded-full hover:bg-usm-blue-soft cursor-pointer"
-            >
-              <X size={16} />
-            </button>
-
-            <div className="h-12 w-12 rounded-full bg-usm-blue-primary/10 border border-usm-blue-primary/30 flex items-center justify-center mx-auto mb-4">
-              <Lock className="text-usm-blue-primary" size={22} />
-            </div>
-
-            <h3 className="text-base font-display font-black text-usm-blue-dark uppercase tracking-wider">
-              CONTENU PREMIUM VERROUILLÉ
-            </h3>
-            <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-              Le média &quot;{paywallItem.title}&quot; requiert un compte
-              {paywallItem.level === 'premium' ? " d'abonné actif." : " supporter enregistré."}
-              <br />
-              Soutenez l'US Monastir et débloquez l'accès complet à USM Media.
-            </p>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setPaywallItem(null)}
-                className="flex-1 py-2.5 text-xs font-bold uppercase rounded-xl bg-usm-blue-soft border border-usm-border text-usm-blue-dark hover:bg-usm-blue-soft cursor-pointer"
-              >
-                Fermer
-              </button>
-              <button
-                onClick={() => {
-                  setPaywallItem(null);
-                  router.push(paywallItem.level === 'premium' ? '/abonnement' : '/auth/login');
-                }}
-                className="flex-1 py-2.5 text-xs font-black uppercase rounded-xl bg-usm-blue-primary text-white hover:bg-usm-blue-hover transition-colors cursor-pointer"
-              >
-                {paywallItem.level === 'premium' ? 'S\'abonner' : 'Se connecter'}
-              </button>
-            </div>
           </div>
         </div>
       )}

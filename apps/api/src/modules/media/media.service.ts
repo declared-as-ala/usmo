@@ -43,21 +43,14 @@ export class MediaService {
     }
   }
 
-  // Public retrieval with optional auth context
+  // Public retrieval: all media is 100% public for all users
   async findAllPublic(user?: any): Promise<any[]> {
     const items = await this.mediaModel
       .find({ isActive: true })
       .sort({ displayOrder: 1, createdAt: -1 })
       .exec();
 
-    const hasPremium = await this.checkUserPremium(user);
-
-    return Promise.all(
-      items.map(async (item) => {
-        const hasAccess = await this.userHasAccess(item, user, hasPremium);
-        return this.transformMedia(item, hasAccess);
-      }),
-    );
+    return items.map((item) => this.transformMedia(item, true));
   }
 
   async findOnePublic(id: string, user?: any): Promise<any> {
@@ -66,50 +59,12 @@ export class MediaService {
       throw new NotFoundException('Média non trouvé');
     }
 
-    const hasPremium = await this.checkUserPremium(user);
-    const hasAccess = await this.userHasAccess(item, user, hasPremium);
-
-    return this.transformMedia(item, hasAccess);
+    return this.transformMedia(item, true);
   }
 
-  private async checkUserPremium(user?: any): Promise<boolean> {
-    if (!user || !user.sub) return false;
-    const now = new Date();
-    const activeMembership = await this.membershipModel
-      .findOne({
-        userId: new Types.ObjectId(user.sub),
-        status: 'active',
-        endDate: { $gte: now },
-      })
-      .exec();
-    return !!activeMembership;
-  }
-
-  private async userHasAccess(item: MediaItem, user?: any, hasPremium = false): Promise<boolean> {
-    if (item.accessLevel === 'public') {
-      return true;
-    }
-    if (item.accessLevel === 'fan') {
-      return !!user;
-    }
-    if (item.accessLevel === 'premium') {
-      return hasPremium;
-    }
-    return false;
-  }
-
-  private transformMedia(item: MediaItem, hasAccess: boolean) {
+  private transformMedia(item: MediaItem, _hasAccess = true) {
     const obj = item.toObject();
-    if (!hasAccess) {
-      obj.locked = true;
-      if (obj.type === 'video') {
-        obj.videoUrl = ''; // Hide full video
-      } else if (obj.type === 'album') {
-        obj.photos = obj.teaserPhotos || []; // Hide full photo URLs
-      }
-    } else {
-      obj.locked = false;
-    }
+    obj.locked = false;
     return obj;
   }
 }

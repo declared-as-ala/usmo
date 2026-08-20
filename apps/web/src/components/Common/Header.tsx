@@ -477,16 +477,7 @@ export const Header: React.FC = () => {
                     )}
                   </AnimatePresence>
                 </div>
-              ) : (
-                <button
-                  onClick={() => router.push('/auth/login')}
-                  className="h-9 px-3.5 rounded-full border border-white/25 bg-transparent hover:bg-usm-teal-accent hover:border-usm-teal-accent hover:text-usm-blue-dark flex items-center gap-1.5 text-white transition-all duration-300 cursor-pointer"
-                  title="Connexion"
-                >
-                  <User size={13} />
-                  <span className="text-[10px] font-bold tracking-wider uppercase hidden sm:inline">{tr(language, 'Sign In', 'Connexion', 'تسجيل الدخول')}</span>
-                </button>
-              )}
+              ) : null}
 
               {/* Mobile menu toggle */}
               <button
