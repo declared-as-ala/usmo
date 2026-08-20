@@ -53,6 +53,16 @@ const nextConfig: NextConfig = {
         destination: '/matches',
         permanent: true,
       },
+      {
+        source: '/compte',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/compte/:path*',
+        destination: '/',
+        permanent: true,
+      },
     ];
   },
 
