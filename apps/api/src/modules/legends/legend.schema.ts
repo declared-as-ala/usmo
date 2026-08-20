@@ -6,7 +6,7 @@ export class Legend extends Document {
   @Prop({ type: String, required: true })
   name: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, default: '' })
   nameAr: string;
 
   @Prop({ type: String, required: true, enum: ['football', 'basketball', 'club'], default: 'club' })
@@ -18,7 +18,7 @@ export class Legend extends Document {
   @Prop({ type: String, required: true })
   role: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, default: '' })
   roleAr: string;
 
   @Prop({ type: String, default: '' })

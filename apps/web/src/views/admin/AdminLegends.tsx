@@ -63,8 +63,13 @@ export default function AdminLegends() {
     if (!form.name || !form.role) return;
     setSaving(true);
     try {
-      if (editingId) await api.updateLegend(editingId, form);
-      else await api.createLegend(form);
+      const payload = {
+        ...form,
+        nameAr: form.nameAr || form.name,
+        roleAr: form.roleAr || form.role,
+      };
+      if (editingId) await api.updateLegend(editingId, payload);
+      else await api.createLegend(payload);
       setShowForm(false);
       await load();
     } catch (err: any) {

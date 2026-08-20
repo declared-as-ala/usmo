@@ -20,11 +20,22 @@ export class LegendsService {
   }
 
   create(input: Partial<Legend>) {
-    return this.model.create(input);
+    const payload = {
+      ...input,
+      nameAr: input.nameAr || input.name || '',
+      roleAr: input.roleAr || input.role || '',
+      image: input.image || '',
+    };
+    return this.model.create(payload);
   }
 
   async update(id: string, input: Partial<Legend>) {
-    const doc = await this.model.findByIdAndUpdate(id, { $set: input }, { new: true });
+    const payload = {
+      ...input,
+      ...(input.name && !input.nameAr ? { nameAr: input.name } : {}),
+      ...(input.role && !input.roleAr ? { roleAr: input.role } : {}),
+    };
+    const doc = await this.model.findByIdAndUpdate(id, { $set: payload }, { new: true });
     if (!doc) throw new NotFoundException('Legend not found');
     return doc;
   }
