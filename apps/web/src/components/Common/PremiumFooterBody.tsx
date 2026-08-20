@@ -39,7 +39,6 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
       links: [
         [tr(language, 'Fan Zone', 'Fan Zone', 'منطقة الأحباء'), 'fanzone'],
         [tr(language, 'USM Media', 'USM Media', 'إعلام الاتحاد'), 'media'],
-        [tr(language, 'Official Shop', 'Boutique officielle', 'المغازة الرسمية'), 'boutique'],
         [tr(language, 'Stadium Guide', 'Guide du stade', 'دليل الملعب'), 'stadium']
       ]
     },
@@ -78,9 +77,9 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
                   )}
             </p>
             <div className="mt-6 flex gap-2">
-              <Social href={settings.facebook || '#'} label="Facebook"><FacebookIcon/></Social>
-              <Social href={settings.instagram || '#'} label="Instagram"><InstagramIcon/></Social>
-              <Social href="https://twitter.com" label="X"><XIcon/></Social>
+              <Social href="https://www.facebook.com/usmonastir.official/" label="Facebook"><FacebookIcon/></Social>
+              <Social href="https://www.instagram.com/usmonastir.official" label="Instagram"><InstagramIcon/></Social>
+              <Social href="https://x.com/USMonastir_1923" label="X"><XIcon/></Social>
             </div>
           </div>
 
