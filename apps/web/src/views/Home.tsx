@@ -281,64 +281,6 @@ export const Home: React.FC = () => {
       </section>
       )}
 
-      {/* SECTION H: PRODUCT STORE PREVIEW */}
-      {sectionVisible('catalog') && (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between border-b-2 border-usm-blue-primary/40 pb-2 mb-6">
-          <h3 className="font-display font-extrabold text-2xl uppercase tracking-wider text-usm-blue-dark">
-            🛍️ {t('home.storeTitle')}
-          </h3>
-          <button
-            onClick={() => setActiveScreen('boutique')}
-            className="text-xs font-bold text-usm-blue-primary hover:text-usm-blue-primary flex items-center space-x-1 rtl:space-x-reverse cursor-pointer transition-colors"
-          >
-            <span>View Catalog</span>
-            <ArrowRight size={13} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {catalogProducts.slice(0, 3).map((item) => (
-            <div
-              key={item.id}
-              onClick={() => router.push(`/product/${item.slug || item.id}`)}
-              className="bg-usm-blue-soft border border-usm-border rounded-2xl overflow-hidden shadow-lg group hover:border-usm-blue-primary/30 cursor-pointer transition-all flex flex-col justify-between"
-            >
-              <div className="relative overflow-hidden h-60 bg-white p-4">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                />
-                {!item.available && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-                    <span className="bg-usm-danger text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full tracking-widest">
-                      Sold Out
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div className="p-4 flex-grow flex flex-col justify-between bg-usm-blue-soft">
-                <div>
-                  <h4 className="text-sm font-bold text-usm-blue-dark line-clamp-1">{language === 'ar' ? item.nameAr : item.name}</h4>
-                  <span className="text-xs text-usm-blue-primary font-bold block mt-1">{item.price}</span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/product/${item.slug || item.id}`);
-                  }}
-                  className="mt-4 w-full py-2 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-bold uppercase rounded-lg text-center cursor-pointer transition-colors"
-                >
-                  Voir l&apos;Article
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-      )}
-
       {sectionVisible('supporterGallery') && fanPhotos.length > 0 && (
         <section className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="supporter-gallery-title">
           <div className="mb-6 flex items-end justify-between gap-4">
