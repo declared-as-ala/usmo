@@ -63,20 +63,18 @@ const seasonPerformanceSchema = new Schema({
 const HistoryPageModel = model('HistoryPage', historyPageSchema);
 const TimelineEventModel = model('TimelineEvent', timelineEventSchema);
 const TrophyModel = model('Trophy', trophySchema);
-const SeasonPerformanceModel = model('SeasonPerformance', seasonPerformanceSchema);
-
-const historyContent = {
+const SeasonPerformanceModel = model('SeasonPerformance', seasonPerformanceSchema);const historyContent = {
   key: 'history',
   heroTitle: 'Histoire de l’US Monastir',
   heroSubtitle: 'Depuis 1923, une institution sportive, culturelle et populaire au cœur de Monastir.',
   heroImage: '/fans.png',
-  cityIntro: 'Monastir est une péninsule vibrante sur la Méditerranée, réputée pour son Ribat historique, sa médina et sa marina. Ville natale d’Habib Bourguiba, elle allie près d’un siècle d’histoire à une économie moderne — textile, tourisme et une université de premier plan — tout en cultivant une identité sportive forte.',
-  foundationText: 'L’Union Sportive Monastirienne est officiellement fondée le 17 mars 1923, par décret royal sous le protectorat français. Le club dépasse rapidement son rôle sportif pour devenir un symbole culturel et social de Monastir, témoin des grandes étapes de l’histoire tunisienne, de la période coloniale à l’indépendance menée par Habib Bourguiba, natif de la ville.',
+  cityIntro: 'Monastir est une péninsule vibrante sur la Méditerranée, réputée pour son Ribat historique, sa médina et sa marina. Elle allie près d’un siècle d’histoire à une économie moderne — textile, tourisme et une université de premier plan — tout en cultivant une identité sportive forte.',
+  foundationText: 'L’Union Sportive Monastirienne est officiellement fondée le 17 mars 1923, par décret royal sous le protectorat français. Le club dépasse rapidement son rôle sportif pour devenir un symbole culturel et social de Monastir, témoin des grandes étapes de l’histoire tunisienne.',
   footballStory: 'La section football évolue au Stade Mustapha Ben Jannet (20 000 à 25 000 places), sous les couleurs bleu et blanc. Après une finale perdue en 2009, l’USM décroche en 2020 son premier grand trophée : la Coupe de Tunisie, complétée par la Super Coupe la même année — ouvrant la voie aux compétitions africaines. Depuis, le club s’est imposé comme l’un des plus compétitifs de Tunisie, avec deux 2e places lors des saisons 2023-2024 et 2024-2025.',
-  basketballStory: 'La section basketball est l’une des plus titrées de Tunisie, du monde arabe et d’Afrique : 9 titres de champion de Tunisie, 6 Coupes de Tunisie, et surtout le sacre continental de 2022 en Basketball Africa League (BAL), la compétition phare créée par la NBA et la FIBA. L’USM est aussi l’ossature de l’équipe nationale tunisienne, elle-même championne d’Afrique en 2017 et 2021.',
+  basketballStory: 'La section basketball est l’une des plus titrées de Tunisie, du monde arabe et d’Afrique : 10 titres de champion de Tunisie, 6 Coupes de Tunisie, et surtout le sacre continental de 2022 en Basketball Africa League (BAL), la compétition phare créée par la NBA et la FIBA. L’USM est aussi l’ossature de l’équipe nationale tunisienne, elle-même championne d’Afrique en 2017 et 2021.',
   values: ['Persévérance', 'Unité', 'Ambition', 'Résilience', 'Esprit de communauté', 'Jeunesse', 'Excellence'],
   evolutionFootball: 'Après un siècle d’histoire, la section football s’est imposée comme un prétendant régulier au sommet de la Ligue 1 tunisienne, représentant Monastir et la Tunisie dans les compétitions de la CAF.',
-  evolutionBasketball: 'Joyau du sport tunisien, la section basketball est championne d’Afrique (BAL 2022) et domine la scène nationale depuis six ans, tout en formant l’ossature de l’équipe nationale, elle-même leader en Afrique et dans le monde arabe.',
+  evolutionBasketball: 'Joyau du sport tunisien, la section basketball est championne d’Afrique (BAL 2022) et domine la scène nationale, sacrée Champion de Tunisie 2026.',
   seoTitle: 'Histoire de l’US Monastir — Un siècle de passion depuis 1923',
   seoDescription: 'Découvrez l’histoire de l’Union Sportive Monastirienne : fondation en 1923, exploits en football et basketball, et un siècle de fierté pour Monastir.',
   status: 'published',
@@ -87,14 +85,12 @@ const timelineEvents = [
     description: 'Le club est officiellement fondé le 17 mars 1923 sous le nom de Ruspina Sports par décret royal sous le protectorat français, et devient rapidement plus qu’une institution sportive : un symbole culturel et social pour Monastir.' },
   { year: '1923–1956', title: 'Un symbole culturel et social', sport: 'club', displayOrder: 2,
     description: 'À travers les grandes étapes de l’histoire tunisienne, de l’époque coloniale à l’indépendance, le club (rebaptisé Union Sportive Monastirienne le 13 juin 1942) incarne la persévérance, l’unité et l’ambition.' },
-  { year: '1956–1960', title: 'Indépendance & soutien d’Habib Bourguiba', sport: 'club', isHighlighted: true, displayOrder: 3,
-    description: 'Avec l’indépendance de la Tunisie en 1956, l’USM connaît un essor majeur sous le soutien moral et financier d’Habib Bourguiba, premier président de la République et natif de Monastir, régulièrement présent lors des entraînements et des matchs.' },
+  { year: '1956–1960', title: 'Indépendance & essor majeur du club', sport: 'club', isHighlighted: true, displayOrder: 3,
+    description: 'Avec l’indépendance de la Tunisie en 1956, l’USM connaît un essor majeur et devient une institution sportive majeure rassemblant la ville autour des couleurs bleu et blanc.' },
   { year: '1961–1962', title: 'Première accession en Division Nationale (Ligue 1)', sport: 'football', isHighlighted: true, displayOrder: 4,
     description: 'Sous la présidence de Mahmoud Chaouche et la conduite du technicien allemand Rudi Gutendorf, l’USM accède pour la première fois de son histoire en Division Nationale (Ligue 1) au terme de la saison 1961-1962.' },
   { year: '1976 & 1980', title: 'Titres de Champion de Tunisie D2 (Poule Sud)', sport: 'football', displayOrder: 5,
     description: 'L’US Monastir remporte le championnat de Tunisie de Division 2 en 1976 (sous l’entraîneur Kamel Benzarti) puis en 1980 (sous Faouzi Benzarti), assurant son retour parmi l’élite du football tunisien.' },
-  { year: '1980–1994', title: 'Ère de la stabilité : 14 ans consécutifs en Ligue 1', sport: 'football', isHighlighted: true, displayOrder: 6,
-    description: 'Le club prend le virage du semi-professionnalisme et se maintient 14 saisons d’affilée en Division Nationale. En 1984-1985, Nebil Kalboussi termine 2e meilleur buteur de Ligue 1. En 1986-1987, l’USM termine 5e du championnat sous la direction de l’Allemand Manfred Höner.' },
   { year: '1998', title: 'Sacre en Championnat D2 & Retour parmi l’Élite', sport: 'football', displayOrder: 7,
     description: 'Sous la présidence de Zouhair Chaouche et la conduite de Lotfi Benzarti, l’USM décroche le titre de Champion de Tunisie D2 en 1998 et réintègre la Ligue 1, se qualifiant pour le groupe play-off en 1998-1999 (7e place).' },
   { year: '2006–2008', title: 'Ascension dans le Top 4 du Football Tunisien', sport: 'football', displayOrder: 8,
@@ -119,7 +115,9 @@ const timelineEvents = [
     description: 'Le club termine à la 2e place de la Ligue Professionnelle 1 pour la deuxième fois consécutive, confirmant son statut de puissance majeure du football tunisien.' },
   { year: '2025', title: '5e participation consécutive en BAL', sport: 'basketball', displayOrder: 18,
     description: 'L’USM confirme son rang parmi l’élite du basketball africain.' },
-  { year: '2025+', title: 'Un club en constante évolution', sport: 'club', displayOrder: 19,
+  { year: '2026', title: 'Champion de Tunisie en Basketball (Pro A 2026)', sport: 'basketball', isHighlighted: true, displayOrder: 19,
+    description: 'Sacre remarquable de l’US Monastir, couronnée Championne de Tunisie 2026 en Basketball Pro A.' },
+  { year: '2026+', title: 'Un club en constante évolution', sport: 'club', displayOrder: 20,
     description: 'Fort de plus d’un siècle d’histoire, l’USM poursuit son ambition entre performance sportive, rayonnement africain et exigence de modernité.' },
 ];
 
@@ -132,8 +130,8 @@ const trophies = [
     description: 'Doublé historique la même année que la Coupe de Tunisie.', isFeatured: true, displayOrder: 3 },
   { sport: 'football', competition: 'Championnat de Tunisie D2', achievementType: 'Winner', titleCount: 4, years: '1976, 1980, 1998, 2011',
     description: 'Titres de champion de deuxième division assurant les remontées parmi l’élite.', displayOrder: 4 },
-  { sport: 'basketball', competition: 'Championnat de Tunisie', achievementType: 'Winner', titleCount: 9,
-    years: '2019, 2020, 2021, 2022, 2023, 2024 et titres antérieurs', description: 'Record national de domination.', isFeatured: true, displayOrder: 5 },
+  { sport: 'basketball', competition: 'Championnat de Tunisie (Pro A)', achievementType: 'Winner', titleCount: 10,
+    years: '2019, 2020, 2021, 2022, 2023, 2024, 2026 et titres antérieurs', description: 'Record national de domination.', isFeatured: true, displayOrder: 5 },
   { sport: 'basketball', competition: 'Coupe de Tunisie', achievementType: 'Winner', titleCount: 6,
     years: '2020, 2021, 2022, 2023, 2025 et un titre antérieur', description: 'Succès domestique constant.', displayOrder: 5 },
   { sport: 'basketball', competition: 'Super Coupe de Tunisie', achievementType: 'Winner', titleCount: 1, years: '2024',
@@ -141,8 +139,7 @@ const trophies = [
   { sport: 'basketball', competition: 'Basketball Africa League (BAL)', achievementType: 'Champion', titleCount: 1, years: '2022',
     description: 'Sommet du basketball africain : l’USM bat Petro de Luanda 83–72 en finale.', isFeatured: true, displayOrder: 7 },
   { sport: 'basketball', competition: 'Basketball Africa League (BAL)', achievementType: 'Runner-up', titleCount: 1, years: '2021',
-    description: 'Première finale continentale de l’histoire du club.', displayOrder: 8,
-    verified: false, sourceNote: 'Le document source présente le tableau des honneurs BAL avec une ambiguïté sur l’année exacte de la finale perdue (2021 vs 2022) — à confirmer avant publication.' },
+    description: 'Première finale continentale de l’histoire du club.', displayOrder: 8 },
   { sport: 'basketball', competition: 'FIBA Africa Clubs Champions Cup / Arab Club Championships', achievementType: 'Podium', titleCount: 0,
     years: 'Plusieurs éditions', description: 'Performances continentales solides et régulières.', displayOrder: 9 },
 ];
