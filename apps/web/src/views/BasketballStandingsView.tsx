@@ -66,23 +66,6 @@ export const BasketballStandingsView: React.FC = () => {
                 )}
               </p>
             </div>
-
-            {/* Trophies Summary Card */}
-            <div className="flex items-center gap-4 bg-white/80 border border-amber-500/30 px-6 py-4 rounded-2xl shadow-lg backdrop-blur">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 shrink-0">
-                <Flame size={24} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 font-mono font-black text-lg text-usm-blue-dark">
-                  <span>9x Pro A</span>
-                  <span className="text-amber-500">•</span>
-                  <span>1x BAL</span>
-                </div>
-                <span className="text-[10px] uppercase font-bold text-slate-500 block tracking-wider">
-                  {tr(language, 'National & Continental Titles', 'Titres Nationaux & Continentaux', 'الألقاب الوطنية والقارية')}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
