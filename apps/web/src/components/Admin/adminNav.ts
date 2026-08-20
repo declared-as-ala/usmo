@@ -52,8 +52,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal, permission: 'settings.edit' },
       { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag, permission: 'products.view' },
-      { label: 'Football Section', href: '/admin/football', icon: Trophy },
-      { label: 'Basketball Section', href: '/admin/basketball', icon: Trophy },
       { label: 'History Page', href: '/admin/history', icon: Landmark },
       { label: 'Timeline Page', href: '/admin/timeline', icon: History },
       { label: 'Palmarès Page', href: '/admin/palmares', icon: Trophy },
@@ -74,7 +72,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
       { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
-      { label: 'Fan Zone', href: '/admin/fanzone', icon: Megaphone },
       { label: 'Campagnes Email', href: '/admin/campaigns', icon: Mail, permission: 'users.edit' },
     ],
   },
@@ -83,7 +80,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: 'Administrateurs', href: '/admin/administrateurs', icon: ShieldCheck, superAdminOnly: true, permission: 'admins.view' },
       { label: 'Notifications', href: '/admin/notifications', icon: Bell },
-      { label: 'Users & Roles', href: '/admin/users', icon: UserCog, permission: 'users.view' },
       { label: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
       { label: 'SEO Config', href: '/admin/seo', icon: Search },
     ],
