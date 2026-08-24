@@ -39,6 +39,41 @@ async function fetchJson(endpoint: string, options: RequestInit = {}) {
 }
 
 export const api = {
+  // ── Sports Synchronization & Standings (MongoDB-backed) ──────────────────
+  getSportsSyncStandings: (sport = 'football', season?: string) =>
+    fetchJson(`/sports-sync/standings?sport=${sport}${season ? `&season=${season}` : ''}`),
+  getSportsSyncFreshness: (sport = 'football') =>
+    fetchJson(`/sports-sync/freshness?sport=${sport}`),
+  getAdminSportsSyncStatus: () => fetchJson('/admin/sports-sync/status'),
+  getAdminSportsSyncLogs: (params: { page?: number; limit?: number; sport?: string; status?: string } = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/sports-sync/logs${query ? `?${query}` : ''}`);
+  },
+  triggerAdminSportsSync: (data: { sport?: string; resourceType?: string; competitionId?: string; season?: string }) =>
+    fetchJson('/admin/sports-sync/trigger', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getAdminSportsConfig: () => fetchJson('/admin/sports-sync/config'),
+  updateAdminSportsConfig: (data: Record<string, unknown>) =>
+    fetchJson('/admin/sports-sync/config', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  overrideStanding: (id: string, data: Record<string, unknown>) =>
+    fetchJson(`/admin/sports-sync/manual-override/standing/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  overrideMatch: (id: string, data: Record<string, unknown>) =>
+    fetchJson(`/admin/sports-sync/manual-override/match/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
   // ── API-Football / Sports (Public) ───────────────────────────────────────
   getFootballStandings: () => fetchJson('/sports/football/standings'),
   getFootballSquad: () => fetchJson('/sports/football/squad'),
@@ -485,7 +520,15 @@ export const api = {
 
   // ── Sponsors (Admin) ────────────────────────────────────────────────────
 
-  getSponsors: () => fetchJson('/sponsors'),
+  getSponsors: (params: { homepage?: boolean; sportScope?: string; sponsorsPage?: boolean } = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return fetchJson(`/sponsors${query ? '?' + query : ''}`);
+  },
+
+  getAdminSponsors: () => fetchJson('/sponsors/admin'),
 
   createSponsor: (data: any) => fetchJson('/sponsors', {
     method: 'POST',

@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { clubTrophies } from '../data/mockData';
 import { LeagueStandingsTable } from '../components/Common/LeagueStandingsTable';
 import { HeroCarousel, HeroSlideData } from '../components/Common/HeroCarousel';
+import { PartnerShowcase } from '../components/Common/PartnerShowcase';
 import { Play, ArrowRight, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '../lib/api-client';
@@ -14,6 +15,7 @@ interface HomepageConfig {
   primaryCtaLabel: string; primaryCtaHref: string; sections: Record<string, boolean>;
 }
 interface FanPhoto { _id: string; imageUrl: string; caption?: string; supporterName?: string; }
+interface SponsorItem { _id: string; name: string; category: string; logo?: string; link?: string; story?: string; storyFr?: string; storyAr?: string; }
 
 // Local banner photos — used only as a fallback single-slide hero when no admin-managed
 // hero slides exist yet in the backend.
@@ -36,13 +38,20 @@ export const Home: React.FC = () => {
   const [homepage, setHomepage] = useState<HomepageConfig | null>(null);
   const [fanPhotos, setFanPhotos] = useState<FanPhoto[]>([]);
   const [heroSlidesFromApi, setHeroSlidesFromApi] = useState<HeroSlideData[]>([]);
+  const [sponsors, setSponsors] = useState<SponsorItem[]>([]);
   const sectionVisible = (key: string) => homepage?.sections?.[key] ?? isSectionVisible(key);
 
   useEffect(() => {
-    Promise.allSettled([api.getHomepageSettings(), api.getFanPhotos(), api.getHeroSlides()]).then(([settings, photos, slides]) => {
+    Promise.allSettled([
+      api.getHomepageSettings(),
+      api.getFanPhotos(),
+      api.getHeroSlides(),
+      api.getSponsors({ homepage: true }),
+    ]).then(([settings, photos, slides, sp]) => {
       if (settings.status === 'fulfilled') setHomepage(settings.value);
       if (photos.status === 'fulfilled') setFanPhotos(photos.value || []);
       if (slides.status === 'fulfilled' && Array.isArray(slides.value)) setHeroSlidesFromApi(slides.value);
+      if (sp.status === 'fulfilled' && Array.isArray(sp.value)) setSponsors(sp.value);
     });
   }, []);
 
@@ -300,6 +309,17 @@ export const Home: React.FC = () => {
             ))}
           </div>
         </section>
+      )}
+
+      {/* SECTION H: OFFICIAL CLUB PARTNERS / SPONSORS */}
+      {sponsors.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PartnerShowcase
+            sponsors={sponsors}
+            language={language}
+            onExplore={() => setActiveScreen('sponsors')}
+          />
+        </div>
       )}
 
       {/* SECTION I: NEWSLETTER & PWA BANNER */}

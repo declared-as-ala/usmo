@@ -28,11 +28,34 @@ export const MatchCenter: React.FC = () => {
   const { language, predictions, submitPrediction, addBluePoints, t } = useApp();
   const [sportTab, setSportTab] = useState<'football' | 'basketball'>('football');
 
-  // ── Live football data (TheSportsDB) ─────────────────────────────────
   const [teamInfo, setTeamInfo] = useState<TeamInfo | null>(null);
   const [nextMatch, setNextMatch] = useState<ResultRow | null>(null);
   const [recentResults, setRecentResults] = useState<ResultRow[]>([]);
   const [liveLoading, setLiveLoading] = useState(true);
+  const [freshnessText, setFreshnessText] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api.getSportsSyncFreshness(sportTab)
+      .then((f: any) => {
+        if (cancelled || !f?.lastSyncAt) return;
+        const syncDate = new Date(f.lastSyncAt);
+        const diffMins = Math.floor((Date.now() - syncDate.getTime()) / (60 * 1000));
+        if (diffMins < 2) setFreshnessText('Mis à jour à l’instant');
+        else if (diffMins < 60) setFreshnessText(`Mis à jour il y a ${diffMins} min`);
+        else {
+          setFreshnessText(
+            `Dernière synchronisation : ${syncDate.toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'Africa/Tunis',
+            })}`
+          );
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [sportTab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -166,16 +189,24 @@ export const MatchCenter: React.FC = () => {
         <div className="pointer-events-none absolute -bottom-20 -left-20 w-[300px] h-[300px] bg-usm-blue-primary/10 rounded-full blur-[110px]" />
         <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
           <div>
-            <span className="text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase">
-              USM Match Center
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] bg-usm-blue-primary text-white font-black tracking-widest px-3 py-1 rounded-full uppercase">
+                USM Match Center
+              </span>
+              {freshnessText && (
+                <span className="text-[10px] bg-white/80 backdrop-blur-sm text-usm-blue-dark font-bold px-3 py-1 rounded-full border border-usm-border flex items-center gap-1.5 shadow-sm">
+                  <Clock3 size={11} className="text-usm-blue-primary" />
+                  {freshnessText}
+                </span>
+              )}
+            </div>
             <h1 className="font-display font-black text-3xl sm:text-4xl text-usm-blue-dark uppercase tracking-wider mt-3">
               {language === 'ar' ? 'مركز المباريات' : 'Match Center'}
             </h1>
             <p className="text-xs text-slate-600 mt-2 max-w-lg">
               {language === 'ar'
-                ? 'الترتيب، النتائج والمباراة القادمة مباشرة من TheSportsDB.'
-                : 'Classement, résultats et prochaine échéance en direct via TheSportsDB.'}
+                ? 'الترتيب الرسمي، النتائج الأخيرة، والمباريات القادمة للاتحاد المنستيري.'
+                : 'Classement officiel, derniers résultats et prochaines rencontres de l\'US Monastir.'}
             </p>
           </div>
 

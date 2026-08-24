@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    pool: 'forks',
     include: [
       'apps/web/src/**/__tests__/**/*.test.ts',
       'apps/api/src/**/__tests__/**/*.test.ts',

@@ -18,8 +18,33 @@ export class SponsorsService {
     @InjectModel(Sponsor.name) private readonly sponsorModel: Model<Sponsor>,
   ) {}
 
-  async findAll(activeOnly = true): Promise<Sponsor[]> {
-    return this.sponsorModel.find().sort({ createdAt: -1 }).exec();
+  async findAll(params: {
+    homepage?: boolean;
+    sponsorsPage?: boolean;
+    sportScope?: string;
+    activeOnly?: boolean;
+  } | boolean = {}): Promise<Sponsor[]> {
+    const filter: Record<string, unknown> = {};
+    const opts = typeof params === 'boolean' ? { activeOnly: params } : params;
+
+    if (opts.activeOnly !== false) {
+      filter.isActive = { $ne: false };
+    }
+    if (opts.homepage) {
+      filter.showOnHomepage = true;
+    }
+    if (opts.sponsorsPage) {
+      filter.showOnSponsorsPage = true;
+    }
+    if (opts.sportScope && opts.sportScope !== 'ALL') {
+      filter.sportScope = { $in: [opts.sportScope, 'CLUB', 'BOTH'] };
+    }
+
+    return this.sponsorModel.find(filter).sort({ displayOrder: 1, createdAt: 1 }).exec();
+  }
+
+  async findAllAdmin(): Promise<Sponsor[]> {
+    return this.sponsorModel.find().sort({ displayOrder: 1, createdAt: -1 }).exec();
   }
 
   async findOne(id: string): Promise<Sponsor> {
@@ -39,15 +64,26 @@ export class SponsorsService {
   }
 
   async create(data: Partial<Sponsor>): Promise<Sponsor> {
-    let slug = slugify(data.name || '') || `sponsor-${Date.now().toString(36)}`;
-    if (await this.sponsorModel.exists({ slug })) slug = `${slug}-${Date.now().toString(36)}`;
-    const newSponsor = new this.sponsorModel({ ...data, slug });
+    let slug = data.slug || slugify(data.name || '') || `sponsor-${Date.now().toString(36)}`;
+    if (await this.sponsorModel.exists({ slug })) {
+      slug = `${slug}-${Date.now().toString(36)}`;
+    }
+    const newSponsor = new this.sponsorModel({
+      ...data,
+      slug,
+      primaryLogo: data.primaryLogo || data.logo || '',
+      logo: data.logo || data.primaryLogo || '',
+    });
     return newSponsor.save();
   }
 
   async update(id: string, data: Partial<Sponsor>): Promise<Sponsor> {
+    const updatePayload = { ...data };
+    if (data.primaryLogo && !data.logo) updatePayload.logo = data.primaryLogo;
+    if (data.logo && !data.primaryLogo) updatePayload.primaryLogo = data.logo;
+
     const sponsor = await this.sponsorModel
-      .findByIdAndUpdate(id, data, { new: true })
+      .findByIdAndUpdate(id, { $set: updatePayload }, { new: true })
       .exec();
     if (!sponsor) {
       throw new NotFoundException(`Sponsor introuvable avec l'ID ${id}`);
@@ -63,3 +99,4 @@ export class SponsorsService {
     return { success: true };
   }
 }
+

@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Users,
   Radio,
   Trophy,
   Newspaper,
@@ -50,7 +51,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Pages Management',
     items: [
-      { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal, permission: 'settings.edit' },
+      { label: 'Joueurs & Effectif', href: '/admin/players', icon: Users, permission: 'players.view' },
+      { label: 'Staff Technique', href: '/admin/staff', icon: UserCog, permission: 'staff.view' },
       { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag, permission: 'products.view' },
       { label: 'History Page', href: '/admin/history', icon: Landmark },
       { label: 'Timeline Page', href: '/admin/timeline', icon: History },
@@ -70,6 +72,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Operations & Community',
     items: [
+      { label: 'Synchronisation Sportive', href: '/admin/sports-sync', icon: Radio },
       { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
       { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
       { label: 'Campagnes Email', href: '/admin/campaigns', icon: Mail, permission: 'users.edit' },
@@ -79,6 +82,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: 'System',
     items: [
       { label: 'Administrateurs', href: '/admin/administrateurs', icon: ShieldCheck, superAdminOnly: true, permission: 'admins.view' },
+      { label: 'Configuration Sports', href: '/admin/settings/sports', icon: Radio, superAdminOnly: true },
       { label: 'Notifications', href: '/admin/notifications', icon: Bell },
       { label: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
       { label: 'SEO Config', href: '/admin/seo', icon: Search },

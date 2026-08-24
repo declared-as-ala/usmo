@@ -6,6 +6,7 @@ import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { Settings as SettingsIcon, Check } from 'lucide-react';
 import { MediaUploader } from '../../components/Admin/MediaUploader';
 import { tr } from '../../utils/i18n';
+import Link from 'next/link';
 
 export default function AdminSettings() {
   const { clubSettings, updateClubSettings, language } = useApp();
@@ -25,6 +26,22 @@ export default function AdminSettings() {
       <AdminPageHeader
         title="Settings"
         description="Club information shown across the public site (footer, contact points, social links)."
+        actions={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/sports-sync"
+              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
+            >
+              Tableau de bord Synchro
+            </Link>
+            <Link
+              href="/admin/settings/sports"
+              className="px-3 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg transition-colors shadow-sm"
+            >
+              Configuration Sports
+            </Link>
+          </div>
+        }
       />
 
       <form

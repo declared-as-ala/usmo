@@ -37,7 +37,7 @@ export class SearchService {
       this.productsService.findAll({ search: q, status: 'published', limit: 5 }).catch(() => ({ products: [] })),
       this.playersService.findPublic().catch(() => []),
       this.staffService.findPublic().catch(() => []),
-      this.sponsorsService.findAll(true).catch(() => []),
+      this.sponsorsService.findAll({ activeOnly: true }).catch(() => []),
       this.legendsService.findPublic().catch(() => []),
       this.venuesService.findPublic().catch(() => []),
     ]);

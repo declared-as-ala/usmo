@@ -129,6 +129,24 @@ export class Match extends Document {
   @Prop({ type: String, default: '' })
   sponsorName: string;
 
+  @Prop({ type: String, default: null, index: true })
+  externalId?: string | null;
+
+  @Prop({ type: String, enum: ['EXTERNAL_API', 'MANUAL', 'HYBRID', 'manual', 'sportsdb'], default: 'MANUAL' })
+  dataSource?: string;
+
+  @Prop({ type: Boolean, default: false })
+  manualOverride?: boolean;
+
+  @Prop({ type: Date, default: null })
+  manualOverrideUntil?: Date | null;
+
+  @Prop({ type: Date, default: null })
+  providerUpdatedAt?: Date | null;
+
+  @Prop({ type: Date, default: Date.now })
+  syncedAt?: Date;
+
   @Prop({ type: String, enum: ['manual', 'sportsdb'], default: 'manual' })
   source: 'manual' | 'sportsdb';
 }
@@ -136,3 +154,5 @@ export class Match extends Document {
 export const MatchSchema = SchemaFactory.createForClass(Match);
 MatchSchema.index({ sport: 1, date: 1 });
 MatchSchema.index({ sport: 1, status: 1 });
+MatchSchema.index({ externalId: 1 });
+

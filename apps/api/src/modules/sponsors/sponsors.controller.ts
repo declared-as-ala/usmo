@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { SponsorsService } from './sponsors.service';
 import { PartnerLeadsService } from './partner-leads.service';
 import { Sponsor } from './sponsor.schema';
@@ -15,8 +15,24 @@ export class SponsorsController {
   ) {}
 
   @Get()
-  async getActive() {
-    return this.sponsorsService.findAll();
+  async getActive(
+    @Query('homepage') homepage?: string,
+    @Query('sponsorsPage') sponsorsPage?: string,
+    @Query('sportScope') sportScope?: string,
+  ) {
+    return this.sponsorsService.findAll({
+      homepage: homepage === 'true',
+      sponsorsPage: sponsorsPage === 'true',
+      sportScope,
+      activeOnly: true,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Super Admin', 'Admin', 'Boutique Manager', 'Content Editor')
+  @Get('admin')
+  async getAllAdmin() {
+    return this.sponsorsService.findAllAdmin();
   }
 
   @Get('slug/:slug')
@@ -25,21 +41,21 @@ export class SponsorsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Content Editor')
+  @Roles('Super Admin', 'Admin', 'Boutique Manager', 'Content Editor')
   @Post()
   async create(@Body() body: Partial<Sponsor>) {
     return this.sponsorsService.create(body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Content Editor')
+  @Roles('Super Admin', 'Admin', 'Boutique Manager', 'Content Editor')
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: Partial<Sponsor>) {
     return this.sponsorsService.update(id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager')
+  @Roles('Super Admin', 'Admin', 'Boutique Manager')
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.sponsorsService.delete(id);

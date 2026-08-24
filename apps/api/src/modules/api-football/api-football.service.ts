@@ -208,40 +208,41 @@ export class ApiFootballService {
       standingsRows = rawData.response[0].league.standings[0] || [];
     }
 
-    // Pre-season 2026-2027: Season has not started yet, so all match stats are 0
     const normalizedStandings: NormalizedStandingRow[] = standingsRows.map((row: any, idx: number) => {
-      const isUSM = row.team.id === USM_TEAM_ID || row.team.name.toLowerCase().includes('monastir');
+      const isUSM = row.team?.id === USM_TEAM_ID || (row.team?.name && row.team.name.toLowerCase().includes('monastir'));
+      const played = Number(row.all?.played ?? row.played ?? 0);
+      const win = Number(row.all?.win ?? row.win ?? 0);
+      const draw = Number(row.all?.draw ?? row.draw ?? 0);
+      const lose = Number(row.all?.lose ?? row.lose ?? 0);
+      const goalsFor = Number(row.all?.goals?.for ?? row.goalsFor ?? 0);
+      const goalsAgainst = Number(row.all?.goals?.against ?? row.goalsAgainst ?? 0);
+      const goalDifference = Number(row.goalsDiff ?? row.goalDifference ?? (goalsFor - goalsAgainst));
+      const points = Number(row.points ?? 0);
+      const rank = Number(row.rank ?? idx + 1);
+
       return {
-        rank: idx + 1,
-        teamId: row.team.id,
-        team: row.team.name === 'US Monastirienne' ? 'US Monastir' : row.team.name,
-        logo: row.team.logo,
-        played: 0,
-        win: 0,
-        draw: 0,
-        lose: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        goalDifference: 0,
-        points: 0,
-        form: null,
+        rank,
+        teamId: row.team?.id ?? idx + 1,
+        team: row.team?.name === 'US Monastirienne' ? 'US Monastir' : (row.team?.name || `Team ${idx + 1}`),
+        logo: row.team?.logo || null,
+        played,
+        win,
+        draw,
+        lose,
+        goalsFor,
+        goalsAgainst,
+        goalDifference,
+        points,
+        form: row.form || null,
         isUSM,
       };
     });
-
-    // Ensure US Monastir is rank #2 in initial standings if present
-    const usmIndex = normalizedStandings.findIndex((s) => s.isUSM);
-    if (usmIndex > -1 && usmIndex !== 1) {
-      const [usmRow] = normalizedStandings.splice(usmIndex, 1);
-      normalizedStandings.splice(1, 0, usmRow);
-      normalizedStandings.forEach((s, i) => { s.rank = i + 1; });
-    }
 
     return {
       season: currentSeason,
       league: {
         id: TUNISIA_LEAGUE_ID,
-        name: 'Ligue 1 (2026-2027)',
+        name: 'Ligue 1',
         logo: 'https://media.api-sports.io/football/leagues/202.png',
         country: 'Tunisia',
         flag: 'https://media.api-sports.io/flags/tn.svg',

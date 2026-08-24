@@ -133,38 +133,38 @@ export const Header: React.FC = () => {
       >
         <div className="relative w-full px-4 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between h-20">
-            {/* Logo lockup — crest medallion + two-line wordmark */}
+            {/* Logo lockup — crest medallion + two-line wordmark visible on all devices */}
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-3.5 md:gap-4 shrink-0 cursor-pointer group"
+              className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 shrink-0 cursor-pointer group"
               aria-label="US Monastir — Home"
             >
-              <span className="relative flex h-[52px] w-[52px] items-center justify-center">
+              <span className="relative flex h-[44px] w-[44px] sm:h-[48px] sm:w-[48px] md:h-[52px] md:w-[52px] items-center justify-center shrink-0">
                 {/* soft blue aura, revealed on hover */}
-                <span className="absolute -inset-2 rounded-full bg-[radial-gradient(circle,rgba(13,99,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <span className="absolute -inset-1.5 rounded-full bg-[radial-gradient(circle,rgba(13,99,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 {/* medallion ring framing the crest */}
                 <span className="absolute inset-0 rounded-full ring-1 ring-white/12 group-hover:ring-usm-teal-accent/60 shadow-[0_0_0_3px_rgba(255,255,255,0.03)] transition-all duration-500" />
                 <Logo
-                  size={45}
+                  size={42}
                   variant="color"
                   className="relative rounded-full transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               </span>
-              <span className="hidden md:block lg:hidden xl:block w-px self-stretch my-2 bg-gradient-to-b from-transparent via-usm-teal-accent/40 to-transparent" />
-              <div className="hidden md:flex lg:hidden xl:flex flex-col leading-none select-none text-left rtl:text-right">
-                <span className="font-display text-[15px] font-bold tracking-[0.22em] text-white uppercase whitespace-nowrap">
+              <span className="hidden sm:block w-px self-stretch my-2 bg-gradient-to-b from-transparent via-usm-teal-accent/40 to-transparent shrink-0" />
+              <div className="flex flex-col leading-none select-none text-left rtl:text-right min-w-0">
+                <span className="font-display text-[12px] xs:text-[13px] sm:text-[14px] md:text-[15px] font-black tracking-[0.14em] sm:tracking-[0.20em] text-white uppercase whitespace-nowrap">
                   US&nbsp;Monastir
                 </span>
-                <span className="mt-[7px] mb-[6px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
-                <span className="flex items-baseline gap-2 whitespace-nowrap">
+                <span className="mt-[4px] mb-[3px] sm:mt-[6px] sm:mb-[5px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
+                <span className="flex items-baseline gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span
-                    className={`text-[8px] uppercase font-semibold text-usm-teal-accent ${
-                      language === 'ar' ? 'font-arabic text-[10px]' : 'tracking-[0.22em]'
+                    className={`text-[7px] xs:text-[7.5px] sm:text-[8px] uppercase font-bold text-usm-teal-accent tracking-[0.08em] sm:tracking-[0.18em] truncate max-w-[130px] xs:max-w-[160px] sm:max-w-none ${
+                      language === 'ar' ? 'font-arabic text-[9px]' : ''
                     }`}
                   >
                     {language === 'ar' ? 'الاتحاد الرياضي المنستيري' : 'Union Sportive Monastirienne'}
                   </span>
-                  <span className="font-serif italic text-sm text-white/45">1923</span>
+                  <span className="font-serif italic text-[10px] sm:text-xs text-white/50 shrink-0">1923</span>
                 </span>
               </div>
             </button>
@@ -435,25 +435,26 @@ export const Header: React.FC = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:hidden overflow-hidden bg-gradient-to-b from-white to-usm-blue-soft border-t border-usm-teal-accent/15 shadow-2xl"
+            className="lg:hidden overflow-hidden bg-[#071328] border-t border-usm-teal-accent/20 shadow-2xl text-white"
           >
-            <div className="px-4 py-4 flex flex-col">
+            <div className="px-4 py-3 flex flex-col divide-y divide-white/5">
               {navGroups.map((entry, idx) => {
                 if (entry.kind === 'link') {
+                  const isActive = activeScreen === entry.screen;
                   return (
                     <motion.button
                       key={entry.screen}
-                      initial={{ opacity: 0, x: -12 }}
+                      initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.035, duration: 0.25 }}
+                      transition={{ delay: idx * 0.03, duration: 0.2 }}
                       onClick={() => handleNavClick(entry.screen)}
-                      className={`flex items-center gap-3 w-full text-left rtl:text-right px-2 py-3.5 border-b border-usm-border last:border-0 cursor-pointer transition-colors ${
-                        activeScreen === entry.screen
-                          ? 'text-usm-teal-accent'
-                          : 'text-usm-blue-dark/85 hover:text-usm-teal-accent'
+                      className={`flex items-center gap-3 w-full text-left rtl:text-right px-3 min-h-[46px] cursor-pointer transition-colors ${
+                        isActive
+                          ? 'text-usm-teal-accent font-bold bg-white/[0.04] rounded-xl'
+                          : 'text-white/80 hover:text-usm-teal-accent hover:bg-white/[0.02] rounded-xl'
                       }`}
                     >
-                      <span className="text-sm font-semibold tracking-wide uppercase">
+                      <span className="text-xs font-bold tracking-wider uppercase">
                         {t(entry.labelKey)}
                       </span>
                     </motion.button>
@@ -461,22 +462,26 @@ export const Header: React.FC = () => {
                 }
 
                 const isGroupOpen = mobileGroupOpen === entry.key;
+                const isGroupActive = isDropdownActive(entry.items);
                 return (
-                  <div key={entry.key} className="border-b border-usm-border last:border-0">
+                  <div key={entry.key} className="py-0.5">
                     <motion.button
-                      initial={{ opacity: 0, x: -12 }}
+                      initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.035, duration: 0.25 }}
+                      transition={{ delay: idx * 0.03, duration: 0.2 }}
                       onClick={() => setMobileGroupOpen(isGroupOpen ? null : entry.key)}
                       aria-expanded={isGroupOpen}
-                      className={`flex items-center justify-between gap-3 w-full text-left rtl:text-right px-2 py-3.5 cursor-pointer transition-colors ${
-                        isDropdownActive(entry.items) ? 'text-usm-teal-accent' : 'text-usm-blue-dark/85 hover:text-usm-teal-accent'
+                      className={`flex items-center justify-between gap-3 w-full text-left rtl:text-right px-3 min-h-[46px] cursor-pointer transition-colors ${
+                        isGroupActive || isGroupOpen
+                          ? 'text-usm-teal-accent font-bold bg-white/[0.04] rounded-xl'
+                          : 'text-white/80 hover:text-usm-teal-accent hover:bg-white/[0.02] rounded-xl'
                       }`}
                     >
-                      <span className="flex items-center gap-3">
-                        <span className="text-sm font-semibold tracking-wide uppercase">{entry.label}</span>
-                      </span>
-                      <ChevronDown size={16} className={`transition-transform duration-300 ${isGroupOpen ? 'rotate-180' : ''}`} />
+                      <span className="text-xs font-bold tracking-wider uppercase">{entry.label}</span>
+                      <ChevronDown
+                        size={15}
+                        className={`transition-transform duration-300 ${isGroupOpen ? 'rotate-180 text-usm-teal-accent' : 'text-white/40'}`}
+                      />
                     </motion.button>
                     <AnimatePresence>
                       {isGroupOpen && (
@@ -485,36 +490,33 @@ export const Header: React.FC = () => {
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="overflow-hidden pb-2 ps-9"
+                          className="overflow-hidden pb-2 ps-4 space-y-1"
                         >
-                          {entry.items.map((item) => (
-                            <button
-                              key={item.screen}
-                              onClick={() => handleNavClick(item.screen)}
-                              className={`flex w-full items-center gap-2.5 text-left rtl:text-right py-2.5 text-sm font-semibold tracking-wide cursor-pointer transition-colors ${
-                                activeScreen === item.screen ? 'text-usm-teal-accent' : 'text-usm-blue-dark/70 hover:text-usm-teal-accent'
-                              }`}
-                            >
-                              {item.icon && (
-                                <img src={item.icon} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" />
-                              )}
-                              {t(item.labelKey)}
-                            </button>
-                          ))}
+                          {entry.items.map((item) => {
+                            const isSubActive = activeScreen === item.screen;
+                            return (
+                              <button
+                                key={item.screen}
+                                onClick={() => handleNavClick(item.screen)}
+                                className={`flex w-full items-center gap-2.5 text-left rtl:text-right px-3 min-h-[42px] text-xs font-medium tracking-wide rounded-lg cursor-pointer transition-colors ${
+                                  isSubActive
+                                    ? 'text-usm-teal-accent bg-usm-teal-accent/15 font-bold'
+                                    : 'text-white/70 hover:text-white hover:bg-white/[0.03]'
+                                }`}
+                              >
+                                {item.icon && (
+                                  <img src={item.icon} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" />
+                                )}
+                                <span>{t(item.labelKey)}</span>
+                              </button>
+                            );
+                          })}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
                 );
               })}
-              {userRole === 'admin' && (
-                <button
-                  onClick={() => handleNavClick('admin')}
-                  className="mt-2 w-full text-left rtl:text-right px-2 py-3 text-sm font-semibold text-usm-danger cursor-pointer"
-                >
-                  {language === 'ar' ? 'لوحة تحكم المشرف' : 'Admin Controller'}
-                </button>
-              )}
             </div>
           </motion.div>
         )}

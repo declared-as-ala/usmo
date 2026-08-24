@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '../context/AppContext';
 import { tr } from '../utils/i18n';
-import { Trophy, Shield, Users, ArrowRight, Star, Flame, Sparkles } from 'lucide-react';
+import { api } from '../lib/api-client';
+import { Trophy, Shield, Users, ArrowRight, Sparkles, Clock } from 'lucide-react';
 
 interface BasketballTeamRow {
   position: number;
@@ -17,24 +18,78 @@ interface BasketballTeamRow {
   isUSM: boolean;
 }
 
-const BASKETBALL_STANDINGS_2026: BasketballTeamRow[] = [
-  { position: 1, team: 'US Monastir', badge: '/logo basket.png', played: 0, won: 0, lost: 0, points: 0, isUSM: true },
-  { position: 2, team: 'Club Africain', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 3, team: 'Étoile du Sahel', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 4, team: 'JS Kairouan', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 5, team: 'US Ansar', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 6, team: 'DS Grombalia', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 7, team: 'Stade Nabeulien', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
-  { position: 8, team: 'ES Radès', badge: null, played: 0, won: 0, lost: 0, points: 0, isUSM: false },
+const FALLBACK_BASKETBALL_STANDINGS: BasketballTeamRow[] = [
+  { position: 1, team: 'US Monastir', badge: '/logo basket.png', played: 14, won: 13, lost: 1, points: 27, isUSM: true },
+  { position: 2, team: 'Club Africain', badge: null, played: 14, won: 12, lost: 2, points: 26, isUSM: false },
+  { position: 3, team: 'Étoile du Sahel', badge: null, played: 14, won: 10, lost: 4, points: 24, isUSM: false },
+  { position: 4, team: 'JS Kairouan', badge: null, played: 14, won: 9, lost: 5, points: 23, isUSM: false },
+  { position: 5, team: 'Stade Nabeulien', badge: null, played: 14, won: 6, lost: 8, points: 20, isUSM: false },
+  { position: 6, team: 'ES Radès', badge: null, played: 14, won: 5, lost: 9, points: 19, isUSM: false },
+  { position: 7, team: 'DS Grombalia', badge: null, played: 14, won: 4, lost: 10, points: 18, isUSM: false },
+  { position: 8, team: 'US Ansar', badge: null, played: 14, won: 1, lost: 13, points: 15, isUSM: false },
 ];
 
 export const BasketballStandingsView: React.FC = () => {
   const { language } = useApp();
+  const [standings, setStandings] = useState<BasketballTeamRow[]>(FALLBACK_BASKETBALL_STANDINGS);
+  const [loading, setLoading] = useState(true);
+  const [freshnessText, setFreshnessText] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    api
+      .getSportsSyncStandings('basketball')
+      .then((rows: any[]) => {
+        if (!active) return;
+        if (Array.isArray(rows) && rows.length > 0) {
+          setStandings(
+            rows.map((r: any) => ({
+              position: r.position,
+              team: r.teamName,
+              badge: r.teamLogo || (r.isUSM ? '/logo basket.png' : null),
+              played: r.played,
+              won: r.won,
+              lost: r.lost,
+              points: r.points,
+              isUSM: Boolean(r.isUSM),
+            })),
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    api
+      .getSportsSyncFreshness('basketball')
+      .then((f: any) => {
+        if (!active || !f?.lastSyncAt) return;
+        const syncDate = new Date(f.lastSyncAt);
+        const diffMins = Math.floor((Date.now() - syncDate.getTime()) / (60 * 1000));
+        if (diffMins < 2) setFreshnessText('Mis à jour à l’instant');
+        else if (diffMins < 60) setFreshnessText(`Mis à jour il y a ${diffMins} min`);
+        else {
+          setFreshnessText(
+            `Dernière synchro : ${syncDate.toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              timeZone: 'Africa/Tunis',
+            })}`,
+          );
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-usm-blue-dark py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
-        
         {/* Cinematic Basketball Header Banner */}
         <div className="relative rounded-3xl overflow-hidden border border-usm-border p-8 sm:p-12 bg-gradient-to-r from-amber-500/10 via-white to-usm-blue-soft shadow-2xl">
           <div
@@ -54,15 +109,15 @@ export const BasketballStandingsView: React.FC = () => {
                   {tr(language, 'Basketball Standings', 'Classement Basketball', 'ترتيب بطولة كرة السلة')}
                 </h1>
                 <span className="bg-amber-500 text-white text-[10px] font-black uppercase px-3.5 py-1 rounded-full tracking-wider shadow">
-                  Saison 2026 / 2027
+                  Saison 2025 / 2026
                 </span>
               </div>
               <p className="text-xs text-slate-500 max-w-xl mt-3 leading-relaxed">
                 {tr(
                   language,
-                  'Official standings for the 2026-2027 Tunisian Pro A Basketball League. US Monastir enters the season as defending champions.',
-                  'Classement officiel de la Ligue Pro A de Basketball (Saison 2026-2027). L\'US Monastir aborde la compétition en tant que tenant du titre.',
-                  'الترتيب الرسمي للبطولة الوطنية المحترفة لكرة السلة 2026-2027. يدخل الاتحاد المنستيري الموسم كبطل للمسابقة.'
+                  'Official standings for the Tunisian Pro A Basketball League. US Monastir enters the season as defending champions.',
+                  'Classement officiel de la Ligue Pro A de Basketball. L\'US Monastir aborde la compétition en tant que tenant du titre.',
+                  'الترتيب الرسمي للبطولة الوطنية المحترفة لكرة السلة. يدخل الاتحاد المنستيري المسابقة كبطل للمسابقة.',
                 )}
               </p>
             </div>
@@ -74,11 +129,14 @@ export const BasketballStandingsView: React.FC = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-base font-black uppercase tracking-wider text-usm-blue-dark flex items-center gap-2">
               <Shield size={18} className="text-usm-blue-primary" />
-              {tr(language, 'Pro A Tunisia Standings (2026–2027)', 'Classement Pro A Tunisie (2026–2027)', 'جدول ترتيب البطولة المحترفة (2026-2027)')}
+              {tr(language, 'Pro A Tunisia Standings', 'Classement Pro A Tunisie', 'جدول ترتيب البطولة المحترفة')}
             </h2>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-usm-blue-soft border border-usm-border text-slate-500 px-3 py-1 rounded-full">
-              Pre-season • 0 Matchs
-            </span>
+            {freshnessText && (
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-usm-blue-soft border border-usm-border text-slate-500 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <Clock size={11} className="text-amber-500" />
+                {freshnessText}
+              </span>
+            )}
           </div>
 
           <div className="bg-white border border-usm-border rounded-2xl overflow-hidden shadow-xl">
@@ -95,7 +153,7 @@ export const BasketballStandingsView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {BASKETBALL_STANDINGS_2026.map((row) => (
+                  {standings.map((row) => (
                     <tr
                       key={row.team}
                       className={
@@ -107,7 +165,7 @@ export const BasketballStandingsView: React.FC = () => {
                       <td className="px-5 py-4 text-center font-mono font-black text-sm">
                         {row.isUSM ? (
                           <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-amber-500 text-white font-mono text-xs font-black shadow-md">
-                            1
+                            {row.position}
                           </span>
                         ) : (
                           <span className="text-slate-400">{row.position}</span>
@@ -168,7 +226,6 @@ export const BasketballStandingsView: React.FC = () => {
             <ArrowRight size={13} className="rtl:rotate-180" />
           </Link>
         </div>
-
       </div>
     </div>
   );

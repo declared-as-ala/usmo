@@ -34,7 +34,8 @@ const emptyPlayerForm = {
 
 const emptyStaffForm = { name: '', nameAr: '', role: '', image: '' };
 
-export default function AdminSquad() {
+export default function AdminSquad({ initialTab = 'players' }: { initialTab?: 'players' | 'staff' } = {}) {
+  const [activeTab, setActiveTab] = useState<'players' | 'staff'>(initialTab);
   const [sport, setSport] = useState<Sport>('football');
   const [players, setPlayers] = useState<RosterPlayer[]>([]);
   const [allStaff, setAllStaff] = useState<RosterStaff[]>([]);
