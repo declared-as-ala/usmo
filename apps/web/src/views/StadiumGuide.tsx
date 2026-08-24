@@ -91,14 +91,19 @@ export const StadiumGuide: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {venues.map((venue) => (
               <div key={venue._id} className="usm-card rounded-3xl p-6 space-y-6">
-                <div className="relative h-48 rounded-2xl overflow-hidden bg-usm-blue-soft">
+                <div className="relative h-52 sm:h-60 rounded-2xl overflow-hidden bg-slate-900 border border-slate-100 shadow-sm group">
                   {venue.image ? (
-                    <Image src={venue.image} alt={venue.name} fill unoptimized className="object-cover" />
+                    <Image
+                      src={venue.image}
+                      alt={venue.name}
+                      fill
+                      unoptimized
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center text-usm-blue-primary/40"><MapPin size={32} /></div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-usm-blue-primary text-white text-[9px] font-black uppercase px-3 py-1 rounded tracking-wide">
+                  <span className="absolute top-4 left-4 bg-[#071328]/90 backdrop-blur-md border border-white/15 text-usm-teal-accent text-[9px] font-black uppercase px-3 py-1 rounded-lg tracking-wider shadow-md z-10">
                     {SPORT_LABEL[venue.sport]}
                   </span>
                 </div>

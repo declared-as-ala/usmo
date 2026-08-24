@@ -205,6 +205,7 @@ export default function AdminStadium() {
           <table className="w-full text-left rtl:text-right text-xs">
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
+                <th className="py-3 px-4">Photo</th>
                 <th className="py-3 px-4">Nom</th>
                 <th className="py-3 px-4">Sport</th>
                 <th className="py-3 px-4">Capacité</th>
@@ -214,10 +215,19 @@ export default function AdminStadium() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {venues.length === 0 ? (
-                <tr><td colSpan={5} className="py-10 text-center text-slate-400">Aucun site pour le moment.</td></tr>
+                <tr><td colSpan={6} className="py-10 text-center text-slate-400">Aucun site pour le moment.</td></tr>
               ) : (
                 venues.map((venue) => (
                   <tr key={venue._id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-4">
+                      <div className="h-10 w-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                        {venue.image ? (
+                          <img src={venue.image} alt={venue.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <MapPin size={16} className="text-slate-400" />
+                        )}
+                      </div>
+                    </td>
                     <td className="py-2.5 px-4 font-bold text-slate-900">{venue.name}</td>
                     <td className="py-2.5 px-4 text-slate-600 capitalize">{venue.sport}</td>
                     <td className="py-2.5 px-4 text-slate-600">{venue.capacity ? venue.capacity.toLocaleString('fr-FR') : '—'}</td>
