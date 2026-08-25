@@ -160,7 +160,7 @@ export default function RegisterPage() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Wajdi Kechrida"
+                    placeholder="Nom Prénom"
                     className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-3 pl-11 pr-4 text-xs text-usm-blue-dark outline-none transition-all"
                     required
                   />
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="wajdi@kechrida.tn"
+                    placeholder="fan@usmonastir.tn"
                     className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-3 pl-11 pr-4 text-xs text-usm-blue-dark outline-none transition-all"
                     required
                   />
@@ -280,12 +280,15 @@ export default function RegisterPage() {
 
           {/* Redirect Footer */}
           <div className="text-center mt-6">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mb-2">
               {tr(language, 'Already have an account?', 'Vous avez déjà un compte ?', 'هل لديك حساب بالفعل؟')}{' '}
               <Link href="/auth/login" className="text-usm-blue-primary font-bold hover:underline">
                 {tr(language, 'Sign In', 'Se connecter', 'تسجيل الدخول')}
               </Link>
             </p>
+            <Link href="/auth/forgot-password" className="text-[11px] text-usm-blue-primary font-bold hover:underline">
+              {tr(language, 'Forgot password?', 'Mot de passe oublié ?', 'نسيت كلمة المرور؟')}
+            </Link>
           </div>
         </div>
       </div>
