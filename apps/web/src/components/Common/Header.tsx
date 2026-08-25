@@ -67,6 +67,7 @@ export const Header: React.FC = () => {
     .slice(0, 2)
     .map((w: string) => w.charAt(0).toUpperCase())
     .join('');
+  const cartCount = (cart || []).reduce((acc: number, item: any) => acc + (item.quantity || 1), 0);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -261,7 +262,7 @@ export const Header: React.FC = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-              {/* Utility cluster — search & notifications */}
+              {/* Utility cluster — search, cart & notifications */}
               <div className="flex items-center h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
                 {/* Search */}
                 <button
@@ -269,10 +270,28 @@ export const Header: React.FC = () => {
                     setIsSearchOpen(true);
                     setIsCartOpen(false);
                   }}
-                  className="h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-teal-accent hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
-                  title="Search"
+                  className="h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
+                  title={tr(language, 'Search', 'Recherche', 'بحث')}
                 >
                   <Search size={15} />
+                </button>
+
+                {/* Cart / Panier */}
+                <span className="w-px h-4 bg-white/10" />
+                <button
+                  onClick={() => {
+                    setIsCartOpen(true);
+                    setIsSearchOpen(false);
+                  }}
+                  className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
+                  title={tr(language, 'Shopping Cart', 'Panier', 'سلة التسوق')}
+                >
+                  <ShoppingBag size={15} />
+                  {cartCount > 0 && (
+                    <span className="absolute top-1 end-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#0D63FF] text-[7px] font-black text-white ring-2 ring-[#040b1c]">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
                 </button>
 
                 {/* Notifications — logged-in fans only */}
@@ -284,7 +303,7 @@ export const Header: React.FC = () => {
                         setProfileOpen(false);
                         router.push('/compte/notifications');
                       }}
-                      className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-teal-accent hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
+                      className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
                       title="Notifications"
                     >
                       <Bell size={15} />
@@ -517,6 +536,35 @@ export const Header: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Mobile Cart Action */}
+            <div className="px-4 py-2 border-t border-white/10 bg-[#050e1f]/40">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsCartOpen(true);
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-usm-blue-primary/50 text-white transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-usm-blue-primary/20 flex items-center justify-center text-usm-blue-primary">
+                    <ShoppingBag size={14} />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {tr(language, 'My Shopping Bag', 'Mon Panier', 'حقيبة التسوق')}
+                  </span>
+                </div>
+                {cartCount > 0 ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#0D63FF] text-white text-[10px] font-black shadow-sm">
+                    {cartCount} {cartCount === 1 ? tr(language, 'item', 'article', 'منتج') : tr(language, 'items', 'articles', 'منتجات')}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 font-semibold">
+                    {tr(language, 'Empty', 'Vide', 'فارغ')}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Mobile Auth Actions */}
