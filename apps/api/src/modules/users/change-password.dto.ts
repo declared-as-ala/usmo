@@ -1,10 +1,10 @@
 import { IsString, MinLength } from 'class-validator';
 
 export class ChangePasswordDto {
-  @IsString()
+  @IsString({ message: 'Le mot de passe actuel est requis' })
   currentPassword: string;
 
-  @IsString()
-  @MinLength(6, { message: 'Le nouveau mot de passe doit contenir au moins 6 caractères' })
+  @IsString({ message: 'Le nouveau mot de passe est requis' })
+  @MinLength(8, { message: 'Le nouveau mot de passe doit contenir au moins 8 caractères' })
   newPassword: string;
 }

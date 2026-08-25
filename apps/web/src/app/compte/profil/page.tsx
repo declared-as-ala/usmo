@@ -4,392 +4,184 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { tr } from '../../../utils/i18n';
 import { api } from '../../../lib/api-client';
-import { User, Camera, Loader2, Save } from 'lucide-react';
+import { Save, Loader2, UserCheck, Mail, ShieldAlert, AlertCircle } from 'lucide-react';
 
 export default function ProfilPage() {
   const { fan, language, refreshMe, showToast } = useApp();
 
-  const [profileForm, setProfileForm] = useState(() => ({
-    firstName: fan?.firstName || '',
-    lastName: fan?.lastName || '',
-    phone: fan?.phone || '',
-    city: fan?.city || '',
-    country: fan?.country || 'Tunisie',
-    favoriteSport: (fan?.favoriteSport || 'both') as 'football' | 'basketball' | 'both',
-    favoritePlayer: fan?.favoritePlayer || '',
-  }));
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const [privacyForm, setPrivacyForm] = useState(() => ({
-    showProfilePublicly: !!fan?.privacySettings?.showProfilePublicly,
-    showCity: !!fan?.privacySettings?.showCity,
-    showRanking: !!fan?.privacySettings?.showRanking,
-    showDonationBadge: !!fan?.privacySettings?.showDonationBadge,
-    showDonationAmount: !!fan?.privacySettings?.showDonationAmount,
-    useNickname: !!fan?.privacySettings?.useNickname,
-  }));
-
-  const [uploading, setUploading] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [privacyLoading, setPrivacyLoading] = useState(false);
-
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setProfileForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handlePrivacyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setPrivacyForm(prev => ({ ...prev, [name]: checked }));
-  };
-
-  const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setProfileLoading(true);
-    try {
-      await api.updateProfile(profileForm);
-      await refreshMe();
-      showToast(
-        tr(language, 'Profile updated successfully!', 'Profil mis à jour avec succès !', 'تم تحديث الملف الشخصي بنجاح!'),
-        'success'
-      );
-    } catch (err: any) {
-      showToast(err.message || 'Error updating profile', 'error');
-    } finally {
-      setProfileLoading(false);
+  useEffect(() => {
+    if (fan) {
+      setFirstName(fan.firstName || fan.name?.split(' ')[0] || '');
+      setLastName(fan.lastName || fan.name?.split(' ').slice(1).join(' ') || '');
+      setEmail(fan.email || '');
     }
-  };
+  }, [fan]);
 
-  const handlePrivacySubmit = async (e: React.FormEvent) => {
+  const emailChanged = fan?.email && email.trim().toLowerCase() !== fan.email.toLowerCase();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPrivacyLoading(true);
-    try {
-      await api.updatePrivacy(privacyForm);
-      await refreshMe();
-      showToast(
-        tr(language, 'Privacy settings updated!', 'Paramètres de confidentialité mis à jour !', 'تم تحديث إعدادات الخصوصية!'),
-        'success'
-      );
-    } catch (err: any) {
-      showToast(err.message || 'Error updating privacy settings', 'error');
-    } finally {
-      setPrivacyLoading(false);
+    setErrorMessage('');
+
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+      setErrorMessage(tr(language, 'All fields are required.', 'Tous les champs sont obligatoires.', 'جميع الحقول مطلوبة.'));
+      return;
     }
-  };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setUploading(true);
+    setLoading(true);
     try {
-      await api.uploadAvatar(formData);
+      // 1. Update basic profile info (firstName, lastName)
+      await api.updateProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+
+      // 2. If email changed, perform secure email update
+      if (emailChanged) {
+        await api.updateEmail(email.trim().toLowerCase(), currentPassword || undefined);
+      }
+
       await refreshMe();
       showToast(
-        tr(language, 'Avatar uploaded successfully!', 'Photo de profil mise à jour !', 'تم تحميل الصورة الشخصية بنجاح!'),
+        tr(language, 'Your information has been updated.', 'Vos informations ont été mises à jour.', 'تم تحديث معلوماتك بنجاح.'),
         'success'
       );
+      setCurrentPassword('');
     } catch (err: any) {
-      showToast(err.message || 'Error uploading avatar', 'error');
+      setErrorMessage(err.message || tr(language, 'Error updating information.', 'Erreur lors de la mise à jour des informations.', 'حدث خطأ أثناء تحديث المعلومات.'));
     } finally {
-      setUploading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Profile Photo Header */}
-      <div className="usm-card border border-usm-border p-6 flex flex-col sm:flex-row items-center gap-6">
-        <div className="relative group shrink-0">
-          <div className="h-20 w-20 rounded-full overflow-hidden border-2 border-usm-blue-primary/40 bg-usm-blue-soft flex items-center justify-center">
-            {fan?.avatar ? (
-              <img src={fan.avatar} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              <User size={36} className="text-slate-500" />
-            )}
-          </div>
-          {/* Upload overlay */}
-          <label className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
-            <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploading} />
-            {uploading ? (
-              <Loader2 className="h-5 w-5 text-usm-blue-primary animate-spin" />
-            ) : (
-              <Camera className="h-5 w-5 text-usm-blue-primary" />
-            )}
-          </label>
+    <div className="bg-white border border-[#DDE8F8] rounded-3xl p-6 sm:p-8 shadow-sm">
+      <div className="flex items-center gap-3 pb-6 border-b border-[#DDE8F8] mb-6">
+        <div className="h-10 w-10 rounded-xl bg-[#0D63FF]/10 text-[#0D63FF] flex items-center justify-center shrink-0">
+          <UserCheck size={20} />
         </div>
-        <div className="text-center sm:text-left rtl:text-right">
-          <h3 className="text-lg font-bold text-usm-blue-dark uppercase tracking-wider">{tr(language, 'Profile Picture', 'Photo de profil', 'الصورة الشخصية')}</h3>
-          <p className="text-[10px] text-slate-500 mt-1 max-w-sm">
-            {tr(
-              language,
-              'Hover and click on the photo to upload a new one. Max file size: 10MB.',
-              'Survolez et cliquez pour charger une nouvelle photo. Max : 10 Mo.',
-              'قم بتمرير الفأرة والضغط على الصورة لتحميل صورة جديدة. الحجم الأقصى: 10 ميغابايت.'
-            )}
+        <div>
+          <h2 className="text-xl font-black text-[#071A30] font-display uppercase tracking-wide">
+            {tr(language, 'Personal Information', 'Informations personnelles', 'المعلومات الشخصية')}
+          </h2>
+          <p className="text-xs text-[#5B6B82] mt-0.5">
+            {tr(language, 'Update your name and email address.', 'Modifiez vos informations personnelles ci-dessous.', 'قم بتعديل بياناتك الشخصية أدناه.')}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
-        {/* Profile Info Form */}
-        <div className="usm-card border border-usm-border p-6">
-          <h3 className="text-sm font-bold text-usm-blue-dark uppercase tracking-wider border-b border-usm-border pb-3 mb-6">
-            {tr(language, 'Profile Details', 'Modifier le Profil', 'تعديل البيانات')}
-          </h3>
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'First Name', 'Prénom', 'الاسم الأول')}
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={profileForm.firstName}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'Last Name', 'Nom', 'اللقب')}
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={profileForm.lastName}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
-                  required
-                />
-              </div>
-            </div>
+      {errorMessage && (
+        <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2.5">
+          <AlertCircle size={16} className="shrink-0 text-red-500" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider text-[#5B6B82] mb-1.5">
+              {tr(language, 'First Name', 'Prénom', 'الاسم')} *
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              placeholder="ex. Mohamed"
+              className="w-full bg-white border border-[#DDE8F8] focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2.5 text-xs text-[#071A30] outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-wider text-[#5B6B82] mb-1.5">
+              {tr(language, 'Last Name', 'Nom', 'اللقب')} *
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              placeholder="ex. Ben Salem"
+              className="w-full bg-white border border-[#DDE8F8] focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2.5 text-xs text-[#071A30] outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-wider text-[#5B6B82] mb-1.5">
+            {tr(language, 'Email address', 'Adresse e-mail', 'البريد الإلكتروني')} *
+          </label>
+          <div className="relative">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="nom@exemple.com"
+              className="w-full bg-white border border-[#DDE8F8] focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2.5 pl-10 text-xs text-[#071A30] outline-none transition-all"
+            />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+          </div>
+        </div>
+
+        {/* If user is modifying email, show security password confirmation prompt */}
+        {emailChanged && (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2 animate-fadeIn">
+            <div className="flex items-center gap-2 text-amber-800 text-xs font-bold">
+              <ShieldAlert size={16} className="text-amber-600 shrink-0" />
+              <span>{tr(language, 'Security verification', 'Vérification de sécurité', 'تأكيد الأمان')}</span>
+            </div>
+            <p className="text-[11px] text-amber-700 leading-relaxed">
+              {tr(
+                language,
+                'You are changing your email address. Please enter your current password to confirm this change.',
+                'Vous êtes en train de modifier votre adresse e-mail. Veuillez saisir votre mot de passe actuel pour confirmer.',
+                'أنت بصدد تغيير بريدك الإلكتروني. يرجى إدخال كلمة المرور الحالية للتأكيد.'
+              )}
+            </p>
             <div>
-              <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                {tr(language, 'Phone Number', 'Numéro de Téléphone', 'رقم الهاتف')}
+              <label className="block text-[10px] font-black uppercase tracking-wider text-amber-900 mb-1">
+                {tr(language, 'Current Password', 'Mot de passe actuel', 'كلمة المرور الحالية')}
               </label>
               <input
-                type="tel"
-                name="phone"
-                value={profileForm.phone}
-                onChange={handleProfileChange}
-                className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-white border border-amber-300 focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2 text-xs text-[#071A30] outline-none"
               />
             </div>
+          </div>
+        )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'City', 'Ville', 'المدينة')}
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={profileForm.city}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'Country', 'Pays', 'البلد')}
-                </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={profileForm.country}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'Favorite USM Section', 'Section préférée', 'الفرع المفضل')}
-                </label>
-                <select
-                  name="favoriteSport"
-                  value={profileForm.favoriteSport}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3 text-xs text-usm-blue-dark outline-none transition-all cursor-pointer appearance-none"
-                >
-                  <option value="both">{tr(language, 'Football & Basketball', 'Football & Basket', 'كرة قدم وسلة')}</option>
-                  <option value="football">Football</option>
-                  <option value="basketball">Basketball</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-2">
-                  {tr(language, 'Favorite Player', 'Joueur préféré', 'اللاعب المفضل')}
-                </label>
-                <input
-                  type="text"
-                  name="favoritePlayer"
-                  value={profileForm.favoritePlayer}
-                  onChange={handleProfileChange}
-                  className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-3.5 text-xs text-usm-blue-dark outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={profileLoading}
-              className="w-full usm-btn-primary py-2.5 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider text-usm-blue-dark rounded-xl cursor-pointer hover:bg-usm-blue-hover hover:text-white transition-all duration-300 mt-6"
-            >
-              {profileLoading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <>
-                  <Save size={14} />
-                  <span>{tr(language, 'Save Changes', 'Enregistrer', 'حفظ التغييرات')}</span>
-                </>
-              )}
-            </button>
-          </form>
+        <div className="pt-4">
+          <button
+            type="submit"
+            disabled={loading || !firstName.trim() || !lastName.trim() || !email.trim()}
+            className="py-3 px-6 rounded-xl bg-[#0D63FF] hover:bg-[#0052D9] disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>{tr(language, 'Saving...', 'Enregistrement...', 'جار الحفظ...')}</span>
+              </>
+            ) : (
+              <>
+                <Save size={15} />
+                <span>{tr(language, 'Save Changes', 'Enregistrer les modifications', 'حفظ التعديلات')}</span>
+              </>
+            )}
+          </button>
         </div>
-
-        {/* Privacy Settings Form */}
-        <div className="usm-card border border-usm-border p-6">
-          <h3 className="text-sm font-bold text-usm-blue-dark uppercase tracking-wider border-b border-usm-border pb-3 mb-6">
-            {tr(language, 'Privacy Preferences', 'Confidentialité & Affichage', 'إعدادات الخصوصية')}
-          </h3>
-          <form onSubmit={handlePrivacySubmit} className="space-y-4">
-            <div className="space-y-4">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="showProfilePublicly"
-                  checked={privacyForm.showProfilePublicly}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Show Profile Publicly', 'Afficher mon profil publiquement', 'عرض الملف الشخصي للعامة')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Allow other fans to search for your profile.', 'Permettre aux autres fans de voir mon profil.', 'السماح للأحباء الآخرين بالبحث عن ملفك الشخصي.')}
-                  </span>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="showCity"
-                  checked={privacyForm.showCity}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Show City', 'Afficher ma ville', 'عرض المدينة')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Display your city on your public profile card.', 'Afficher ma ville sur ma fiche de profil.', 'عرض مدينتك على بطاقة ملفك الشخصي.')}
-                  </span>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="showRanking"
-                  checked={privacyForm.showRanking}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Show in Rankings', 'Afficher dans le classement', 'الظهور في لائحة المتصدرين')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Participate and display your points in the fan leaderboard.', 'Afficher mes points dans le classement des fans.', 'المشاركة والظهور بنقاطك في لائحة متصدري الأحباء.')}
-                  </span>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="showDonationBadge"
-                  checked={privacyForm.showDonationBadge}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Show Donation Badge', 'Afficher mes badges de soutien', 'عرض شارات التبرع')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Show supporter tiers on rankings and leaderboards.', 'Afficher mes badges de donateur sur le classement.', 'عرض رتبة الدعم الخاصة بك في لائحة المتصدرين.')}
-                  </span>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="showDonationAmount"
-                  checked={privacyForm.showDonationAmount}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Show Donation Amount', 'Afficher mes montants de soutien', 'عرض مبالغ التبرع')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Display the exact amount of donations publicly.', 'Afficher le montant exact de mes dons publiquement.', 'عرض المبلغ الدقيق لتبرعاتك علناً.')}
-                  </span>
-                </div>
-              </label>
-
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="useNickname"
-                  checked={privacyForm.useNickname}
-                  onChange={handlePrivacyChange}
-                  className="mt-0.5 rounded border-usm-border bg-white text-usm-blue-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                />
-                <div className="text-xs">
-                  <span className="block font-bold text-usm-blue-dark uppercase tracking-wider text-[10px]">
-                    {tr(language, 'Use Display Name', 'Utiliser mon pseudonyme', 'استخدام اسم العرض')}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    {tr(language, 'Use nickname instead of real name for display (defaults to email username).', 'Utiliser un pseudonyme à la place du vrai nom.', 'استخدام اسم العرض بدلاً من الاسم الحقيقي.')}
-                  </span>
-                </div>
-              </label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={privacyLoading}
-              className="w-full usm-btn-primary py-2.5 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-wider text-usm-blue-dark rounded-xl cursor-pointer hover:bg-usm-blue-hover hover:text-white transition-all duration-300 mt-6"
-            >
-              {privacyLoading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <>
-                  <Save size={14} />
-                  <span>{tr(language, 'Update Privacy', 'Enregistrer la confidentialité', 'تحديث الخصوصية')}</span>
-                </>
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
+      </form>
     </div>
   );
 }

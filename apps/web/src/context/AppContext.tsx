@@ -689,43 +689,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const normalizedRole = (adminRole || '').toUpperCase().replace(/[\s_]+/g, '_');
   const isSuperAdmin =
-    normalizedRole === 'SUPER_ADMIN' ||
-    adminRole === 'Super Admin' ||
-    normalizedRole === 'ADMIN' ||
-    (fan && (fan.role === 'SUPER_ADMIN' || fan.role === 'Super Admin')) ||
-    (!isLoggedIn && typeof window !== 'undefined');
+    isLoggedIn &&
+    (normalizedRole === 'SUPER_ADMIN' ||
+      adminRole === 'Super Admin' ||
+      normalizedRole === 'ADMIN' ||
+      (fan && (fan.role === 'SUPER_ADMIN' || fan.role === 'Super Admin')));
 
   const hasPermission = (permission: string): boolean => {
-    if (isSuperAdmin || customPermissions.includes('*') || !isLoggedIn) return true;
+    if (!isLoggedIn) return false;
+    if (isSuperAdmin || customPermissions.includes('*')) return true;
     return customPermissions.includes(permission);
   };
 
   const refreshMe = async () => {
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const data = await api.getMe();
-      if (data) {
+      if (data && (data._id || data.id || data.email)) {
         setFan(data);
         setIsLoggedIn(true);
-        setUsername(data.displayName || data.name || data.email);
-        const resolvedRole = data.role || 'SUPER_ADMIN';
+        setUsername(data.displayName || data.firstName || data.name || data.email);
+        const resolvedRole = data.role || 'USER';
         setAdminRole(resolvedRole);
-        setCustomPermissions(data.customPermissions && data.customPermissions.length > 0 ? data.customPermissions : ['*']);
-        setUserRole(resolvedRole && resolvedRole !== 'USER' && resolvedRole !== 'Customer' && resolvedRole !== 'Fan' ? 'admin' : 'supporter');
+        setCustomPermissions(data.customPermissions && data.customPermissions.length > 0 ? data.customPermissions : []);
+        setUserRole(
+          resolvedRole && resolvedRole !== 'USER' && resolvedRole !== 'Customer' && resolvedRole !== 'Fan'
+            ? 'admin'
+            : 'supporter'
+        );
       } else {
         setFan(null);
         setIsLoggedIn(false);
-        setUsername('Super Admin');
-        setAdminRole('SUPER_ADMIN');
-        setCustomPermissions(['*']);
-        setUserRole('admin');
+        setUsername('');
+        setAdminRole('USER');
+        setCustomPermissions([]);
+        setUserRole('guest');
       }
     } catch {
       setFan(null);
       setIsLoggedIn(false);
-      setUsername('Super Admin');
-      setAdminRole('SUPER_ADMIN');
-      setCustomPermissions(['*']);
-      setUserRole('admin');
+      setUsername('');
+      setAdminRole('USER');
+      setCustomPermissions([]);
+      setUserRole('guest');
     }
   };
 

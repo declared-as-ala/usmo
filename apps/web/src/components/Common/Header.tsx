@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import { tr } from '../../utils/i18n';
 import { Logo } from './Logo';
-import { Search, Globe, User, Menu, X, ShoppingBag, ChevronDown, Bell, Zap, Award, CreditCard, LifeBuoy, Crown } from 'lucide-react';
+import { Search, Globe, User, Menu, X, ShoppingBag, ChevronDown, Bell, Zap, Award, CreditCard, LifeBuoy, Crown, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '../../lib/api-client';
 
@@ -298,7 +298,7 @@ export const Header: React.FC = () => {
                 )}
               </div>
 
-              {/* Supporter profile — shown once authenticated */}
+              {/* Supporter profile (authenticated) or Connexion / S'inscrire buttons (guests) */}
               {isLoggedIn ? (
                 <div className="relative" ref={profileRef}>
                   <button
@@ -306,20 +306,22 @@ export const Header: React.FC = () => {
                       setProfileOpen(!profileOpen);
                       setLangOpen(false);
                     }}
-                    className="flex items-center gap-2 pl-1.5 pr-3.5 h-9 rounded-full bg-usm-teal-accent/10 border border-usm-teal-accent/30 hover:border-usm-teal-accent/60 transition-all cursor-pointer"
+                    className="flex items-center gap-2 pl-1.5 pr-3 h-9 rounded-full bg-white/[0.06] border border-white/15 hover:border-usm-blue-primary hover:bg-white/[0.1] transition-all cursor-pointer"
                   >
-                    <span className="relative h-6 w-6 rounded-full bg-usm-teal-accent/20 border border-usm-teal-accent/50 flex items-center justify-center overflow-hidden">
+                    <span className="relative h-6 w-6 rounded-full bg-usm-blue-primary/20 border border-usm-blue-primary/50 flex items-center justify-center overflow-hidden shrink-0">
                       {fan?.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={fan.avatar} alt={username} className="h-full w-full object-cover" />
-                      ) : (
+                      ) : initials ? (
                         <span className="text-[9px] font-black text-usm-teal-accent">{initials}</span>
+                      ) : (
+                        <User size={13} className="text-white/80" />
                       )}
                     </span>
                     <span className="hidden sm:inline text-[11px] font-semibold text-white tracking-wide max-w-[110px] truncate">
-                      {username}
+                      {username || 'Mon Compte'}
                     </span>
-                    {isPremiumMember && <Crown size={11} className="text-usm-accent-gold hidden sm:inline" />}
+                    <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${profileOpen ? 'rotate-180 text-usm-blue-primary' : ''}`} />
                   </button>
                   <AnimatePresence>
                     {profileOpen && (
@@ -328,93 +330,90 @@ export const Header: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.18 }}
-                        className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-64 bg-white border border-usm-teal-accent/25 rounded-2xl shadow-2xl p-4 z-50"
+                        className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-64 bg-white border border-usm-border rounded-2xl shadow-2xl p-4 z-50 text-usm-blue-dark"
                       >
                         <div className="flex items-center gap-3 border-b border-usm-border pb-3 mb-3">
-                          <div className="relative h-10 w-10 rounded-full bg-usm-teal-accent/15 flex items-center justify-center border border-usm-teal-accent/50 overflow-hidden shrink-0">
+                          <div className="relative h-10 w-10 rounded-full bg-usm-blue-soft flex items-center justify-center border border-usm-border overflow-hidden shrink-0">
                             {fan?.avatar ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={fan.avatar} alt={username} className="h-full w-full object-cover" />
+                            ) : initials ? (
+                              <span className="text-xs font-black text-usm-blue-primary">{initials}</span>
                             ) : (
-                              <span className="text-xs font-black text-usm-teal-accent">{initials}</span>
+                              <User size={18} className="text-slate-400" />
                             )}
                           </div>
                           <div className="min-w-0">
-                            <h4 className="text-sm font-bold text-usm-blue-dark truncate">{username}</h4>
-                            {isPremiumMember ? (
-                              <p className="text-[9px] text-usm-accent-gold font-bold tracking-[0.1em] mt-0.5 flex items-center gap-1">
-                                <Crown size={10} /> {tr(language, 'PREMIUM MEMBER', 'MEMBRE PREMIUM', 'عضو مميز')}
-                              </p>
-                            ) : (
-                              <p className="text-[9px] text-usm-teal-accent/80 uppercase font-bold tracking-[0.15em] mt-0.5">
-                                {userRole}
-                              </p>
-                            )}
+                            <h4 className="text-sm font-bold text-usm-blue-dark truncate">{username || fan?.name || 'Utilisateur'}</h4>
+                            <p className="text-[10px] text-slate-500 truncate">{fan?.email || ''}</p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 mb-3">
+
+                        <div className="space-y-1.5 mb-3">
                           {userRole === 'admin' && (
                             <button
                               onClick={() => {
                                 setProfileOpen(false);
                                 handleNavClick('admin');
                               }}
-                              className="col-span-2 py-2.5 border border-usm-danger/40 text-usm-danger text-[11px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-danger/10 transition-all cursor-pointer"
+                              className="w-full py-2 px-3 border border-usm-danger/40 text-usm-danger text-[11px] font-bold uppercase tracking-wider text-left rtl:text-right rounded-xl hover:bg-usm-danger/10 transition-all cursor-pointer"
                             >
-                              {tr(language, 'Open Control Panel', 'Ouvrir le Panneau Admin', 'فتح لوحة التحكم')}
+                              {tr(language, 'Admin Panel', 'Panneau Admin', 'لوحة التحكم')}
                             </button>
                           )}
                           <button
                             onClick={() => { setProfileOpen(false); router.push('/compte'); }}
-                            className="col-span-2 py-2.5 bg-usm-blue-soft text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer"
+                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
                           >
-                            {tr(language, 'My Account', 'Mon compte', 'حسابي')}
+                            <User size={13} />
+                            <span>{tr(language, 'My Profile', 'Mon profil', 'ملفي الشخصي')}</span>
                           </button>
                           <button
-                            onClick={() => { setProfileOpen(false); handleNavClick('fanzone'); }}
-                            className="py-2 bg-usm-blue-soft text-usm-blue-dark text-[10px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer"
+                            onClick={() => { setProfileOpen(false); router.push('/compte/profil'); }}
+                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
                           >
-                            {tr(language, 'Fan Zone', 'Fan Zone', 'منطقة الأحباء')}
+                            <Shield size={13} />
+                            <span>{tr(language, 'Account Settings', 'Paramètres du compte', 'إعدادات الحساب')}</span>
                           </button>
                           <button
-                            onClick={() => { setProfileOpen(false); router.push('/abonnement'); }}
-                            className="py-2 bg-usm-blue-soft text-usm-blue-dark text-[10px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer flex items-center justify-center gap-1"
+                            onClick={() => { setProfileOpen(false); router.push('/compte/securite'); }}
+                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
                           >
-                            <CreditCard size={11} /> {tr(language, 'Membership', 'Abonnement', 'الاشتراك')}
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte/points'); }}
-                            className="py-2 bg-usm-blue-soft text-usm-blue-dark text-[10px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <Zap size={11} /> {tr(language, 'Points', 'Points', 'النقاط')}
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte/badges'); }}
-                            className="py-2 bg-usm-blue-soft text-usm-blue-dark text-[10px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <Award size={11} /> {tr(language, 'Badges', 'Badges', 'الأوسمة')}
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte/support'); }}
-                            className="py-2 bg-usm-blue-soft text-usm-blue-dark text-[10px] font-bold uppercase tracking-wider text-center rounded-lg hover:bg-usm-teal-accent/15 hover:text-usm-teal-accent transition-all cursor-pointer flex items-center justify-center gap-1"
-                          >
-                            <LifeBuoy size={11} /> {tr(language, 'Support', 'Assistance', 'المساعدة')}
+                            <Shield size={13} />
+                            <span>{tr(language, 'Security', 'Sécurité', 'الأمان')}</span>
                           </button>
                         </div>
+
                         <button
                           onClick={() => {
                             setProfileOpen(false);
                             logout();
                           }}
-                          className="w-full py-2.5 bg-usm-teal-accent text-usm-blue-dark text-[11px] font-black uppercase tracking-wider text-center rounded-lg hover:bg-usm-blue-hover hover:text-white transition-all cursor-pointer"
+                          className="w-full py-2 px-3 bg-slate-100 hover:bg-red-50 text-red-600 text-[11px] font-black uppercase tracking-wider text-center rounded-xl transition-all cursor-pointer"
                         >
-                          {tr(language, 'Sign Out', 'Déconnexion', 'تسجيل الخروج')}
+                          {tr(language, 'Sign Out', 'Se déconnecter', 'تسجيل الخروج')}
                         </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
-              ) : null}
+              ) : (
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    onClick={() => router.push('/connexion')}
+                    className="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-transparent border border-white/25 hover:border-usm-blue-primary hover:text-usm-blue-primary text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    <User size={13} />
+                    <span>{tr(language, 'Sign In', 'CONNEXION', 'تسجيل الدخول')}</span>
+                  </button>
+                  <button
+                    onClick={() => router.push('/inscription')}
+                    className="flex items-center gap-1.5 px-4 h-9 rounded-full bg-usm-blue-primary hover:bg-[#0052D9] text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-usm-blue-primary/25 transition-all cursor-pointer"
+                  >
+                    <span>{tr(language, 'Sign Up', "S'INSCRIRE", 'إنشاء حساب')}</span>
+                  </button>
+                </div>
+              )}
 
               {/* Mobile menu toggle */}
               <button
@@ -518,6 +517,77 @@ export const Header: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Mobile Auth Actions */}
+            <div className="p-4 border-t border-white/10 bg-[#050e1f]/80">
+              {isLoggedIn ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 px-3 py-2 bg-white/[0.04] rounded-xl border border-white/10">
+                    <div className="h-9 w-9 rounded-full bg-usm-blue-primary/20 border border-usm-blue-primary/40 flex items-center justify-center text-usm-blue-primary font-bold text-xs shrink-0 overflow-hidden">
+                      {fan?.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={fan.avatar} alt={username} className="h-full w-full object-cover" />
+                      ) : initials ? (
+                        initials
+                      ) : (
+                        <User size={16} />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white truncate">{username || fan?.name || 'Utilisateur'}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{fan?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); router.push('/compte'); }}
+                      className="py-2 text-[10px] font-bold uppercase tracking-wider text-center text-white bg-white/[0.06] hover:bg-usm-blue-primary rounded-lg transition-colors"
+                    >
+                      {tr(language, 'Profile', 'Profil', 'الملف')}
+                    </button>
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); router.push('/compte/profil'); }}
+                      className="py-2 text-[10px] font-bold uppercase tracking-wider text-center text-white bg-white/[0.06] hover:bg-usm-blue-primary rounded-lg transition-colors"
+                    >
+                      {tr(language, 'Settings', 'Paramètres', 'الإعدادات')}
+                    </button>
+                    <button
+                      onClick={() => { setMobileMenuOpen(false); router.push('/compte/securite'); }}
+                      className="py-2 text-[10px] font-bold uppercase tracking-wider text-center text-white bg-white/[0.06] hover:bg-usm-blue-primary rounded-lg transition-colors"
+                    >
+                      {tr(language, 'Security', 'Sécurité', 'الأمان')}
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full py-2.5 text-center text-xs font-bold uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white rounded-xl transition-all"
+                  >
+                    {tr(language, 'Sign Out', 'Déconnexion', 'تسجيل الخروج')}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); router.push('/connexion'); }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/25 text-white font-bold text-xs uppercase tracking-wider hover:border-usm-blue-primary hover:text-usm-blue-primary transition-all"
+                  >
+                    <User size={14} />
+                    <span>{tr(language, 'Sign In', 'Connexion', 'تسجيل الدخول')}</span>
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); router.push('/inscription'); }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-usm-blue-primary hover:bg-[#0052D9] text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all"
+                  >
+                    <span>{tr(language, 'Sign Up', "S'inscrire", 'إنشاء حساب')}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

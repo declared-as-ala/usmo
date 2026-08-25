@@ -218,6 +218,11 @@ export const api = {
     body: JSON.stringify(data),
   }),
 
+  updateEmail: (email: string, currentPassword?: string) => fetchJson('/me/email', {
+    method: 'PATCH',
+    body: JSON.stringify({ email, currentPassword }),
+  }),
+
   changePassword: (currentPassword: string, newPassword: string) => fetchJson('/me/password', {
     method: 'PATCH',
     body: JSON.stringify({ currentPassword, newPassword }),

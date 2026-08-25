@@ -20,6 +20,7 @@ import { MembershipsService } from '../memberships/memberships.service';
 import { UpdateProfileDto } from './update-profile.dto';
 import { UpdatePrivacyDto } from './update-privacy.dto';
 import { ChangePasswordDto } from './change-password.dto';
+import { UpdateEmailDto } from './update-email.dto';
 import { MAX_IMAGE_SIZE } from '../storage/constants/upload.constants';
 
 const multerOptions = {
@@ -75,6 +76,17 @@ export class MeController {
       throw new NotFoundException('Utilisateur non trouvé lors de la mise à jour');
     }
 
+    const { password, ...result } = updatedUser.toObject();
+    return result;
+  }
+
+  @Patch('email')
+  async updateEmail(@Req() req: any, @Body() updateEmailDto: UpdateEmailDto) {
+    const updatedUser = await this.usersService.updateEmail(
+      req.user.sub,
+      updateEmailDto.email,
+      updateEmailDto.currentPassword,
+    );
     const { password, ...result } = updatedUser.toObject();
     return result;
   }

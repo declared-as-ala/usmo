@@ -15,7 +15,8 @@ import {
   X,
   Eye,
   Lock,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -49,6 +50,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({ slug }) => {
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
   const [activePhotoIdx, setActivePhotoIdx] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchAlbum = async () => {
     setLoading(true);
@@ -116,17 +118,51 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({ slug }) => {
     );
   }
 
-  const handleShare = () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      navigator.share({
-        title: album.title,
-        text: album.description,
-        url: url
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url);
-      showToast('Lien de l\'album copié !', 'info');
+  const handleShare = async () => {
+    if (!album) return;
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    const shareData = {
+      title: album.title || 'US Monastir Media',
+      text: album.description || album.title || 'US Monastir Media',
+      url,
+    };
+
+    let shared = false;
+    if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        shared = true;
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          return;
+        }
+      }
+    }
+
+    if (!shared) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const textArea = document.createElement('textarea');
+          textArea.value = url;
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+        showToast(
+          tr(language, 'Album link copied to clipboard!', "Lien de l'album copié dans le presse-papier !", 'تم نسخ رابط الألبوم!'),
+          'success'
+        );
+      } catch {
+        showToast(url, 'info');
+      }
     }
   };
 
@@ -196,9 +232,23 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({ slug }) => {
             
             <button
               onClick={handleShare}
-              className="px-4 py-2 rounded-xl bg-usm-blue-soft border border-usm-border hover:bg-usm-blue-hover/15 transition-all flex items-center gap-1.5 cursor-pointer text-usm-blue-dark"
+              className={`px-4 py-2 rounded-xl border transition-all flex items-center gap-1.5 cursor-pointer text-[11px] font-bold ${
+                copied
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                  : 'bg-usm-blue-soft border-usm-border hover:bg-usm-blue-hover/15 text-usm-blue-dark'
+              }`}
             >
-              <Share2 size={13} /> Partager l'album
+              {copied ? (
+                <>
+                  <Check size={13} className="text-emerald-600" />
+                  <span>{tr(language, 'Link Copied!', 'Lien copié !', 'تم النسخ!')}</span>
+                </>
+              ) : (
+                <>
+                  <Share2 size={13} />
+                  <span>{tr(language, 'Share Album', "Partager l'album", 'مشاركة الألبوم')}</span>
+                </>
+              )}
             </button>
           </div>
         </div>

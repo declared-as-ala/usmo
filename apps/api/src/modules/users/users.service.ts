@@ -361,6 +361,38 @@ export class UsersService {
     return { success: true };
   }
 
+  async updateEmail(id: string, newEmail: string, currentPassword?: string): Promise<User> {
+    const normalizedEmail = newEmail.toLowerCase().trim();
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+
+    if (user.email.toLowerCase() === normalizedEmail) {
+      return user;
+    }
+
+    const existing = await this.userModel.findOne({
+      _id: { $ne: id },
+      email: normalizedEmail,
+    }).exec();
+    if (existing) {
+      throw new ConflictException('Cette adresse e-mail est déjà utilisée par un autre compte');
+    }
+
+    if (currentPassword && user.password) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        throw new BadRequestException('Mot de passe actuel incorrect');
+      }
+    }
+
+    user.email = normalizedEmail;
+    user.emailVerified = false;
+    await user.save();
+    return user;
+  }
+
   async changePassword(id: string, currentPassword: string, newPassword: string): Promise<void> {
     const user = await this.userModel.findById(id).exec();
     if (!user || !user.password) {
