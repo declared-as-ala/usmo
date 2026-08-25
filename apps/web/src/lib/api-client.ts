@@ -4,10 +4,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 async function fetchJson(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   // Retrieve token from localStorage if available
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
-  
+
   const headers = new Headers(options.headers);
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
@@ -27,7 +27,7 @@ async function fetchJson(endpoint: string, options: RequestInit = {}) {
     try {
       const errorData = await response.json();
       errorMessage = errorData.message || errorMessage;
-    } catch {}
+    } catch { }
     throw new Error(errorMessage);
   }
 
@@ -128,7 +128,7 @@ export const api = {
   // Public Catalog
   getCategories: () => fetchJson('/categories'),
   getCollections: () => fetchJson('/collections'),
-  
+
   // Cart & Checkout
   getDeliveryZones: () => fetchJson('/cart/delivery-zones'),
   getPickupPoints: () => fetchJson('/cart/pickup-points'),
@@ -141,7 +141,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
-  
+
   getProducts: (params: Record<string, string | number | undefined> = {}) => {
     const query = Object.entries(params)
       .filter(([_, v]) => v !== undefined)
@@ -149,7 +149,7 @@ export const api = {
       .join('&');
     return fetchJson(`/products?${query}`);
   },
-  
+
   getProductBySlug: (slug: string) => fetchJson(`/products/slug/${slug}`),
   incrementProductViews: (id: string) => fetchJson(`/products/${id}/views`, { method: 'POST' }),
 
@@ -161,17 +161,17 @@ export const api = {
       .join('&');
     return fetchJson(`/products/all?${query}`);
   },
-  
+
   createProduct: (data: any) => fetchJson('/products', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
-  
+
   updateProduct: (id: string, data: any) => fetchJson(`/products/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
-  
+
   deleteProduct: (id: string) => fetchJson(`/products/${id}`, {
     method: 'DELETE',
   }),
@@ -193,14 +193,24 @@ export const api = {
     }
     return data;
   },
-  
+
+  forgotPassword: (email: string) => fetchJson('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }),
+
+  resetPassword: (token: string, newPassword: string) => fetchJson('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  }),
+
   logout: async () => {
     await fetchJson('/auth/logout', { method: 'POST' });
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
     }
   },
-  
+
   getMe: () => fetchJson('/me'),
 
   updateProfile: (data: any) => fetchJson('/me/profile', {
@@ -472,7 +482,7 @@ export const api = {
       };
       xhr.onload = () => {
         let body: any = null;
-        try { body = JSON.parse(xhr.responseText); } catch {}
+        try { body = JSON.parse(xhr.responseText); } catch { }
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(body);
         } else {

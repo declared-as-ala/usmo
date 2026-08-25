@@ -107,6 +107,12 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
               </div>
             )}
 
+            <div className="flex justify-end">
+              <a href="/auth/forgot-password" target="_blank" className="text-[10px] text-usm-blue-primary font-bold hover:underline">
+                Forgot password?
+              </a>
+            </div>
+
             {/* Connect Button */}
             <button
               type="submit"

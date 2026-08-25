@@ -153,16 +153,27 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3 bg-white/[0.05] border border-white/10 backdrop-blur-md px-5 py-3 rounded-2xl">
-              <Users size={24} className="text-usm-teal-accent" />
-              <div>
-                <div className="text-2xl font-black text-white font-display leading-none">
-                  {roster.length}
-                </div>
-                <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
-                  Athlètes Enregistrés
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex items-center gap-3 bg-white/[0.05] border border-white/10 backdrop-blur-md px-5 py-3 rounded-2xl">
+                <Users size={24} className="text-usm-teal-accent" />
+                <div>
+                  <div className="text-2xl font-black text-white font-display leading-none">
+                    {roster.length}
+                  </div>
+                  <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                    {language === 'ar' ? 'رياضي مسجل' : 'Athlètes Enregistrés'}
+                  </div>
                 </div>
               </div>
+
+              <Link
+                href={`/${sport}/staff`}
+                className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-usm-blue-primary text-white font-bold text-xs uppercase tracking-wider hover:bg-white hover:text-usm-blue-dark transition-all duration-300 shadow-lg shadow-usm-blue-primary/20 border border-usm-blue-primary/50"
+              >
+                <UserCheck size={18} />
+                {language === 'ar' ? 'عرض الطاقم الفني' : 'Voir le Staff'}
+                <ArrowRight size={16} className="rtl:rotate-180" />
+              </Link>
             </div>
           </div>
 
