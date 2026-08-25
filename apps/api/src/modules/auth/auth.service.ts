@@ -124,7 +124,7 @@ export class AuthService {
     await user.save();
 
     const appUrl = process.env.APP_URL || 'http://54.37.226.228';
-    const resetUrl = `${appUrl}/reset-password?token=${resetToken}`;
+    const resetUrl = `${appUrl}/auth/reset-password?token=${resetToken}`;
 
     // Send reset password email via OVH SMTP
     this.mailService.sendPasswordResetEmail(user.email, user.name || 'Utilisateur', resetUrl).catch((err) => {

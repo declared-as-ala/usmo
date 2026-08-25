@@ -73,7 +73,7 @@ export default function OnboardingPage() {
             type="text"
             value={favoritePlayer}
             onChange={(e) => setFavoritePlayer(e.target.value)}
-            placeholder={tr(language, 'e.g. Moez Ben Cherifia', 'ex. Moez Ben Cherifia', 'مثال: معز بن شريفية')}
+            placeholder={tr(language, 'e.g. Fan Usmonastirien', 'ex. Fan Usmonastirien', 'مثال: معز بن شريفية')}
             className="w-full bg-white border border-usm-border focus:border-usm-blue-primary rounded-xl py-2.5 px-4 text-xs text-usm-blue-dark outline-none transition-all"
           />
         </div>

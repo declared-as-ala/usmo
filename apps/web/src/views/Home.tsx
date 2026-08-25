@@ -195,10 +195,10 @@ export const Home: React.FC = () => {
           <div className="relative grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
             {[
               { value: '1923', label: language === 'ar' ? 'التأسيس' : 'Fondation' },
-              { value: '100+', label: language === 'ar' ? 'سنة من التاريخ' : 'Ans d’histoire' },
-              { value: '2020', label: language === 'ar' ? 'كأس تونس (كرة القدم)' : 'Coupe de Tunisie · Foot' },
+              { value: '103', label: language === 'ar' ? 'سنة من التاريخ' : 'Ans d’histoire' },
               { value: '2022', label: language === 'ar' ? 'بطل أفريقيا (كرة السلة)' : 'Champion BAL · Basket' },
-              { value: 'Afrique', label: language === 'ar' ? 'حضور قاري ووطني' : 'Présence continentale' },
+              { value: '10', label: language === 'ar' ? 'بطولات تونس · كرة السلة' : 'Titres de Tunisie · Basket' },
+              { value: '2023', label: language === 'ar' ? 'رابع العالم في كرة السلة' : '4ème du Mondial · Basket' },
             ].map((s) => (
               <div key={s.label} className="rounded-xl bg-usm-blue-soft border border-usm-border px-3 py-4 text-center">
                 <p className="font-display font-black text-lg sm:text-xl text-usm-blue-primary">{s.value}</p>
