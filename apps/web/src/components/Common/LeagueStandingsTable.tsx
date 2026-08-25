@@ -34,6 +34,59 @@ interface LeagueStandingsTableProps {
   showFreshness?: boolean;
 }
 
+const LOCAL_TEAM_LOGOS: Record<string, string> = {
+  'ps sakiet eddaier': '/teams/pss.svg',
+  'progres sportif de sakiet eddaier': '/teams/pss.svg',
+  'sakiet eddaier': '/teams/pss.svg',
+  'esperance sportive de tunis': '/teams/est.png',
+  'esperance tunis': '/teams/est.png',
+  'es tunis': '/teams/est.png',
+  'club africain': '/teams/ca.png',
+  'club athletique bizertin': '/teams/cab.png',
+  'ca bizertin': '/teams/cab.png',
+  'esperance sportive de zarzis': '/teams/esz.png',
+  'es zarzis': '/teams/esz.png',
+  'club sportif sfaxien': '/teams/css.png',
+  'cs sfaxien': '/teams/css.png',
+  'stade tunisien': '/teams/st.png',
+  'us monastir': '/logo.png',
+  'us monastirienne': '/logo.png',
+  'union sportive monastirienne': '/logo.png',
+  'es hammam sousse': '/teams/eshs.png',
+  'etoile sportive du sahel': '/teams/ess.png',
+  'es sahel': '/teams/ess.png',
+  'us ben guerdane': '/teams/usbg.png',
+  'cs hammam-lif': '/teams/cshl.png',
+  'avenir sportif de la marsa': '/teams/asm.png',
+  'as marsa': '/teams/asm.png',
+  'etoile sportive de metlaoui': '/teams/esm.png',
+  'es metlaoui': '/teams/esm.png',
+  'olympique de beja': '/teams/ob.png',
+  'js omrane': '/teams/jso.png',
+  'js kairouan': '/teams/jsk.svg',
+  'es goulette': '/teams/esg.svg',
+  'ds grombalia': '/teams/dsg.svg',
+};
+
+function normalizeTeamKey(name: string): string {
+  return (name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function resolveTeamBadge(teamName: string, remoteBadge?: string | null, isUSM?: boolean): string {
+  if (isUSM) return '/logo.png';
+  const key = normalizeTeamKey(teamName);
+  for (const [pattern, localPath] of Object.entries(LOCAL_TEAM_LOGOS)) {
+    if (key.includes(pattern) || pattern.includes(key)) {
+      return localPath;
+    }
+  }
+  return remoteBadge || '/logo.png';
+}
+
 /** Live Tunisian League table sourced from NestJS backend cache — shared by Home and Match Center. */
 export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
   posLabel,
@@ -214,14 +267,22 @@ export const LeagueStandingsTable: React.FC<LeagueStandingsTableProps> = ({
                   <td className="px-4 py-3 text-center font-display font-black text-slate-500">
                     {row.position}
                   </td>
-                  <td className="px-4 py-3 flex items-center space-x-2 rtl:space-x-reverse">
-                    {row.isUSM && <span className="h-1.5 w-1.5 rounded-full bg-usm-blue-primary animate-live-pulse" />}
-                    {row.badge ? (
-                      <img src={row.badge} alt="" className="h-4 w-4 object-contain" />
-                    ) : row.isUSM ? (
-                      <img src="/logo.png" alt="" className="h-4 w-4 object-contain" />
-                    ) : null}
-                    <span className="truncate max-w-[180px]">{row.team}</span>
+                  <td className="px-4 py-3 flex items-center space-x-2.5 rtl:space-x-reverse">
+                    {row.isUSM && <span className="h-2 w-2 rounded-full bg-usm-blue-primary animate-live-pulse shrink-0" />}
+                    <div className="h-6 w-6 rounded-md overflow-hidden bg-white border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs p-0.5">
+                      <img
+                        src={resolveTeamBadge(row.team, row.badge, row.isUSM)}
+                        alt={row.team}
+                        className="h-full w-full object-contain"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.src.includes('/logo.png')) {
+                            target.src = '/logo.png';
+                          }
+                        }}
+                      />
+                    </div>
+                    <span className="truncate max-w-[190px] font-semibold text-slate-800">{row.team}</span>
                   </td>
                   <td className="px-4 py-3 text-center font-mono font-semibold">{row.played}</td>
                   <td className="px-4 py-3 text-center font-mono font-semibold text-emerald-600">{row.won}</td>

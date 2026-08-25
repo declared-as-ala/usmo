@@ -10,13 +10,13 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Current official 2026-2027 Ligue 1 Standings (Journée 1)
+// Current official 2026-2027 Ligue 1 Standings with local crisp team badges
 const currentFootballStandings2026_2027 = [
   {
     position: 1,
     teamId: 'ps-sakiet-eddaier',
     teamName: 'PS Sakiet Eddaier',
-    teamLogo: 'https://media.api-sports.io/football/teams/19888.png',
+    teamLogo: '/teams/pss.svg',
     played: 1,
     won: 1,
     drawn: 0,
@@ -32,7 +32,7 @@ const currentFootballStandings2026_2027 = [
     position: 2,
     teamId: '988',
     teamName: 'Espérance Sportive de Tunis',
-    teamLogo: 'https://media.api-sports.io/football/teams/988.png',
+    teamLogo: '/teams/est.png',
     played: 1,
     won: 1,
     drawn: 0,
@@ -48,7 +48,7 @@ const currentFootballStandings2026_2027 = [
     position: 3,
     teamId: '987',
     teamName: 'Club Africain',
-    teamLogo: 'https://media.api-sports.io/football/teams/987.png',
+    teamLogo: '/teams/ca.png',
     played: 1,
     won: 1,
     drawn: 0,
@@ -64,7 +64,7 @@ const currentFootballStandings2026_2027 = [
     position: 4,
     teamId: '990',
     teamName: 'Club Athlétique Bizertin',
-    teamLogo: 'https://media.api-sports.io/football/teams/990.png',
+    teamLogo: '/teams/cab.png',
     played: 1,
     won: 1,
     drawn: 0,
@@ -80,7 +80,7 @@ const currentFootballStandings2026_2027 = [
     position: 5,
     teamId: '996',
     teamName: 'Espérance Sportive de Zarzis',
-    teamLogo: 'https://media.api-sports.io/football/teams/996.png',
+    teamLogo: '/teams/esz.png',
     played: 1,
     won: 1,
     drawn: 0,
@@ -96,7 +96,7 @@ const currentFootballStandings2026_2027 = [
     position: 6,
     teamId: '989',
     teamName: 'Club Sportif Sfaxien',
-    teamLogo: 'https://media.api-sports.io/football/teams/989.png',
+    teamLogo: '/teams/css.png',
     played: 1,
     won: 0,
     drawn: 1,
@@ -112,7 +112,7 @@ const currentFootballStandings2026_2027 = [
     position: 7,
     teamId: '993',
     teamName: 'Stade Tunisien',
-    teamLogo: 'https://media.api-sports.io/football/teams/993.png',
+    teamLogo: '/teams/st.png',
     played: 1,
     won: 0,
     drawn: 1,
@@ -128,7 +128,7 @@ const currentFootballStandings2026_2027 = [
     position: 8,
     teamId: '992',
     teamName: 'US Monastir',
-    teamLogo: 'https://media.api-sports.io/football/teams/992.png',
+    teamLogo: '/logo.png',
     played: 1,
     won: 0,
     drawn: 1,
@@ -144,7 +144,7 @@ const currentFootballStandings2026_2027 = [
     position: 9,
     teamId: '995',
     teamName: 'ES Hammam Sousse',
-    teamLogo: 'https://media.api-sports.io/football/teams/995.png',
+    teamLogo: '/teams/eshs.png',
     played: 1,
     won: 0,
     drawn: 1,
@@ -160,7 +160,7 @@ const currentFootballStandings2026_2027 = [
     position: 10,
     teamId: '991',
     teamName: 'US Ben Guerdane',
-    teamLogo: 'https://media.api-sports.io/football/teams/991.png',
+    teamLogo: '/teams/usbg.png',
     played: 0,
     won: 0,
     drawn: 0,
@@ -176,7 +176,7 @@ const currentFootballStandings2026_2027 = [
     position: 11,
     teamId: '994',
     teamName: 'CS Hammam-Lif',
-    teamLogo: 'https://media.api-sports.io/football/teams/994.png',
+    teamLogo: '/teams/cshl.png',
     played: 0,
     won: 0,
     drawn: 0,
@@ -192,7 +192,7 @@ const currentFootballStandings2026_2027 = [
     position: 12,
     teamId: '986',
     teamName: 'Étoile Sportive du Sahel',
-    teamLogo: 'https://media.api-sports.io/football/teams/986.png',
+    teamLogo: '/teams/ess.png',
     played: 1,
     won: 0,
     drawn: 0,
@@ -208,7 +208,7 @@ const currentFootballStandings2026_2027 = [
     position: 13,
     teamId: '997',
     teamName: 'Avenir Sportif de La Marsa',
-    teamLogo: 'https://media.api-sports.io/football/teams/997.png',
+    teamLogo: '/teams/asm.png',
     played: 1,
     won: 0,
     drawn: 0,
@@ -224,7 +224,7 @@ const currentFootballStandings2026_2027 = [
     position: 14,
     teamId: '998',
     teamName: 'Étoile Sportive de Métlaoui',
-    teamLogo: 'https://media.api-sports.io/football/teams/998.png',
+    teamLogo: '/teams/esm.png',
     played: 1,
     won: 0,
     drawn: 0,
@@ -240,7 +240,7 @@ const currentFootballStandings2026_2027 = [
     position: 15,
     teamId: '999',
     teamName: 'Olympique de Béja',
-    teamLogo: 'https://media.api-sports.io/football/teams/999.png',
+    teamLogo: '/teams/ob.png',
     played: 1,
     won: 0,
     drawn: 0,
@@ -256,7 +256,7 @@ const currentFootballStandings2026_2027 = [
     position: 16,
     teamId: 'js-omrane',
     teamName: 'JS Omrane',
-    teamLogo: 'https://media.api-sports.io/football/teams/22756.png',
+    teamLogo: '/teams/jso.png',
     played: 1,
     won: 0,
     drawn: 0,
@@ -300,7 +300,7 @@ async function seed() {
 
   // 2. Upsert each team standing for 2026-2027
   const standingsCol = db.collection('standings');
-  console.log(`[Seed] Upserting ${currentFootballStandings2026_2027.length} teams for season 2026-2027...`);
+  console.log(`[Seed] Upserting ${currentFootballStandings2026_2027.length} teams with sharp logos...`);
 
   for (const team of currentFootballStandings2026_2027) {
     await standingsCol.updateOne(
@@ -337,7 +337,7 @@ async function seed() {
     );
   }
 
-  // Also support season "2026" key alias if query uses short format
+  // Also support season "2026" key alias
   for (const team of currentFootballStandings2026_2027) {
     await standingsCol.updateOne(
       {
@@ -373,26 +373,7 @@ async function seed() {
     );
   }
 
-  // 3. Update Sync Status for Data Freshness
-  await db.collection('sportssyncstatuses').updateOne(
-    { sport: 'football', resourceType: 'standings' },
-    {
-      $set: {
-        sport: 'football',
-        resourceType: 'standings',
-        status: 'SUCCESS',
-        lastSuccessfulSyncAt: new Date(),
-        lastAttemptAt: new Date(),
-        totalFetched: 16,
-        totalUpdated: 16,
-        consecutiveFailures: 0,
-        errorMessage: null,
-      },
-    },
-    { upsert: true }
-  );
-
-  console.log('[Seed] Standings 2026-2027 successfully seeded in MongoDB!');
+  console.log('[Seed] Standings with sharp logos successfully seeded in MongoDB!');
   await mongoose.disconnect();
 }
 
