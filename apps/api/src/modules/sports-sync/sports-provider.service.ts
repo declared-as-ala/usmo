@@ -58,8 +58,8 @@ export class SportsProviderService {
       provider,
       leagueExternalId: fSettings.leagueExternalId || '202',
       teamExternalId: fSettings.teamExternalId || '992',
-      season: fSettings.currentSeason || '2024',
-      seasonLabel: fSettings.currentSeasonLabel || '2024-2025',
+      season: fSettings.currentSeason || '2026-2027',
+      seasonLabel: fSettings.currentSeasonLabel || '2026–2027',
       enabled: fSettings.syncEnabled !== false,
     };
   }
