@@ -6,9 +6,10 @@ import { api } from "../../../lib/api-client";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { tr } from '../../../utils/i18n'
 
 function ResetPasswordPageContent() {
-  const { language, tr } = useApp();
+  const { language } = useApp();
   const router = useRouter();
   const searchParams = useSearchParams();
 

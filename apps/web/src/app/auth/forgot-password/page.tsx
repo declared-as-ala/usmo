@@ -5,9 +5,10 @@ import { useApp } from '../../../context/AppContext';
 import { api } from '../../../lib/api-client';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { tr } from '../../../utils/i18n'
 
 export default function ForgotPasswordPage() {
-  const { language, tr } = useApp();
+  const { language } = useApp();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
