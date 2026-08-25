@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
 import { tr } from '../utils/i18n';
-import { Shield, Loader2, Users, ArrowRight, Sparkles, UserCheck } from 'lucide-react';
+import { Shield, Loader2, Users, ArrowRight, Sparkles, UserCheck, Trophy } from 'lucide-react';
 
 interface RosterPlayer {
   _id: string;
@@ -100,16 +100,23 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
 
     return roster.filter((p) => {
       const pos = (p.position || '').toLowerCase();
+      const posAr = (p.positionAr || '').toLowerCase();
       const target = activeFilter.toLowerCase();
 
-      if (target === 'goalkeeper') return pos.includes('goal') || pos.includes('gardien');
-      if (target === 'defender') return pos.includes('def') || pos.includes('défens');
-      if (target === 'midfielder') return pos.includes('mid') || pos.includes('milieu');
-      if (target === 'forward') return pos.includes('forw') || pos.includes('attaqu') || pos.includes('ailier') || pos.includes('striker');
-      if (target === 'guard') return pos.includes('guard') || pos.includes('meneur') || pos.includes('arrière');
-      if (target === 'center') return pos.includes('center') || pos.includes('pivot');
+      if (target === 'goalkeeper') return pos.includes('goal') || pos.includes('gardien') || posAr.includes('حارس');
+      if (target === 'defender') return pos.includes('def') || pos.includes('défens') || posAr.includes('مدافع');
+      if (target === 'midfielder') return pos.includes('mid') || pos.includes('milieu') || posAr.includes('وسط');
+      if (target === 'forward') {
+        return pos.includes('forw') || pos.includes('attaqu') || pos.includes('ailier') || pos.includes('striker') || posAr.includes('مهاجم') || posAr.includes('جناح') || posAr.includes('أجنحة');
+      }
+      if (target === 'guard') {
+        return pos.includes('guard') || pos.includes('meneur') || pos.includes('arrière') || pos.includes('point') || posAr.includes('خلفي') || posAr.includes('صانع') || posAr.includes('موزع');
+      }
+      if (target === 'center') {
+        return pos.includes('center') || pos.includes('pivot') || posAr.includes('ارتكاز');
+      }
 
-      return pos.includes(target);
+      return pos.includes(target) || posAr.includes(target);
     });
   }, [roster, activeFilter]);
 
@@ -119,9 +126,17 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
     if (pos.includes('goal') || pos.includes('gardien')) return tr(language, 'Goalkeeper', 'Gardien', 'حارس مرمى');
     if (pos.includes('def') || pos.includes('défens')) return tr(language, 'Defender', 'Défenseur', 'مدافع');
     if (pos.includes('mid') || pos.includes('milieu')) return tr(language, 'Midfielder', 'Milieu de terrain', 'متوسط ميدان');
-    if (pos.includes('forw') || pos.includes('attaqu')) return tr(language, 'Forward', 'Attaquant', 'مهاجم');
-    if (pos.includes('guard') || pos.includes('meneur')) return tr(language, 'Guard', 'Meneur / Arrière', 'لاعب خلفي');
-    if (pos.includes('center') || pos.includes('pivot')) return tr(language, 'Center', 'Pivot', 'لاعب ارتكاز');
+    if (pos.includes('forw') || pos.includes('attaqu') || pos.includes('ailier')) {
+      return sport === 'basketball'
+        ? tr(language, 'Forward', 'Ailier', 'جناح')
+        : tr(language, 'Forward', 'Attaquant', 'مهاجم');
+    }
+    if (pos.includes('guard') || pos.includes('meneur') || pos.includes('arrière')) {
+      return tr(language, 'Guard', 'Meneur / Arrière', 'لاعب خلفي');
+    }
+    if (pos.includes('center') || pos.includes('pivot')) {
+      return tr(language, 'Center', 'Pivot', 'لاعب ارتكاز');
+    }
     return p.position;
   };
 
@@ -153,7 +168,7 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-3 bg-white/[0.05] border border-white/10 backdrop-blur-md px-5 py-3 rounded-2xl">
                 <Users size={24} className="text-usm-teal-accent" />
                 <div>
@@ -165,6 +180,17 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
                   </div>
                 </div>
               </div>
+
+              {sport === 'basketball' && (
+                <Link
+                  href="/basketball/classement"
+                  className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-500/20 text-amber-300 font-bold text-xs uppercase tracking-wider hover:bg-amber-500 hover:text-white transition-all duration-300 border border-amber-500/40 shadow-lg shadow-amber-500/10"
+                >
+                  <Trophy size={18} className="text-amber-400" />
+                  {language === 'ar' ? 'ترتيب البطولة' : 'Classement Pro A'}
+                  <ArrowRight size={16} className="rtl:rotate-180" />
+                </Link>
+              )}
 
               <Link
                 href={`/${sport}/staff`}

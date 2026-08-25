@@ -210,14 +210,24 @@ export const BasketballStandingsView: React.FC = () => {
               </p>
             </div>
           </div>
-          <Link
-            href="/basketball/staff"
-            className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-usm-blue-dark shadow-sm hover:border-usm-blue-primary hover:text-usm-blue-primary transition-colors shrink-0"
-          >
-            <Users size={14} />
-            {tr(language, 'View Technical Staff', 'Voir le Staff Technique', 'مشاهدة الطاقم الفني')}
-            <ArrowRight size={13} className="rtl:rotate-180" />
-          </Link>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/basketball"
+              className="inline-flex items-center gap-2 rounded-full border border-usm-blue-primary/40 bg-usm-blue-primary text-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider shadow-sm hover:bg-usm-blue-dark transition-colors"
+            >
+              <Users size={14} />
+              {tr(language, 'View Squad Roster', "Voir l'Effectif", 'مشاهدة قائمة اللاعبين')}
+              <ArrowRight size={13} className="rtl:rotate-180" />
+            </Link>
+            <Link
+              href="/basketball/staff"
+              className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-white px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-usm-blue-dark shadow-sm hover:border-usm-blue-primary hover:text-usm-blue-primary transition-colors"
+            >
+              <Users size={14} />
+              {tr(language, 'View Technical Staff', 'Voir le Staff Technique', 'مشاهدة الطاقم الفني')}
+              <ArrowRight size={13} className="rtl:rotate-180" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

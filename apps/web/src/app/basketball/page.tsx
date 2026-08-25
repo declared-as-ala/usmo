@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { BasketballStandingsView } from '../../views/BasketballStandingsView';
+import { SquadRoster } from '../../views/SquadRoster';
 
 export const metadata: Metadata = {
-  title: 'Classement Basketball Pro A | Union Sportive Monastirienne',
-  description: 'Consultez le classement officiel de l’US Monastir Basketball pour la saison 2026-2027 en Ligue Pro A.',
+  title: 'Effectif Basketball | Union Sportive Monastirienne',
+  description: 'Découvrez la liste officielle des joueurs de basketball de l’US Monastir : meneurs, ailiers, pivots pour la saison Pro A.',
 };
 
 export default function BasketballRosterPage() {
-  return <BasketballStandingsView />;
+  return <SquadRoster sport="basketball" />;
 }
