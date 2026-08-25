@@ -171,15 +171,8 @@ export const BasketballStandingsView: React.FC = () => {
                           <span className="text-slate-400">{row.position}</span>
                         )}
                       </td>
-                      <td className="px-5 py-4 flex items-center space-x-3 rtl:space-x-reverse">
-                        {row.isUSM ? (
-                          <img src="/logo basket.png" alt="USM Basket" className="h-7 w-7 object-contain drop-shadow" />
-                        ) : (
-                          <div className="h-7 w-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                            {row.team.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                        <span className="text-sm font-bold text-usm-blue-dark flex items-center gap-2">
+                      <td className="px-5 py-4 flex items-center space-x-2 rtl:space-x-reverse">
+                        <span className={`text-sm font-bold flex items-center gap-2 ${row.isUSM ? 'text-amber-600' : 'text-usm-blue-dark'}`}>
                           {row.team}
                           {row.isUSM && (
                             <span className="bg-amber-500/20 text-amber-700 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/30">
