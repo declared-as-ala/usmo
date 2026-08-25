@@ -6,7 +6,7 @@ import { clubTrophies } from '../data/mockData';
 import { LeagueStandingsTable } from '../components/Common/LeagueStandingsTable';
 import { HeroCarousel, HeroSlideData } from '../components/Common/HeroCarousel';
 import { PartnerShowcase } from '../components/Common/PartnerShowcase';
-import { Play, ArrowRight, Send } from 'lucide-react';
+import { Play, ArrowRight, Send, ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '../lib/api-client';
 
@@ -39,6 +39,7 @@ export const Home: React.FC = () => {
   const [fanPhotos, setFanPhotos] = useState<FanPhoto[]>([]);
   const [heroSlidesFromApi, setHeroSlidesFromApi] = useState<HeroSlideData[]>([]);
   const [sponsors, setSponsors] = useState<SponsorItem[]>([]);
+  const [productsFromApi, setProductsFromApi] = useState<any[]>([]);
   const sectionVisible = (key: string) => homepage?.sections?.[key] ?? isSectionVisible(key);
 
   useEffect(() => {
@@ -47,11 +48,16 @@ export const Home: React.FC = () => {
       api.getFanPhotos(),
       api.getHeroSlides(),
       api.getSponsors({ homepage: true }),
-    ]).then(([settings, photos, slides, sp]) => {
+      api.getProducts({ limit: 4 }),
+    ]).then(([settings, photos, slides, sp, prod]) => {
       if (settings.status === 'fulfilled') setHomepage(settings.value);
       if (photos.status === 'fulfilled') setFanPhotos(photos.value || []);
       if (slides.status === 'fulfilled' && Array.isArray(slides.value)) setHeroSlidesFromApi(slides.value);
       if (sp.status === 'fulfilled' && Array.isArray(sp.value)) setSponsors(sp.value);
+      if (prod.status === 'fulfilled') {
+        const list = prod.value?.products || (Array.isArray(prod.value) ? prod.value : []);
+        setProductsFromApi(list);
+      }
     });
   }, []);
 
@@ -310,6 +316,91 @@ export const Home: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* SECTION: BOUTIQUE OFFICIELLE / SHOWCASE */}
+      {(() => {
+        const displayProducts = productsFromApi.length > 0 ? productsFromApi : catalogProducts.slice(0, 4);
+        if (displayProducts.length === 0) return null;
+        return (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b-2 border-usm-blue-primary/40 pb-4 mb-8">
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] text-usm-blue-primary">
+                  <ShoppingBag size={14} />
+                  {language === 'ar' ? 'المغازة الرسمية' : 'Boutique Officielle'}
+                </span>
+                <h2 className="mt-1 font-display font-extrabold text-2xl uppercase tracking-wider text-usm-blue-dark sm:text-3xl">
+                  {language === 'ar' ? 'منتجات النادي الرسمية' : language === 'fr' ? 'Nos Produits Officiels' : 'Official Merchandise'}
+                </h2>
+                <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                  {language === 'ar'
+                    ? 'أقمصة المباريات، أزياء التمارين وإكسسوارات النادي الحصرية لموسم 2026.'
+                    : 'Arborez fièrement les couleurs bleu et blanc. Maillots de match officiels, tenues d’entraînement et accessoires exclusifs.'}
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/boutique')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-lg self-start sm:self-auto cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'تصفح كل المغازة' : 'Voir toute la boutique'}</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              {displayProducts.slice(0, 4).map((p: any) => {
+                const cover = p.coverImage || p.image || p.images?.[0] || '/logo.webp';
+                const formattedPrice = typeof p.price === 'number'
+                  ? `${(p.price / 1000).toFixed(3)} DT`
+                  : (p.price || '0.000 DT');
+                const title = language === 'ar' ? (p.nameAr || p.name) : (p.nameFr || p.name);
+                const badge = p.badges?.[0] || (p.category ? p.category : null);
+                const productSlug = p.slug || p._id || p.id;
+
+                return (
+                  <div
+                    key={p._id || p.id || p.name}
+                    onClick={() => router.push(productSlug ? `/product/${productSlug}` : '/boutique')}
+                    className="group bg-white border border-[#DDE8F8] hover:border-usm-blue-primary/50 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-slate-50 p-4 flex items-center justify-center">
+                      {badge && (
+                        <span className="absolute top-3 left-3 bg-[#071328]/85 backdrop-blur-md text-usm-teal-accent text-[9px] font-black uppercase px-2.5 py-0.5 rounded-md border border-white/10 z-10 shadow-xs">
+                          {badge}
+                        </span>
+                      )}
+                      <img
+                        src={cover}
+                        alt={title}
+                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.src = '/logo.webp';
+                        }}
+                      />
+                    </div>
+                    <div className="p-4 flex flex-col justify-between flex-grow space-y-2 border-t border-slate-100">
+                      <div>
+                        <h4 className="font-bold text-xs sm:text-sm text-usm-blue-dark group-hover:text-usm-blue-primary transition-colors line-clamp-1">
+                          {title}
+                        </h4>
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="font-display font-black text-sm sm:text-base text-usm-blue-primary">
+                          {formattedPrice}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 group-hover:text-usm-blue-primary transition-colors">
+                          Détails →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* SECTION H: OFFICIAL CLUB PARTNERS / SPONSORS */}
       {sponsors.length > 0 && (

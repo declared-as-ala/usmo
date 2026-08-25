@@ -1,10 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { LegalPage, LEGAL_PAGE_KEYS, LegalPageKey } from './legal-page.schema';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-const DEFAULTS: Record<LegalPageKey, { title: string; content: string }> = {
-  privacy: {
+dotenv.config();
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('Missing MONGODB_URI');
+  process.exit(1);
+}
+
+const legalData = [
+  {
+    key: 'privacy',
     title: 'Politique de Confidentialité',
     content: `1. Engagement et Responsable du Traitement
 L’Union Sportive Monastirienne (USM), association sportive fondée en 1923 dont le siège est situé à l'Avenue Ibn El Jazzar, 5000 Monastir (Tunisie), accorde la plus haute importance à la protection et à la confidentialité des données personnelles de ses supporters, adhérents, visiteurs et partenaires.
@@ -43,7 +51,8 @@ Pour exercer vos droits ou pour toute question relative à vos données personne
 • Par e-mail : contact@usmonastir.org.tn
 • Par courrier : Union Sportive Monastirienne — Secrétariat Général, Avenue Ibn El Jazzar, 5000 Monastir, Tunisie.`,
   },
-  terms: {
+  {
+    key: 'terms',
     title: "Conditions Générales d'Utilisation",
     content: `1. Objet et Champ d'Application
 Les présentes Conditions Générales d'Utilisation (ci-après « CGU ») régissent l'accès et l'utilisation de la plateforme numérique officielle de l'Union Sportive Monastirienne (USM), accessible via le site web et les applications associées.
@@ -72,7 +81,8 @@ Les informations de billetterie, horaires de matchs et accès au Stade Mustapha 
 6. Droit Applicable et Juridiction Compétente
 Les présentes CGU sont soumises au droit tunisien. En cas de contestation ou de litige relatif à l'interprétation ou à l'exécution des présentes, et à défaut de résolution amiable, les tribunaux compétents de Monastir (Tunisie) seront seuls compétents.`,
   },
-  cookies: {
+  {
+    key: 'cookies',
     title: 'Politique relative aux Cookies',
     content: `1. Qu'est-ce qu'un Cookie ?
 Un cookie est un petit fichier texte déposé et stocké sur votre terminal (ordinateur, tablette, smartphone) lors de votre navigation sur le site officiel de l'Union Sportive Monastirienne. Il permet de mémoriser vos actions et préférences (choix de langue, session supporter, panier d'achat) pendant une période donnée.
@@ -102,49 +112,38 @@ Vous pouvez à tout moment configurer votre navigateur internet pour accepter, r
 
 Veuillez noter que le blocage des cookies strictement nécessaires peut altérer certaines fonctionnalités essentielles du site, telles que la gestion de votre panier dans la boutique officielle ou l'accès à votre espace supporter.`,
   },
-};
+];
 
-@Injectable()
-export class LegalPagesService {
-  constructor(@InjectModel(LegalPage.name) private readonly legalPageModel: Model<LegalPage>) {}
+async function seed() {
+  console.log('[Legal Seed] Connecting to MongoDB...');
+  await mongoose.connect(MONGODB_URI as string);
+  console.log('[Legal Seed] Connected.');
 
-  private assertValidKey(key: string): asserts key is LegalPageKey {
-    if (!LEGAL_PAGE_KEYS.includes(key as LegalPageKey)) {
-      throw new BadRequestException(`Unknown legal page key: ${key}`);
-    }
-  }
+  const db = mongoose.connection.db;
+  if (!db) throw new Error('No DB connection');
 
-  async getPublic(key: string) {
-    this.assertValidKey(key);
-    return this.getOrCreate(key);
-  }
-
-  async getAllAdmin() {
-    return Promise.all(LEGAL_PAGE_KEYS.map((key) => this.getOrCreate(key)));
-  }
-
-  async getAdmin(key: string) {
-    this.assertValidKey(key);
-    return this.getOrCreate(key);
-  }
-
-  async update(key: string, input: { title?: string; content?: string }) {
-    this.assertValidKey(key);
-    const update: Record<string, unknown> = {};
-    if (input.title !== undefined) update.title = input.title;
-    if (input.content !== undefined) update.content = input.content;
-    return this.legalPageModel.findOneAndUpdate(
-      { key },
-      { $set: update, $setOnInsert: { key } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
+  const col = db.collection('legalpages');
+  for (const item of legalData) {
+    console.log(`[Legal Seed] Upserting legal page: ${item.key} (${item.title})`);
+    await col.updateOne(
+      { key: item.key },
+      {
+        $set: {
+          key: item.key,
+          title: item.title,
+          content: item.content,
+          updatedAt: new Date(),
+        },
+      },
+      { upsert: true }
     );
   }
 
-  private async getOrCreate(key: LegalPageKey) {
-    return this.legalPageModel.findOneAndUpdate(
-      { key },
-      { $setOnInsert: { key, ...DEFAULTS[key] } },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    );
-  }
+  console.log('[Legal Seed] Successfully seeded legal pages in MongoDB!');
+  await mongoose.disconnect();
 }
+
+seed().catch((err) => {
+  console.error('[Legal Seed] Error:', err);
+  process.exit(1);
+});

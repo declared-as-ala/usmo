@@ -37,6 +37,7 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
     {
       title: tr(language, 'USM Experience', 'Expérience USM', 'تجربة الاتحاد'),
       links: [
+        [tr(language, 'Official Boutique', 'Boutique officielle', 'المغازة الرسمية'), 'boutique'],
         [tr(language, 'Fan Zone', 'Fan Zone', 'منطقة الأحباء'), 'fanzone'],
         [tr(language, 'USM Media', 'USM Media', 'إعلام الاتحاد'), 'media'],
         [tr(language, 'Stadium Guide', 'Guide du stade', 'دليل الملعب'), 'stadium']

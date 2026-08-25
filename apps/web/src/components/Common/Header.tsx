@@ -96,6 +96,7 @@ export const Header: React.FC = () => {
     { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },
     { kind: 'link', screen: 'news', labelKey: 'nav.news' },
     { kind: 'link', screen: 'media', labelKey: 'nav.media' },
+    { kind: 'link', screen: 'boutique', labelKey: 'nav.boutique' },
     {
       kind: 'dropdown',
       key: 'club',
