@@ -18,9 +18,12 @@ import {
   ShieldCheck,
   Store,
   Ban,
-  Sparkles
+  Sparkles,
+  RotateCw,
+  Type,
+  Hash
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductDetailProps {
   productId: string; // this parameter is the product slug
@@ -54,6 +57,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('description');
+
+  // Jersey customization states
+  const [customName, setCustomName] = useState('');
+  const [customNumber, setCustomNumber] = useState('');
+  const [showCustomization, setShowCustomization] = useState(false);
 
   // Load product by slug
   useEffect(() => {
@@ -123,7 +131,23 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     return (millimes / 1000).toFixed(3) + ' DT';
   };
 
-  const gallery = [product.coverImage, ...(product.images || [])];
+  // Gallery uses images[] for pose views (Front, Back, Lateral).
+  // coverImage is only the catalog thumbnail and not shown on the detail page gallery.
+  const gallery = (product.images && product.images.length > 0)
+    ? product.images
+    : [product.coverImage]; // fallback if no images uploaded yet
+
+  // Pose views: assign labels based on position in gallery
+  const POSE_LABELS = ['Front', 'Back', 'Lateral'];
+  const POSE_LABELS_FR = ['Face', 'Dos', 'Latéral'];
+  const POSE_LABELS_AR = ['أمام', 'خلف', 'جانبي'];
+  const poses = gallery.map((img: string, idx: number) => ({
+    src: img,
+    label: tr(language, POSE_LABELS[idx] || `View ${idx + 1}`, POSE_LABELS_FR[idx] || `Vue ${idx + 1}`, POSE_LABELS_AR[idx] || `عرض ${idx + 1}`),
+    key: POSE_LABELS[idx]?.toLowerCase() || `view-${idx}`,
+  }));
+  const isJersey = product.category?.toLowerCase() === 'jerseys';
+  const isBackView = POSE_LABELS[activeImage]?.toLowerCase() === 'back';
   
   // Calculate stock dynamically from variants
   const totalStock = product.variants 
@@ -187,14 +211,139 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         {/* Main Product Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           
-          {/* 1. GALLERY */}
+          {/* 1. GALLERY WITH POSE VIEWS */}
           <div className="lg:col-span-7 space-y-4">
+            {/* Pose selector tabs */}
+            {poses.length > 1 && (
+              <div className="flex gap-2">
+                {poses.map((pose: { src: string; label: string; key: string }, idx: number) => (
+                  <button
+                    key={pose.key}
+                    onClick={() => setActiveImage(idx)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wide transition-all cursor-pointer border ${
+                      activeImage === idx
+                        ? 'bg-usm-blue-primary text-white border-usm-blue-primary shadow-md'
+                        : 'bg-white text-slate-600 border-usm-border hover:border-usm-blue-primary/40'
+                    }`}
+                  >
+                    <RotateCw size={12} />
+                    {pose.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Main image with customization overlay */}
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-usm-border shadow-lg group">
-              <img
-                src={gallery[activeImage]}
-                alt={productName}
-                className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105"
-              />
+              {/* Product image */}
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  src={gallery[activeImage]}
+                  alt={productName}
+                  className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105"
+                />
+              </AnimatePresence>
+
+              {/* Real-time name/number overlay — only on back view for jerseys
+                  Jersey anatomy (3/4 back view):
+                  - Collar gold trim bottom: ~10%
+                  - Back panel center-X: ~47% (shifted left due to angle)
+                  - Printable white area: ~12%-82% vertical, ~27%-67% horizontal
+                  - Name zone: ~15% (below collar, between shoulders)
+                  - Number zone: ~28%-65% (upper-mid torso)
+                  - Sleeve cuff trim: ~42% from top on sides
+              */}
+              {isJersey && isBackView && (customName || customNumber) && (() => {
+                // Use product-level print colors if set by admin, otherwise auto-derive
+                let nameColor: string;
+                let nameStroke: string;
+                let numberColor: string;
+                let numberStroke: string;
+
+                if (product.printColor && product.printStrokeColor) {
+                  // Admin-defined colors
+                  nameColor = product.printColor;
+                  nameStroke = product.printStrokeColor;
+                  numberColor = product.printColor;
+                  numberStroke = product.printStrokeColor;
+                } else {
+                  // Auto-derive from fabric color
+                  const fabricColor = selectedColor || '#0D63FF';
+                  const r = parseInt(fabricColor.slice(1, 3), 16);
+                  const g = parseInt(fabricColor.slice(3, 5), 16);
+                  const b = parseInt(fabricColor.slice(5, 7), 16);
+                  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+                  const isLightFabric = luminance > 0.45;
+                  nameColor = isLightFabric ? '#1A2B5C' : '#FFFFFF';
+                  nameStroke = isLightFabric ? '#FFFFFF' : fabricColor;
+                  numberColor = isLightFabric ? fabricColor : '#FFFFFF';
+                  numberStroke = isLightFabric ? '#FFFFFF' : fabricColor;
+                }
+
+                return (
+                  <div className="absolute inset-6 pointer-events-none overflow-hidden">
+                    {/* NAME — on upper back, below collar; shrinks for long names */}
+                    {customName && (() => {
+                      const len = customName.length;
+                      // Scale factor: 1.0 for <=6 chars, shrinks to ~0.5 for 14 chars
+                      const scale = len <= 6 ? 1 : Math.max(0.5, 6 / len);
+                      const baseSizeVw = 5.5 * scale;
+                      const minPx = Math.round(28 * scale);
+                      const maxPx = Math.round(56 * scale);
+                      return (
+                        <span
+                          className="absolute uppercase select-none whitespace-nowrap"
+                          style={{
+                            top: '25%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            maxWidth: '80%',
+                            textAlign: 'center',
+                            fontFamily: "'Atlanta College', 'Arial Black', Impact, sans-serif",
+                            fontWeight: 400,
+                            fontSize: `clamp(${minPx}px, ${baseSizeVw}vw, ${maxPx}px)`,
+                            lineHeight: 1,
+                            letterSpacing: '0.06em',
+                            color: nameColor,
+                            WebkitTextStroke: `1.5px ${nameStroke}`,
+                            paintOrder: 'stroke fill',
+                          }}
+                        >
+                          {customName}
+                        </span>
+                      );
+                    })()}
+
+                    {/* NUMBER — centered on torso */}
+                    {customNumber && (
+                      <span
+                        className="absolute select-none whitespace-nowrap"
+                        style={{
+                          top: '35%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontFamily: "'Atlanta College', 'Arial Black', Impact, sans-serif",
+                          fontWeight: 400,
+                          fontSize: 'clamp(100px, 20vw, 200px)',
+                          lineHeight: 0.85,
+                          letterSpacing: '-0.03em',
+                          color: numberColor,
+                          WebkitTextStroke: `6px ${numberStroke}`,
+                          paintOrder: 'stroke fill',
+                        }}
+                      >
+                        {customNumber}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
+
               {soldOut && (
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
                   <span className="bg-usm-blue-soft border border-usm-border text-usm-blue-dark text-xs font-black uppercase px-6 py-2 rounded-full tracking-widest">
@@ -209,9 +358,10 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               )}
             </div>
 
+            {/* Thumbnail row */}
             {gallery.length > 1 && (
               <div className="grid grid-cols-4 gap-3">
-                {gallery.map((img, idx) => (
+                {gallery.map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
@@ -220,10 +370,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                     }`}
                   >
                     <img src={img} className="w-full h-full object-contain p-2" alt="" />
+                    <span className="absolute bottom-1 inset-x-0 text-center text-[8px] font-bold text-slate-500 uppercase">
+                      {poses[idx]?.label}
+                    </span>
                   </button>
                 ))}
               </div>
             )}
+
           </div>
 
           {/* 2. BUYING PANEL */}
@@ -269,8 +423,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               {tr(language, product.description, product.descriptionFr, product.descriptionAr)}
             </p>
 
-            {/* Colors Indicator */}
-            {uniqueColors.length > 0 && (
+            {/* Colors Indicator — hidden for jerseys */}
+            {uniqueColors.length > 0 && !isJersey && (
               <div className="space-y-2 border-t border-usm-border pt-4">
                 <label className="text-[10px] font-bold text-slate-500 uppercase block">
                   {tr(language, 'Color', 'Couleur', 'اللون')}
@@ -312,6 +466,92 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Jersey Personalization Toggle + Panel */}
+            {isJersey && (
+              <div className="border-t border-usm-border pt-4 space-y-3">
+                <button
+                  onClick={() => {
+                    const opening = !showCustomization;
+                    setShowCustomization(opening);
+                    if (opening) {
+                      const backIdx = POSE_LABELS.findIndex(l => l === 'Back');
+                      if (backIdx >= 0 && backIdx < gallery.length) setActiveImage(backIdx);
+                    }
+                  }}
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-black uppercase tracking-wide transition-all cursor-pointer border ${
+                    showCustomization
+                      ? 'bg-usm-blue-primary text-white border-usm-blue-primary'
+                      : 'bg-white text-usm-blue-primary border-usm-blue-primary/30 hover:border-usm-blue-primary hover:bg-usm-blue-primary/5'
+                  }`}
+                >
+                  <Sparkles size={14} />
+                  {tr(language, 'Personalize Jersey', 'Personnaliser le Maillot', 'تخصيص القميص')}
+                </button>
+
+                {showCustomization && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="rounded-xl border border-usm-border bg-usm-blue-soft/20 p-4 space-y-3 overflow-hidden"
+                  >
+                    <p className="text-[10px] text-slate-500">
+                      {tr(
+                        language,
+                        'Add your name and number — preview live on the back view.',
+                        'Ajoutez votre nom et numéro — aperçu en direct sur la vue dos.',
+                        'أضف اسمك ورقمك — معاينة مباشرة على عرض الظهر.'
+                      )}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                          <Type size={11} />
+                          {tr(language, 'Name', 'Nom', 'الاسم')}
+                        </label>
+                        <input
+                          type="text"
+                          value={customName}
+                          onChange={(e) => setCustomName(e.target.value.toUpperCase().slice(0, 14))}
+                          placeholder={tr(language, 'e.g. SMITH', 'ex. USMISTE', 'مثال: محمد')}
+                          maxLength={14}
+                          className="w-full min-h-10 rounded-lg border border-usm-border bg-white px-3 text-sm font-bold text-usm-blue-dark placeholder:text-slate-400 outline-none focus:border-usm-blue-primary transition"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                          <Hash size={11} />
+                          {tr(language, 'Number', 'Numéro', 'الرقم')}
+                        </label>
+                        <input
+                          type="text"
+                          value={customNumber}
+                          onChange={(e) => setCustomNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                          placeholder="10"
+                          maxLength={2}
+                          className="w-full min-h-10 rounded-lg border border-usm-border bg-white px-3 text-sm font-bold text-usm-blue-dark placeholder:text-slate-400 outline-none focus:border-usm-blue-primary transition"
+                        />
+                      </div>
+                    </div>
+                    {(customName || customNumber) && !isBackView && (
+                      <button
+                        onClick={() => { const backIdx = POSE_LABELS.findIndex(l => l === 'Back'); if (backIdx >= 0 && backIdx < gallery.length) setActiveImage(backIdx); }}
+                        className="w-full text-[10px] font-bold text-usm-blue-primary flex items-center justify-center gap-1 py-2 rounded-lg bg-usm-blue-primary/5 hover:bg-usm-blue-primary/10 transition cursor-pointer"
+                      >
+                        <RotateCw size={10} />
+                        {tr(
+                          language,
+                          'Switch to Back view to preview',
+                          'Passer à la vue Dos pour aperçu',
+                          'انتقل إلى عرض الظهر للمعاينة'
+                        )}
+                      </button>
+                    )}
+                  </motion.div>
+                )}
               </div>
             )}
 

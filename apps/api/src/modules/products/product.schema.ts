@@ -113,11 +113,20 @@ export class Product extends Document {
   @Prop({ type: Number, default: 0 })
   views: number;
 
+  @Prop({ type: Number, default: 0, index: true })
+  displayOrder: number;
+
   @Prop({ type: String })
   seoTitle?: string;
 
   @Prop({ type: String })
   seoDescription?: string;
+
+  @Prop({ type: String })
+  printColor?: string; // Jersey name/number fill color (e.g. #1A53E0)
+
+  @Prop({ type: String })
+  printStrokeColor?: string; // Jersey name/number outline color (e.g. #FFFFFF)
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

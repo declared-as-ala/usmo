@@ -11,7 +11,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
 
-type SortOption = 'date_desc' | 'popularity_desc' | 'price_asc' | 'price_desc';
+type SortOption = 'order' | 'date_desc' | 'popularity_desc' | 'price_asc' | 'price_desc';
 
 const formatTND = (millimes: number) => `${((millimes || 0) / 1000).toFixed(3)} DT`;
 const stockFor = (product: any) => (product.variants || []).reduce((sum: number, item: any) => sum + (item.stock || 0), 0);
@@ -119,7 +119,7 @@ export const OfficialCatalog: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState('all');
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<SortOption>('date_desc');
+  const [sort, setSort] = useState<SortOption>('order');
   const [inStock, setInStock] = useState(false);
   const [badge, setBadge] = useState('');
   const [mobileFilters, setMobileFilters] = useState(false);
@@ -130,7 +130,7 @@ export const OfficialCatalog: React.FC = () => {
       .catch(() => setBanner(null))
       .finally(() => setSettingsLoading(false));
 
-    Promise.all([api.getProducts({ sort: 'date_desc', limit: 100 }), api.getCategories()])
+    Promise.all([api.getProducts({ sort: 'order_asc', limit: 100 }), api.getCategories()])
       .then(([catalogue, categoryData]) => {
         setProducts(catalogue.products || []);
         setCategories(categoryData || []);
@@ -145,7 +145,7 @@ export const OfficialCatalog: React.FC = () => {
       && (!search.trim() || searchable.includes(search.trim().toLowerCase()))
       && (!inStock || stockFor(product) > 0)
       && (!badge || hasBadge(product, badge));
-  }).sort((a, b) => sort === 'price_asc' ? a.price - b.price : sort === 'price_desc' ? b.price - a.price : sort === 'popularity_desc' ? (b.views || 0) - (a.views || 0) : new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()), [products, category, search, inStock, badge, sort]);
+  }).sort((a, b) => sort === 'price_asc' ? a.price - b.price : sort === 'price_desc' ? b.price - a.price : sort === 'popularity_desc' ? (b.views || 0) - (a.views || 0) : sort === 'date_desc' ? new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime() : 0), [products, category, search, inStock, badge, sort]);
 
   const featured = products.find(product => product.isFeatured) || products[0];
   const desktopBannerImage = banner?.desktopImageUrl || banner?.imageUrl || '';
@@ -264,6 +264,7 @@ export const OfficialCatalog: React.FC = () => {
                 <input id="catalogue-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Rechercher un maillot, un accessoire…" className="min-h-12 w-full rounded-2xl border border-transparent bg-white pl-12 pr-4 text-sm text-[#020814] outline-none transition focus:border-[#0D63FF] sm:min-h-14 sm:text-base" />
               </div>
               <select aria-label="Trier les produits" value={sort} onChange={event => setSort(event.target.value as SortOption)} className="min-h-12 w-full rounded-2xl border border-transparent bg-white px-4 text-sm font-bold text-[#020814] outline-none focus:border-[#0D63FF] sm:min-h-14 lg:w-auto">
+                <option value="order">Recommandés</option>
                 <option value="date_desc">Nouveautés</option>
                 <option value="popularity_desc">Plus populaires</option>
                 <option value="price_asc">Prix croissant</option>

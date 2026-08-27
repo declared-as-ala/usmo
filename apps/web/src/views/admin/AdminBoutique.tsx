@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
-import { Plus, X, Trash2, Pencil, Image as ImageIcon, AlertCircle, Layers, Megaphone, Save } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, Image as ImageIcon, AlertCircle, Layers, Megaphone, Save, Shirt, RotateCw, ChevronUp, ChevronDown, Check } from 'lucide-react';
 import { api } from '../../lib/api-client';
 import { MediaUploader } from '../../components/Admin/MediaUploader';
 import { MediaLibrary } from '../../components/Admin/MediaLibrary';
@@ -38,6 +38,8 @@ const emptyForm = {
   stock: 20,
   status: 'published' as 'published' | 'draft' | 'archived',
   description: '',
+  printColor: '#1A53E0',
+  printStrokeColor: '#FFFFFF',
 };
 
 export default function AdminBoutique() {
@@ -64,6 +66,10 @@ export default function AdminBoutique() {
   const [coverUploading, setCoverUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
   const isImageUploading = coverUploading || galleryUploading;
+
+  // Inline name editing
+  const [inlineEditId, setInlineEditId] = useState<string | null>(null);
+  const [inlineEditName, setInlineEditName] = useState('');
 
   // Load products, categories from NestJS backend
   const loadCatalogData = async () => {
@@ -160,6 +166,8 @@ export default function AdminBoutique() {
       stock: p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0),
       status: p.status || 'published',
       description: p.description || '',
+      printColor: p.printColor || '#1A53E0',
+      printStrokeColor: p.printStrokeColor || '#FFFFFF',
     });
     setShowForm(true);
   };
@@ -212,6 +220,10 @@ export default function AdminBoutique() {
         descriptionFr: form.description,
         descriptionAr: form.description,
         lowStockThreshold: 5,
+        ...(form.category === 'jerseys' && {
+          printColor: form.printColor,
+          printStrokeColor: form.printStrokeColor,
+        }),
       };
 
       if (editingId) {
@@ -316,6 +328,42 @@ export default function AdminBoutique() {
       loadCatalogData();
     } catch (err: any) {
       alert(err.message || 'Impossible de changer les badges');
+    }
+  };
+
+  // Inline name editing — saves immediately to DB
+  const handleInlineNameSave = async () => {
+    if (!inlineEditId || !inlineEditName.trim()) return;
+    try {
+      await api.updateProduct(inlineEditId, {
+        name: inlineEditName.trim(),
+        nameFr: inlineEditName.trim(),
+        slug: inlineEditName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      });
+      setProducts((prev) => prev.map((p) => p._id === inlineEditId ? { ...p, name: inlineEditName.trim() } : p));
+      setInlineEditId(null);
+      setInlineEditName('');
+    } catch (err: any) {
+      alert(err.message || 'Impossible de renommer le produit');
+    }
+  };
+
+  // Reorder: move product up or down in the list
+  const handleReorder = async (index: number, direction: 'up' | 'down') => {
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= products.length) return;
+
+    const newList = [...products];
+    [newList[index], newList[swapIndex]] = [newList[swapIndex], newList[index]];
+    setProducts(newList);
+
+    // Persist new order
+    const items = newList.map((p, i) => ({ id: p._id, displayOrder: i }));
+    try {
+      await api.reorderProducts(items);
+    } catch (err: any) {
+      alert(err.message || 'Impossible de réordonner');
+      loadCatalogData(); // revert on error
     }
   };
 
@@ -436,6 +484,7 @@ export default function AdminBoutique() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
+                  <th className="py-3 px-2 w-10">#</th>
                   <th className="py-3 px-4">Produit</th>
                   <th className="py-3 px-4">Catégorie</th>
                   <th className="py-3 px-4">Prix</th>
@@ -446,16 +495,59 @@ export default function AdminBoutique() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {products.map((p) => {
+                {products.map((p, idx) => {
                   const stockSum = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
                   const isPublished = p.status === 'published';
+                  const isEditingName = inlineEditId === p._id;
                   return (
                     <tr key={p._id} className="hover:bg-slate-50 transition-colors text-slate-800">
+                      {/* Reorder arrows */}
+                      <td className="py-2.5 px-2">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <button
+                            onClick={() => handleReorder(idx, 'up')}
+                            disabled={idx === 0}
+                            className="p-0.5 text-slate-300 hover:text-usm-blue-primary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                          >
+                            <ChevronUp size={12} />
+                          </button>
+                          <span className="text-[9px] font-mono text-slate-400">{idx + 1}</span>
+                          <button
+                            onClick={() => handleReorder(idx, 'down')}
+                            disabled={idx === products.length - 1}
+                            className="p-0.5 text-slate-300 hover:text-usm-blue-primary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                          >
+                            <ChevronDown size={12} />
+                          </button>
+                        </div>
+                      </td>
+                      {/* Product name — inline editable */}
                       <td className="py-2.5 px-4">
                         <div className="flex items-center gap-3">
                           <img src={p.coverImage} alt="" className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0" />
-                          <div>
-                            <span className="font-bold text-slate-900 max-w-[220px] truncate block">{p.name}</span>
+                          <div className="min-w-0">
+                            {isEditingName ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={inlineEditName}
+                                  onChange={(e) => setInlineEditName(e.target.value)}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleInlineNameSave(); if (e.key === 'Escape') { setInlineEditId(null); setInlineEditName(''); } }}
+                                  className="w-40 bg-white border border-usm-blue-primary rounded px-2 py-0.5 text-xs font-bold text-slate-900 outline-none"
+                                />
+                                <button onClick={handleInlineNameSave} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded cursor-pointer"><Check size={12} /></button>
+                                <button onClick={() => { setInlineEditId(null); setInlineEditName(''); }} className="p-1 text-slate-400 hover:bg-slate-100 rounded cursor-pointer"><X size={12} /></button>
+                              </div>
+                            ) : (
+                              <span
+                                className="font-bold text-slate-900 max-w-[220px] truncate block cursor-pointer hover:text-usm-blue-primary transition-colors"
+                                onClick={() => { setInlineEditId(p._id); setInlineEditName(p.name); }}
+                                title="Cliquer pour renommer"
+                              >
+                                {p.name}
+                              </span>
+                            )}
                             <span className="text-[10px] text-slate-400 font-mono">{p.sku}</span>
                           </div>
                         </div>
@@ -569,45 +661,119 @@ export default function AdminBoutique() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">Image principale *</label>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">
+                  {form.category === 'jerseys' ? (<><Shirt size={11} className="inline mr-1" />Vue Face (image principale) *</>) : 'Image principale *'}
+                </label>
                 <MediaUploader compact folder={`products/${editingId || 'new'}/main`} currentUrl={form.coverImage} onUpload={(file) => setForm((current) => ({ ...current, coverImage: file.url }))} onRemove={() => setForm((current) => ({ ...current, coverImage: '' }))} onUploadingChange={setCoverUploading} />
                 <button type="button" onClick={() => setMediaPickerTarget('product')} className="mt-2 min-h-11 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-usm-blue-primary">Choisir une image existante</button>
               </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">
-                  Photos supplémentaires <span className="font-normal text-slate-400">(affichées au survol de la carte et dans la galerie de la fiche produit)</span>
-                </label>
-                {form.images.length > 0 && (
-                  <div className="mb-3 grid grid-cols-4 gap-2">
-                    {form.images.map((url, idx) => (
-                      <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))}
-                          className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
-                        >
-                          <X size={11} />
-                        </button>
-                      </div>
-                    ))}
+              {/* Jersey-specific labeled pose uploaders */}
+              {form.category === 'jerseys' ? (
+                <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <RotateCw size={14} className="text-usm-blue-primary" />
+                    <p className="text-[10px] font-black text-usm-blue-primary uppercase tracking-wide">Vues du maillot</p>
                   </div>
-                )}
-                <MediaUploader
-                  key={form.images.length}
-                  compact
-                  folder={`products/${editingId || 'new'}/gallery`}
-                  onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images, file.url] }))}
-                  onUploadingChange={setGalleryUploading}
-                />
-              </div>
+                  <p className="text-[10px] text-slate-500 -mt-2">
+                    Importez les 3 vues : <strong>Face</strong>, <strong>Dos</strong>, <strong>Latéral</strong>.
+                    Le nom et numéro du fan seront superposés sur la vue Dos.
+                    L'image principale (ci-dessus) sert de miniature catalogue.
+                  </p>
+
+                  {/* Front View (images[0]) */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                      <Shirt size={11} />Vue Face {form.images[0] ? '✓' : '*'}
+                    </label>
+                    {form.images[0] ? (
+                      <div className="relative inline-block">
+                        <img src={form.images[0]} alt="Vue Face" className="h-24 w-24 rounded-lg object-cover border border-slate-200" />
+                        <button type="button" onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== 0) }))} className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow text-red-600 cursor-pointer"><X size={11} /></button>
+                      </div>
+                    ) : (
+                      <MediaUploader compact folder={`products/${editingId || 'new'}/front`} onUpload={(file) => setForm((current) => ({ ...current, images: [file.url, ...current.images] }))} onUploadingChange={setGalleryUploading} />
+                    )}
+                  </div>
+
+                  {/* Back View (images[1]) */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                      <Shirt size={11} />Vue Dos {form.images[1] ? '✓' : '(requis pour la personnalisation)'}
+                    </label>
+                    {form.images[1] ? (
+                      <div className="relative inline-block">
+                        <img src={form.images[1]} alt="Vue Dos" className="h-24 w-24 rounded-lg object-cover border border-slate-200" />
+                        <button type="button" onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== 1) }))} className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow text-red-600 cursor-pointer"><X size={11} /></button>
+                      </div>
+                    ) : (
+                      <MediaUploader compact folder={`products/${editingId || 'new'}/back`} onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images.slice(0, 1), file.url, ...current.images.slice(1)] }))} onUploadingChange={setGalleryUploading} />
+                    )}
+                  </div>
+
+                  {/* Lateral View (images[2]) */}
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
+                      <Shirt size={11} />Vue Latérale {form.images[2] ? '✓' : '(optionnel)'}
+                    </label>
+                    {form.images[2] ? (
+                      <div className="relative inline-block">
+                        <img src={form.images[2]} alt="Vue Latérale" className="h-24 w-24 rounded-lg object-cover border border-slate-200" />
+                        <button type="button" onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== 2) }))} className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-white shadow text-red-600 cursor-pointer"><X size={11} /></button>
+                      </div>
+                    ) : (
+                      <MediaUploader compact folder={`products/${editingId || 'new'}/lateral`} onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images.slice(0, 2), file.url, ...current.images.slice(2)] }))} onUploadingChange={setGalleryUploading} />
+                    )}
+                  </div>
+
+                  {/* Preview summary */}
+                  {form.images.length > 0 && (
+                    <div className="flex gap-3 pt-2 border-t border-blue-100">
+                      {form.images.filter(Boolean).map((url, idx) => (
+                        <div key={url + idx} className="text-center">
+                          <img src={url} alt="" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
+                          <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">{['Face', 'Dos', 'Latéral'][idx] || `+${idx}`}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">
+                    Photos supplémentaires <span className="font-normal text-slate-400">(affichées au survol de la carte et dans la galerie de la fiche produit)</span>
+                  </label>
+                  {form.images.length > 0 && (
+                    <div className="mb-3 grid grid-cols-4 gap-2">
+                      {form.images.map((url, idx) => (
+                        <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                          <img src={url} alt="" className="h-full w-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))}
+                            className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <MediaUploader
+                    key={form.images.length}
+                    compact
+                    folder={`products/${editingId || 'new'}/gallery`}
+                    onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images, file.url] }))}
+                    onUploadingChange={setGalleryUploading}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Catégorie</label>
                   <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800">
-                    {categories.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                    {categories.map((c) => <option key={c._id || c.id || c.slug} value={c.slug}>{c.name}</option>)}
                   </select>
                   <button type="button" onClick={openAddCategory} className="mt-1 min-h-11 text-xs font-bold text-usm-blue-primary hover:underline">+ Nouvelle catégorie</button>
                 </div>
@@ -625,9 +791,31 @@ export default function AdminBoutique() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Description</label>
-                <textarea rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800" />
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Description *</label>
+                <textarea required rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800" />
               </div>
+
+              {form.category === 'jerseys' && (
+                <div className="border border-dashed border-usm-blue-primary/30 rounded-lg p-3 space-y-2 bg-usm-blue-light/30">
+                  <label className="text-[10px] font-bold text-usm-blue-primary uppercase block">🎨 Couleurs d'impression (Nom & Numéro)</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1">Couleur du texte</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={form.printColor} onChange={(e) => setForm((f) => ({ ...f, printColor: e.target.value }))} className="h-8 w-8 rounded border border-slate-200 cursor-pointer" />
+                        <input type="text" value={form.printColor} onChange={(e) => setForm((f) => ({ ...f, printColor: e.target.value }))} className="flex-1 bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 outline-none focus:border-usm-blue-primary text-slate-800 font-mono" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-500 block mb-1">Couleur du contour</label>
+                      <div className="flex items-center gap-2">
+                        <input type="color" value={form.printStrokeColor} onChange={(e) => setForm((f) => ({ ...f, printStrokeColor: e.target.value }))} className="h-8 w-8 rounded border border-slate-200 cursor-pointer" />
+                        <input type="text" value={form.printStrokeColor} onChange={(e) => setForm((f) => ({ ...f, printStrokeColor: e.target.value }))} className="flex-1 bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 outline-none focus:border-usm-blue-primary text-slate-800 font-mono" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"

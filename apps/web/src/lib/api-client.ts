@@ -176,6 +176,11 @@ export const api = {
     method: 'DELETE',
   }),
 
+  reorderProducts: (items: { id: string; displayOrder: number }[]) => fetchJson('/products/bulk/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  }),
+
   // Auth Endpoints
   register: (data: any) => fetchJson('/auth/register', {
     method: 'POST',

@@ -64,6 +64,13 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Patch('bulk/reorder')
+  async reorder(@Body() body: { items: { id: string; displayOrder: number }[] }) {
+    return this.productsService.bulkReorder(body.items);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
   @Get(':id')
   async getById(@Param('id') id: string) {
     return this.productsService.findOneById(id);

@@ -79,7 +79,7 @@ export class ProductsService {
     }
 
     // Sorting
-    let sortOptions: any = { createdAt: -1 };
+    let sortOptions: any = { displayOrder: 1, createdAt: -1 };
     if (sort === 'price_asc') {
       sortOptions = { price: 1 };
     } else if (sort === 'price_desc') {
@@ -88,6 +88,8 @@ export class ProductsService {
       sortOptions = { views: -1 };
     } else if (sort === 'date_asc') {
       sortOptions = { createdAt: 1 };
+    } else if (sort === 'order_asc') {
+      sortOptions = { displayOrder: 1 };
     }
 
     // Pagination
@@ -146,6 +148,17 @@ export class ProductsService {
     if (!result) {
       throw new NotFoundException(`Produit introuvable avec l'ID "${id}"`);
     }
+    return { success: true };
+  }
+
+  async bulkReorder(items: { id: string; displayOrder: number }[]): Promise<{ success: boolean }> {
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { displayOrder: item.displayOrder } },
+      },
+    }));
+    await this.productModel.bulkWrite(ops);
     return { success: true };
   }
 

@@ -48,7 +48,7 @@ export const Home: React.FC = () => {
       api.getFanPhotos(),
       api.getHeroSlides(),
       api.getSponsors({ homepage: true }),
-      api.getProducts({ limit: 4 }),
+      api.getProducts({ sort: 'order_asc', limit: 4 }),
     ]).then(([settings, photos, slides, sp, prod]) => {
       if (settings.status === 'fulfilled') setHomepage(settings.value);
       if (photos.status === 'fulfilled') setFanPhotos(photos.value || []);
