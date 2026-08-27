@@ -158,13 +158,13 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
               {tr(language, 'Privacy Policy', 'Confidentialité', 'سياسة الخصوصية')}
             </Link>
             <Link href="/conditions-utilisation" className="hover:text-usm-blue-light">
-              {tr(language, 'Terms of Use', 'Conditions d’utilisation', 'شروط الاستخدام')}
+              {tr(language, 'Terms of Use', "Conditions d'utilisation", 'شروط الاستخدام')}
             </Link>
             <Link href="/cookies" className="hover:text-usm-blue-light">
               {tr(language, 'Cookies', 'Cookies', 'ملفات تعريف الارتباط')}
             </Link>
             <button onClick={install} className="flex items-center gap-1.5 font-bold text-usm-blue-light hover:text-white">
-              <Download size={13}/> {tr(language, 'Install the Application', 'Installer l’application', 'تثبيت التطبيق')}
+              <Download size={13}/> {tr(language, 'Install the Application', "Installer l'application", 'تثبيت التطبيق')}
             </button>
           </div>
         </div>

@@ -41,6 +41,7 @@ export const Header: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
   const [mobileGroupOpen, setMobileGroupOpen] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mainSponsors, setMainSponsors] = useState<{ name: string; lightLogo?: string; logo?: string; link?: string; websiteUrl?: string; _id?: string }[]>([]);
 
   const langRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -59,6 +60,15 @@ export const Header: React.FC = () => {
     }
     api.getUnreadNotificationCount().then((count: number) => setUnreadCount(count || 0)).catch(() => {});
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    api.getSponsors({ homepage: true })
+      .then((data: any[]) => {
+        const mains = data.filter((s: any) => s.category === 'Main');
+        setMainSponsors(mains);
+      })
+      .catch(() => {});
+  }, []);
 
   const isPremiumMember = !!fan?.membershipSummary?.active;
   const initials = (username || 'U')
@@ -260,8 +270,40 @@ export const Header: React.FC = () => {
               })}
             </nav>
 
+            {/* Main Partners — loaded from DB */}
+            {mainSponsors.length > 0 && (
+              <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10 shrink-0">
+                {mainSponsors.map((sponsor, i) => (
+                  <React.Fragment key={sponsor._id || i}>
+                    {i > 0 && <span className="w-px h-5 bg-white/10" />}
+                    <a
+                      href={sponsor.websiteUrl || sponsor.link || '#'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center"
+                      title={sponsor.name}
+                    >
+                      {(sponsor.lightLogo || sponsor.logo) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={sponsor.lightLogo || sponsor.logo}
+                          alt={sponsor.name}
+                          className="h-5 lg:h-7 max-w-[60px] lg:max-w-[90px] object-contain transition-opacity duration-300"
+                          style={{ filter: 'brightness(0) invert(1)' }}
+                        />
+                      ) : (
+                        <span className="text-[13px] font-black tracking-wide text-white transition-colors duration-300">
+                          {sponsor.name}
+                        </span>
+                      )}
+                    </a>
+                  </React.Fragment>
+                ))}
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-4">
               {/* Utility cluster — search, cart & notifications */}
               <div className="flex items-center h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
                 {/* Search */}
