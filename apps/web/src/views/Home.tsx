@@ -9,6 +9,7 @@ import { PartnerShowcase } from '../components/Common/PartnerShowcase';
 import { Play, ArrowRight, Send, ShoppingBag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { api } from '../lib/api-client';
+import { tr } from '../utils/i18n';
 
 interface HomepageConfig {
   heroTitle: string; heroSubtitle: string; heroDescription: string; heroImageUrl: string;
@@ -419,25 +420,30 @@ export const Home: React.FC = () => {
         <div className="bg-gradient-to-r from-usm-blue-soft to-white border border-usm-blue-primary/30 rounded-3xl p-8 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="max-w-lg">
             <h3 className="font-display font-black text-2xl text-usm-blue-dark uppercase tracking-wider mb-2">
-              Join the Official USM Newsletter
+              {tr(language, 'Join the Official USM Newsletter', 'Rejoignez la Newsletter Officielle de l’USM', 'انضم إلى النشرة الإخبارية الرسمية للاتحاد')}
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Stay in the loop. Receive weekly media summaries, press room releases, academy news, and special sponsor merchandise discounts directly into your inbox.
+              {tr(
+                language,
+                'Stay in the loop. Receive weekly media summaries, press room releases, academy news, and special sponsor merchandise discounts directly into your inbox.',
+                'Restez au cœur de l’actualité. Recevez chaque semaine les résumés médias, communiqués de presse, nouvelles de l’académie et offres partenaires exclusives directement dans votre boîte mail.',
+                'ابق على اطلاع دائم. احصل على ملخصات أسبوعية، بيانات صحفية، أخبار الأكاديمية وخصومات حصرية من المستشهرين مباشرة في بريدك الإلكتروني.'
+              )}
             </p>
           </div>
           <div className="w-full max-w-md flex space-x-2 rtl:space-x-reverse">
             <input
               type="email"
-              placeholder="Enter your email address"
+              placeholder={tr(language, 'Enter your email address', 'Votre adresse e-mail', 'أدخل بريدك الإلكتروني')}
               className="flex-grow bg-white border border-usm-border text-xs text-usm-blue-dark rounded-xl px-4 py-3 outline-none focus:border-usm-blue-primary"
             />
             <button
               onClick={() => {
-                alert(language === 'ar' ? 'تم تسجيل بريدك الإلكتروني بنجاح في القائمة البريدية للاتحاد!' : 'Thank you for subscribing to US Monastir Newsletter!');
+                alert(language === 'ar' ? 'تم تسجيل بريدك الإلكتروني بنجاح في القائمة البريدية للاتحاد!' : 'Merci pour votre inscription à la newsletter de l’US Monastir !');
               }}
-              className="px-6 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white font-bold text-xs uppercase rounded-xl transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse"
+              className="px-6 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white font-bold text-xs uppercase rounded-xl transition-colors cursor-pointer flex items-center space-x-1 rtl:space-x-reverse shrink-0"
             >
-              <span>Subscribe</span>
+              <span>{tr(language, 'Subscribe', 'S’abonner', 'اشتراك')}</span>
               <Send size={12} />
             </button>
           </div>

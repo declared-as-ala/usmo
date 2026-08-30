@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 240" fill="none">
+  <!-- Azuro Triangle Icon -->
+  <g transform="translate(180, 10)">
+    <path d="M70 10 L130 115 L105 115 L70 52 L35 115 L10 115 Z" fill="#FFFFFF"/>
+    <path d="M50 85 L70 50 L90 85 Z" fill="#0A1128"/>
+    <path d="M60 100 L70 82 L80 100 Z" fill="#FFFFFF"/>
+  </g>
+  <!-- AZURO text -->
+  <text x="250" y="180" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="52" fill="#FFFFFF" letter-spacing="4">AZURO</text>
+  <!-- INSPIRE THE WORLD -->
+  <text x="250" y="212" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Montserrat', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="16" fill="#FFFFFF" letter-spacing="6">INSPIRE THE WORLD</text>
+</svg>

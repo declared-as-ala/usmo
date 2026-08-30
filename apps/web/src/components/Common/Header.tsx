@@ -95,6 +95,7 @@ export const Header: React.FC = () => {
 
   const navGroups: NavEntry[] = [
     { kind: 'link', screen: 'home', labelKey: 'nav.home' },
+    { kind: 'link', screen: 'boutique', labelKey: 'nav.boutique' },
     {
       kind: 'dropdown',
       key: 'teams',
@@ -104,10 +105,6 @@ export const Header: React.FC = () => {
         { screen: 'basketball', labelKey: 'nav.basketball', icon: '/logo basket.png' },
       ],
     },
-    { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },
-    { kind: 'link', screen: 'news', labelKey: 'nav.news' },
-    { kind: 'link', screen: 'media', labelKey: 'nav.media' },
-    { kind: 'link', screen: 'boutique', labelKey: 'nav.boutique' },
     {
       kind: 'dropdown',
       key: 'club',
@@ -121,6 +118,8 @@ export const Header: React.FC = () => {
         { screen: 'contact', labelKey: 'nav.contact' },
       ],
     },
+    { kind: 'link', screen: 'matches', labelKey: 'nav.matches' },
+    { kind: 'link', screen: 'media', labelKey: 'nav.media' },
     { kind: 'link', screen: 'sponsors', labelKey: 'nav.partners' },
   ];
 
@@ -273,32 +272,45 @@ export const Header: React.FC = () => {
             {/* Main Partners — loaded from DB */}
             {mainSponsors.length > 0 && (
               <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10 shrink-0">
-                {mainSponsors.map((sponsor, i) => (
-                  <React.Fragment key={sponsor._id || i}>
-                    {i > 0 && <span className="w-px h-5 bg-white/10" />}
-                    <a
-                      href={sponsor.websiteUrl || sponsor.link || '#'}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group flex items-center"
-                      title={sponsor.name}
-                    >
-                      {(sponsor.lightLogo || sponsor.logo) ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={sponsor.lightLogo || sponsor.logo}
-                          alt={sponsor.name}
-                          className="h-5 lg:h-7 max-w-[60px] lg:max-w-[90px] object-contain transition-opacity duration-300"
-                          style={{ filter: 'brightness(0) invert(1)' }}
-                        />
-                      ) : (
-                        <span className="text-[13px] font-black tracking-wide text-white transition-colors duration-300">
-                          {sponsor.name}
-                        </span>
-                      )}
-                    </a>
-                  </React.Fragment>
-                ))}
+                {mainSponsors.map((sponsor, i) => {
+                  const logoUrl = sponsor.logo || sponsor.lightLogo;
+                  return (
+                    <React.Fragment key={sponsor._id || i}>
+                      {i > 0 && <span className="w-px h-5 bg-white/10" />}
+                      <a
+                        href={sponsor.websiteUrl || sponsor.link || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex items-center h-8 px-2.5 py-1 bg-white rounded-lg shadow-sm hover:opacity-90 hover:scale-105 transition-all"
+                        title={sponsor.name}
+                      >
+                        {logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoUrl}
+                            alt={sponsor.name}
+                            className="h-5 max-w-[80px] object-contain"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent && !parent.querySelector('.fallback-name')) {
+                                const span = document.createElement('span');
+                                span.className = 'fallback-name text-[11px] font-black tracking-wide text-slate-800';
+                                span.innerText = sponsor.name;
+                                parent.appendChild(span);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span className="text-[11px] font-black tracking-wide text-slate-800">
+                            {sponsor.name}
+                          </span>
+                        )}
+                      </a>
+                    </React.Fragment>
+                  );
+                })}
               </div>
             )}
 

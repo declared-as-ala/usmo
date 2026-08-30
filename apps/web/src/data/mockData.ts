@@ -1096,6 +1096,34 @@ export const sponsorsList: Sponsor[] = [
     offerFr: "Guide d'hydratation Sabrine et bouteilles éco-responsables disponibles à la boutique officielle.",
     link: 'https://www.sabrine.com.tn',
     metrics: { impressions: 65000, clicks: 2300, ctr: 3.5 }
+  },
+  {
+    id: 'sp7',
+    name: 'iBrand Tunisia',
+    category: 'Official',
+    logo: '/sponsors/ibrand-tunisia/logo.webp',
+    story: "iBrand Tunisia est le partenaire technologique et digital officiel de l'Union Sportive Monastirienne.",
+    storyAr: 'الشريك الرقمي والتكنولوجي الرسمي للاتحاد الرياضي المنستيري.',
+    storyFr: "iBrand Tunisia est le partenaire technologique et digital officiel de l'Union Sportive Monastirienne.",
+    offer: 'Digital branding and technology solutions for USM partners and community.',
+    offerAr: 'حلول رقمية وخدمات حصرية للمشجعين والشركاء.',
+    offerFr: 'Solutions digitales et technologiques pour les partenaires et supporters de l’USM.',
+    link: 'https://ibrandtunisia.tn/',
+    metrics: { impressions: 95000, clicks: 7600, ctr: 8.0 }
+  },
+  {
+    id: 'sp8',
+    name: 'Azuro',
+    category: 'Official',
+    logo: '/sponsors/azuro/logo.webp',
+    story: "Partenaire officiel engagé aux côtés de l'Union Sportive Monastirienne.",
+    storyAr: 'شريك رسمي يرافق الاتحاد الرياضي المنستيري بكل شغف.',
+    storyFr: "Partenaire officiel engagé aux côtés de l'Union Sportive Monastirienne.",
+    offer: 'Official sport lifestyle partner.',
+    offerAr: 'شريك الأسلوب والروح الرياضية للاتحاد.',
+    offerFr: 'Partenaire sportswear et lifestyle officiel de l’USM.',
+    link: 'https://www.facebook.com/azurobrand',
+    metrics: { impressions: 45000, clicks: 2100, ctr: 4.6 }
   }
 ];
 
