@@ -6,6 +6,7 @@ import { Product } from '../products/product.schema';
 import { CartService } from '../cart/cart.service';
 import { BadgesService } from '../loyalty/badges.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
   pending: 'En attente',
@@ -24,6 +25,7 @@ export class OrdersService {
     private readonly cartService: CartService,
     private readonly badgesService: BadgesService,
     private readonly notificationsService: NotificationsService,
+    private readonly mailService: MailService,
   ) {}
 
   async create(dto: any): Promise<Order> {
@@ -72,6 +74,7 @@ export class OrdersService {
         phone: dto.customerPhone,
         city: dto.customerCity,
         address: dto.customerAddress,
+        email: dto.customerEmail,
       },
       deliveryMethod: dto.deliveryMethod,
       deliveryZoneId: dto.deliveryZoneId,
@@ -108,6 +111,22 @@ export class OrdersService {
 
     if (dto.userId) {
       await this.badgesService.unlock(dto.userId, 'first-order');
+    }
+    // Send confirmation email if email provided
+    if (dto.customerEmail) {
+      const subject = 'Confirmation de votre commande';
+      const html = `
+        <html>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #0d63ff;">Merci pour votre commande</h2>
+          <p>Bonjour ${dto.customerName},</p>
+          <p>Nous confirmons la réception de votre commande <strong>${orderNumber}</strong> d'un montant de ${((dto.total || 0) / 1000).toFixed(3)} DT.</p>
+          <p>Vous recevrez bientôt plus de détails concernant la livraison.</p>
+          <p>À bientôt,</p>
+          <p>L'équipe US Monastir</p>
+        </body>
+        </html>`;
+      await this.mailService.sendMail(dto.customerEmail, subject, html);
     }
 
     return saved;

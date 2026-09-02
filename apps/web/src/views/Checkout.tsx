@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { tr } from '../utils/i18n';
@@ -23,6 +23,8 @@ import {
   ExternalLink,
   Phone,
   User,
+  Mail,
+  ChevronDown,
 } from 'lucide-react';
 
 export const TUNISIAN_GOVERNORATES = [
@@ -70,6 +72,7 @@ export const Checkout: React.FC = () => {
   const [governorate, setGovernorate] = useState('Monastir');
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [email, setEmail] = useState('');
 
   // Delivery Zones from DB
   const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
@@ -87,6 +90,9 @@ export const Checkout: React.FC = () => {
   const [placedOrderId, setPlacedOrderId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Mobile order summary accordion toggle
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
 
   // Fetch Delivery Zones from DB
   useEffect(() => {
@@ -188,6 +194,7 @@ export const Checkout: React.FC = () => {
         customerPhone: phone.trim(),
         customerCity: governorate,
         customerAddress: address.trim(),
+        customerEmail: email.trim() || undefined,
         deliveryMethod: 'delivery',
         notes: notes.trim() ? `${notes.trim()} (alphasportofficiel.com)` : 'alphasportofficiel.com',
         items: itemsPayload,
@@ -232,7 +239,9 @@ export const Checkout: React.FC = () => {
               {tr(language, 'Your order has been recorded!', 'Votre commande est enregistrée !', 'تم تسجيل طلبك بنجاح!')}
             </h1>
             <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              Merci pour votre confiance. Notre équipe boutique officielle va préparer votre colis et vous contacter pour la livraison.
+              {email
+                ? `Merci pour votre confiance. Un email de confirmation a été envoyé à ${email}. Notre équipe boutique officielle va préparer votre colis et vous contacter pour la livraison.`
+                : 'Merci pour votre confiance. Notre équipe boutique officielle va préparer votre colis et vous contacter pour la livraison.'}
             </p>
           </div>
 
@@ -249,6 +258,12 @@ export const Checkout: React.FC = () => {
               <span>{tr(language, 'Phone:', 'Téléphone :', 'الهاتف:')}</span>
               <strong className="text-usm-blue-dark font-mono">{phone}</strong>
             </div>
+            {email && (
+              <div className="flex justify-between text-xs text-slate-500 pb-2.5 border-b border-usm-border">
+                <span>{tr(language, 'Email:', 'Email :', 'البريد الإلكتروني:')}</span>
+                <strong className="text-usm-blue-dark font-mono">{email}</strong>
+              </div>
+            )}
             <div className="flex justify-between text-xs text-slate-500 pb-2.5 border-b border-usm-border">
               <span>{tr(language, 'Delivering to:', 'Livraison à :', 'التوصيل إلى:')}</span>
               <strong className="text-usm-blue-dark">{governorate}, {address}</strong>
@@ -329,6 +344,97 @@ export const Checkout: React.FC = () => {
     );
   }
 
+  const renderSummaryBody = () => (
+    <>
+      {/* Cart products list */}
+      <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1 space-y-1">
+        {cart.map((item, idx) => (
+          <div key={idx} className="py-2.5 flex items-center justify-between text-xs text-slate-600">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={(item.product as any).coverImage || item.product.image}
+              className="w-10 h-10 object-cover rounded-lg border border-usm-border shrink-0"
+              alt=""
+            />
+            <div className="flex-1 min-w-0 mx-2.5">
+              <p className="font-bold text-usm-blue-dark truncate">
+                {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                Qté {item.quantity} • Taille {item.size}
+              </p>
+            </div>
+            <span className="font-mono text-usm-blue-dark font-bold shrink-0">{item.product.price}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Promo Code Coupon Panel */}
+      <form onSubmit={handleApplyCoupon} className="flex gap-2 pt-2 border-t border-usm-border">
+        <input
+          type="text"
+          placeholder="Code Promo"
+          value={couponInput}
+          onChange={(e) => setCouponInput(e.target.value)}
+          className="flex-1 bg-white border border-usm-border rounded-xl px-3 py-2 text-xs text-usm-blue-dark uppercase outline-none focus:border-usm-blue-primary"
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 bg-usm-blue-soft hover:bg-usm-blue-primary/10 text-usm-blue-primary rounded-xl text-xs font-bold uppercase transition-colors cursor-pointer border border-usm-border"
+        >
+          Appliquer
+        </button>
+      </form>
+
+      {/* Calculations Breakdown */}
+      {calcResult && (
+        <div className="border-t border-usm-border pt-4 space-y-2.5 text-xs text-slate-500">
+          <div className="flex justify-between">
+            <span>Sous-total</span>
+            <span className="font-mono text-usm-blue-dark font-bold">{formatMoney(calcResult.subtotal)}</span>
+          </div>
+
+          {calcResult.discount > 0 && (
+            <div className="flex justify-between text-emerald-600 font-semibold">
+              <span className="flex items-center gap-1">
+                <Tag size={12} /> Remise (-{calcResult.discountPercent}%)
+              </span>
+              <span className="font-mono">-{formatMoney(calcResult.discount)}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <span>
+              Frais de livraison ({governorate === 'Monastir' ? 'Monastir' : 'Autre région'})
+            </span>
+            <span className="font-mono text-usm-blue-dark font-bold">{formatMoney(calcResult.shippingCost)}</span>
+          </div>
+
+          <div className="flex justify-between text-usm-blue-dark font-bold border-t border-usm-border pt-3.5 text-sm">
+            <span>Total à régler :</span>
+            <span className="font-mono text-usm-blue-primary text-base font-black">
+              {formatMoney(calcResult.total)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="pt-2 border-t border-slate-100 text-center">
+        <span className="text-[10px] text-slate-400 font-semibold block">
+          Partenaire Officiel USM
+        </span>
+        <a
+          href="https://alphasportofficiel.com"
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs font-bold text-usm-blue-primary hover:underline inline-flex items-center gap-1 mt-0.5"
+        >
+          alphasportofficiel.com <ExternalLink size={11} />
+        </a>
+      </div>
+    </>
+  );
+
   // 3. Main Streamlined Order Layout
   return (
     <div className="usm-premium-bg text-usm-blue-dark min-h-screen relative overflow-hidden">
@@ -352,6 +458,58 @@ export const Checkout: React.FC = () => {
             <Truck size={14} className="text-usm-blue-primary" />
             <span>Livraison à domicile partout en Tunisie · Paiement en espèces à la livraison</span>
           </p>
+        </div>
+
+        {/* MOBILE ONLY: Collapsible Order Summary at Top */}
+        <div className="lg:hidden bg-white border border-usm-border rounded-2xl overflow-hidden shadow-md">
+          <button
+            type="button"
+            onClick={() => setMobileSummaryOpen(!mobileSummaryOpen)}
+            className="w-full p-4 flex items-center justify-between bg-slate-50 hover:bg-slate-100/70 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-usm-blue-primary/10 text-usm-blue-primary flex items-center justify-center">
+                <ShoppingBag size={16} />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-usm-blue-dark">
+                  <span>{mobileSummaryOpen ? 'Masquer le résumé' : 'Afficher le résumé de la commande'}</span>
+                  <ChevronDown
+                    size={14}
+                    className={`text-usm-blue-primary transition-transform duration-200 ${
+                      mobileSummaryOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  {cart.length} article{cart.length > 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="text-[9px] uppercase font-bold text-slate-400 block tracking-wider">Total</span>
+              <span className="text-sm font-mono font-black text-usm-blue-primary">
+                {calcResult ? formatMoney(calcResult.total) : '0.000 DT'}
+              </span>
+            </div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {mobileSummaryOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="overflow-hidden border-t border-usm-border"
+              >
+                <div className="p-4 space-y-4 bg-white">
+                  {renderSummaryBody()}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Order Form Grid */}
@@ -395,6 +553,26 @@ export const Checkout: React.FC = () => {
                     className="w-full bg-white border border-usm-border text-sm text-usm-blue-dark rounded-xl p-3.5 pl-10 outline-none focus:border-usm-blue-primary transition-all placeholder-slate-400 font-mono"
                   />
                 </div>
+              </div>
+
+              {/* Email (optional) */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1.5">
+                  Email (facultatif)
+                </label>
+                <div className="relative">
+                  <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="email"
+                    placeholder="exemple@domain.tn"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white border border-usm-border text-sm text-usm-blue-dark rounded-xl p-3.5 pl-10 outline-none focus:border-usm-blue-primary transition-all placeholder-slate-400 font-sans"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1 font-medium">
+                  Optionnel : pour recevoir l'e-mail de confirmation et le suivi de votre commande.
+                </p>
               </div>
 
               {/* 24 Régions / Gouvernorat Dropdown */}
@@ -478,85 +656,14 @@ export const Checkout: React.FC = () => {
             </form>
           </div>
 
-          {/* RIGHT: Order calculations panel */}
-          <div className="bg-white border border-usm-border rounded-3xl p-6 shadow-lg space-y-6">
+          {/* RIGHT: Order calculations panel (Desktop only) */}
+          <div className="hidden lg:block bg-white border border-usm-border rounded-3xl p-6 shadow-lg space-y-6 sticky top-24">
             <h3 className="text-xs font-bold text-usm-blue-dark uppercase border-b border-usm-border pb-3.5 tracking-wider flex items-center justify-between">
               <span>Résumé de la commande</span>
               <span className="text-[10px] font-bold text-usm-blue-primary">{cart.length} article(s)</span>
             </h3>
 
-            {/* Cart products list */}
-            <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1 space-y-1">
-              {cart.map((item, idx) => (
-                <div key={idx} className="py-2.5 flex items-center justify-between text-xs text-slate-600">
-                  <img src={(item.product as any).coverImage || item.product.image} className="w-10 h-10 object-cover rounded-lg border border-usm-border shrink-0" alt="" />
-                  <div className="flex-1 min-w-0 mx-2.5">
-                    <p className="font-bold text-usm-blue-dark truncate">
-                      {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                      Qté {item.quantity} • Taille {item.size}
-                    </p>
-                  </div>
-                  <span className="font-mono text-usm-blue-dark font-bold shrink-0">{item.product.price}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Promo Code Coupon Panel */}
-            <form onSubmit={handleApplyCoupon} className="flex gap-2 pt-2 border-t border-usm-border">
-              <input
-                type="text"
-                placeholder="Code Promo"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value)}
-                className="flex-1 bg-white border border-usm-border rounded-xl px-3 py-2 text-xs text-usm-blue-dark uppercase outline-none focus:border-usm-blue-primary"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-usm-blue-soft hover:bg-usm-blue-primary/10 text-usm-blue-primary rounded-xl text-xs font-bold uppercase transition-colors cursor-pointer border border-usm-border"
-              >
-                Appliquer
-              </button>
-            </form>
-
-            {/* Calculations Breakdown */}
-            {calcResult && (
-              <div className="border-t border-usm-border pt-4 space-y-2.5 text-xs text-slate-500">
-                <div className="flex justify-between">
-                  <span>Sous-total</span>
-                  <span className="font-mono text-usm-blue-dark font-bold">{formatMoney(calcResult.subtotal)}</span>
-                </div>
-                
-                {calcResult.discount > 0 && (
-                  <div className="flex justify-between text-emerald-600 font-semibold">
-                    <span className="flex items-center gap-1"><Tag size={12} /> Remise (-{calcResult.discountPercent}%)</span>
-                    <span className="font-mono">-{formatMoney(calcResult.discount)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between">
-                  <span>
-                    Frais de livraison ({governorate === 'Monastir' ? 'Monastir' : 'Autre région'})
-                  </span>
-                  <span className="font-mono text-usm-blue-dark font-bold">{formatMoney(calcResult.shippingCost)}</span>
-                </div>
-
-                <div className="flex justify-between text-usm-blue-dark font-bold border-t border-usm-border pt-3.5 text-sm">
-                  <span>Total à régler :</span>
-                  <span className="font-mono text-usm-blue-primary text-base font-black">{formatMoney(calcResult.total)}</span>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-slate-100 text-center">
-              <span className="text-[10px] text-slate-400 font-semibold block">
-                Partenaire Officiel USM
-              </span>
-              <a href="https://alphasportofficiel.com" target="_blank" rel="noreferrer" className="text-xs font-bold text-usm-blue-primary hover:underline inline-flex items-center gap-1 mt-0.5">
-                alphasportofficiel.com <ExternalLink size={11} />
-              </a>
-            </div>
+            {renderSummaryBody()}
           </div>
         </div>
       </div>

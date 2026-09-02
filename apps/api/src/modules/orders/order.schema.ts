@@ -52,6 +52,7 @@ export class Order extends Document {
       phone: { type: String, required: true },
       city: { type: String, required: true },
       address: { type: String },
+      email: { type: String },
     },
     required: true,
   })
@@ -60,6 +61,7 @@ export class Order extends Document {
     phone: string;
     city: string;
     address?: string;
+    email?: string;
   };
 
   @Prop({ type: String, required: true, enum: ['delivery', 'pickup'], default: 'delivery' })

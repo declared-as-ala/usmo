@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
-import { Home, Trophy, Newspaper, Sparkles, MoreHorizontal, ShoppingBag, Landmark, Map, Phone, Image as ImageIcon, Crown } from 'lucide-react';
+import { Home, Trophy, Newspaper, MoreHorizontal, ShoppingBag, Landmark, Map, Phone, Image as ImageIcon, Crown } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
-  const { activeScreen, setActiveScreen, t, isLoggedIn } = useApp();
+  const { activeScreen, setActiveScreen, t } = useApp();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const handleTabClick = (screen: typeof activeScreen) => {
@@ -18,7 +18,6 @@ export const MobileNav: React.FC = () => {
     { screen: 'home', label: t('nav.home'), icon: <Home size={19} strokeWidth={2} /> },
     { screen: 'matches', label: t('nav.matches'), icon: <Trophy size={19} strokeWidth={2} /> },
     { screen: 'boutique', label: t('nav.boutique'), icon: <ShoppingBag size={19} strokeWidth={2} /> },
-    ...(isLoggedIn ? [{ screen: 'fanzone' as const, label: 'Fan Zone', icon: <Sparkles size={19} strokeWidth={2} /> }] : []),
   ];
 
   const moreItems: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
