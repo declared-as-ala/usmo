@@ -278,6 +278,22 @@ export class MailService {
       }
     }
 
+    // Try resolving iBrand sponsor logo
+    const possibleIbrandPaths = [
+      path.resolve(process.cwd(), 'apps/web/public/sponsors/ibrand-tunisia/logo.png'),
+      path.resolve(process.cwd(), '../web/public/sponsors/ibrand-tunisia/logo.png'),
+      path.resolve(__dirname, '../../../../web/public/sponsors/ibrand-tunisia/logo.png'),
+      path.resolve(__dirname, '../../../web/public/sponsors/ibrand-tunisia/logo.png'),
+    ];
+
+    let ibrandLogoPath: string | null = null;
+    for (const p of possibleIbrandPaths) {
+      if (fs.existsSync(p)) {
+        ibrandLogoPath = p;
+        break;
+      }
+    }
+
     const attachments: any[] = [];
     let logoImgSrc = 'https://usmonastir.tn/logo%20foot.png';
 
@@ -288,6 +304,16 @@ export class MailService {
         cid: 'usm-logo',
       });
       logoImgSrc = 'cid:usm-logo';
+    }
+
+    let ibrandLogoSrc = 'https://ibrandtunisia.tn/logo.png';
+    if (ibrandLogoPath) {
+      attachments.push({
+        filename: 'ibrand-logo.png',
+        path: ibrandLogoPath,
+        cid: 'ibrand-logo',
+      });
+      ibrandLogoSrc = 'cid:ibrand-logo';
     }
 
     const formatTnd = (m: number) => ((m || 0) / 1000).toFixed(3) + ' DT';
@@ -329,7 +355,7 @@ export class MailService {
           .logo-box { width: 76px; height: 76px; border-radius: 50%; background: #ffffff; margin: 0 auto; padding: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.3); display: block; }
           .logo-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; display: block; }
           .title { margin: 16px 0 2px; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
-          .subtitle { margin: 0; font-size: 11px; font-weight: 700; color: #3ed6d0; letter-spacing: 1.5px; text-transform: uppercase; }
+          .subtitle { margin: 0; font-size: 11px; font-weight: 700; color: #3ed6d0; letter-spacing: 1px; text-transform: uppercase; }
           .body { padding: 32px 28px; }
           .badge-confirmed { display: inline-block; background: #ecfdf3; color: #027a48; border: 1px solid #a6f4c5; padding: 6px 16px; border-radius: 30px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
           .greeting { font-size: 20px; font-weight: 900; color: #061a3a; margin: 0 0 8px; }
@@ -345,6 +371,7 @@ export class MailService {
           .totals-table td { padding: 6px 0; font-size: 13px; }
           .total-highlight { border-top: 2px solid #0d63ff; padding-top: 12px !important; }
           .notice-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #0d63ff; border-radius: 12px; padding: 14px 18px; margin-top: 28px; font-size: 12px; color: #1e40af; line-height: 1.5; }
+          .sponsor-box { margin-top: 28px; padding: 18px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; text-align: center; }
           .footer { background: #061a3a; padding: 28px 24px; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.6; }
           .footer-brand { font-size: 12px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
           .footer a { color: #3ed6d0; text-decoration: none; font-weight: 600; }
@@ -359,7 +386,7 @@ export class MailService {
                 <img src="${logoImgSrc}" alt="US Monastir" />
               </div>
               <h1 class="title">Union Sportive Monastirienne</h1>
-              <p class="subtitle">Boutique Officielle • alphasportofficiel.com</p>
+              <p class="subtitle">Boutique Officielle de l'Union Sportive Monastirienne</p>
             </div>
 
             <!-- Content -->
@@ -370,7 +397,7 @@ export class MailService {
 
               <h2 class="greeting">Bonjour ${params.customerName},</h2>
               <p class="lead">
-                Nous vous remercions pour votre commande sur la boutique officielle de l'Union Sportive Monastirienne ! Notre équipe prépare vos articles avec le plus grand soin.
+                Nous vous remercions pour votre commande sur la Boutique Officielle de l'Union Sportive Monastirienne ! Notre équipe prépare vos articles avec le plus grand soin.
               </p>
 
               <!-- Order Ref Banner -->
@@ -458,13 +485,32 @@ export class MailService {
               <div class="notice-box">
                 <strong>📞 Prochaine étape :</strong> Notre service livraison vous contactera au <strong>${params.customerPhone}</strong> avant le passage du coursier pour confirmer le créneau horaire de livraison.
               </div>
+
+              <!-- Official Sponsor Section: iBrand Tunisia -->
+              <div class="sponsor-box">
+                <span style="font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; display: block; margin-bottom: 10px;">
+                  Sponsor & Partenaire Technologique Officiel
+                </span>
+                <a href="https://ibrandtunisia.tn/" target="_blank" style="text-decoration: none; display: inline-block;">
+                  <img
+                    src="${ibrandLogoSrc}"
+                    alt="iBrand Tunisia"
+                    style="height: 42px; max-width: 160px; object-fit: contain; display: inline-block; vertical-align: middle;"
+                  />
+                </a>
+                <p style="margin: 8px 0 0; font-size: 11px; color: #64748b; font-weight: 600;">
+                  iBrand Tunisia • Partenaire Digital Officiel de l'Union Sportive Monastirienne
+                </p>
+              </div>
             </div>
 
             <!-- Footer -->
             <div class="footer">
-              <div class="footer-brand">Union Sportive Monastirienne</div>
+              <div class="footer-brand">Boutique Officielle de l'Union Sportive Monastirienne</div>
               <p style="margin: 0 0 8px; color: #94a3b8;">Une Ville, Un Cœur, Un Club • الاتحاد الرياضي المنستيري</p>
-              <p style="margin: 0 0 12px; color: #64748b;">Boutique Officielle en partenariat avec <a href="https://alphasportofficiel.com" target="_blank">alphasportofficiel.com</a></p>
+              <p style="margin: 0 0 12px; color: #64748b;">
+                Sponsor officiel : <a href="https://ibrandtunisia.tn/" target="_blank">iBrand Tunisia</a> (ibrandtunisia.tn)
+              </p>
               <p style="margin: 0; font-size: 10px; color: #475569;">© ${new Date().getFullYear()} US Monastir. Tous droits réservés.</p>
             </div>
           </div>

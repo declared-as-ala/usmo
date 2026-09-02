@@ -196,7 +196,7 @@ export const Checkout: React.FC = () => {
         customerAddress: address.trim(),
         customerEmail: email.trim() || undefined,
         deliveryMethod: 'delivery',
-        notes: notes.trim() ? `${notes.trim()} (alphasportofficiel.com)` : 'alphasportofficiel.com',
+        notes: notes.trim() || undefined,
         items: itemsPayload,
         couponCode: couponCode || undefined,
         deliveryZoneId: selectedZoneId || undefined,
@@ -301,8 +301,8 @@ export const Checkout: React.FC = () => {
           </div>
 
           <div className="pt-2 text-xs text-slate-400 font-semibold flex items-center justify-center gap-1.5">
-            <ExternalLink size={13} className="text-usm-blue-primary" />
-            <span>alphasportofficiel.com</span>
+            <ShieldCheck size={14} className="text-emerald-500" />
+            <span>Boutique Officielle US Monastir · Paiement à la livraison</span>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -421,16 +421,11 @@ export const Checkout: React.FC = () => {
 
       <div className="pt-2 border-t border-slate-100 text-center">
         <span className="text-[10px] text-slate-400 font-semibold block">
-          Partenaire Officiel USM
+          Boutique Officielle USM
         </span>
-        <a
-          href="https://alphasportofficiel.com"
-          target="_blank"
-          rel="noreferrer"
-          className="text-xs font-bold text-usm-blue-primary hover:underline inline-flex items-center gap-1 mt-0.5"
-        >
-          alphasportofficiel.com <ExternalLink size={11} />
-        </a>
+        <span className="text-xs font-bold text-usm-blue-primary inline-flex items-center gap-1 mt-0.5">
+          Paiement sécurisé à la livraison
+        </span>
       </div>
     </>
   );
@@ -651,7 +646,7 @@ export const Checkout: React.FC = () => {
 
               <div className="pt-2 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-100">
                 <span>Paiement en espèces à la livraison</span>
-                <span className="font-semibold text-usm-blue-primary">alphasportofficiel.com</span>
+                <span className="font-semibold text-usm-blue-primary">Boutique Officielle USM</span>
               </div>
             </form>
           </div>
