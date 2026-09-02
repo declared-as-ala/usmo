@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class MailService {
@@ -237,17 +239,267 @@ export class MailService {
   }
 
   /**
+   * Send High-End Order Confirmation Email with USM Logo & Full Order Details
+   */
+  async sendOrderConfirmationEmail(params: {
+    to: string;
+    customerName: string;
+    customerPhone: string;
+    customerCity: string;
+    customerAddress?: string;
+    orderNumber: string;
+    items: Array<{
+      name: string;
+      size?: string;
+      quantity: number;
+      price: number;
+      subtotal?: number;
+    }>;
+    subtotal: number;
+    shippingCost: number;
+    discount?: number;
+    total: number;
+  }): Promise<boolean> {
+    const subject = `Confirmation de commande ${params.orderNumber} — US Monastir`;
+
+    // Try resolving logo from several possible runtime paths
+    const possibleLogoPaths = [
+      path.resolve(process.cwd(), 'apps/web/public/logo foot.png'),
+      path.resolve(process.cwd(), '../web/public/logo foot.png'),
+      path.resolve(__dirname, '../../../../web/public/logo foot.png'),
+      path.resolve(__dirname, '../../../web/public/logo foot.png'),
+    ];
+
+    let logoPath: string | null = null;
+    for (const p of possibleLogoPaths) {
+      if (fs.existsSync(p)) {
+        logoPath = p;
+        break;
+      }
+    }
+
+    const attachments: any[] = [];
+    let logoImgSrc = 'https://usmonastir.tn/logo%20foot.png';
+
+    if (logoPath) {
+      attachments.push({
+        filename: 'usm-logo.png',
+        path: logoPath,
+        cid: 'usm-logo',
+      });
+      logoImgSrc = 'cid:usm-logo';
+    }
+
+    const formatTnd = (m: number) => ((m || 0) / 1000).toFixed(3) + ' DT';
+
+    const itemsRows = params.items
+      .map(
+        (item, idx) => `
+      <tr style="border-bottom: 1px solid #f1f5f9; background-color: ${idx % 2 === 0 ? '#ffffff' : '#fafafa'};">
+        <td style="padding: 12px 14px; font-size: 13px; font-weight: 700; color: #061a3a;">
+          ${item.name}
+          ${item.size ? `<span style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-top: 2px;">Taille : ${item.size}</span>` : ''}
+        </td>
+        <td style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 700; color: #061a3a;">
+          ${item.quantity}
+        </td>
+        <td style="padding: 12px 14px; text-align: right; font-size: 13px; font-weight: 600; color: #475569; font-family: monospace;">
+          ${formatTnd(item.price)}
+        </td>
+        <td style="padding: 12px 14px; text-align: right; font-size: 13px; font-weight: 800; color: #061a3a; font-family: monospace;">
+          ${formatTnd(item.subtotal || item.price * item.quantity)}
+        </td>
+      </tr>
+    `
+      )
+      .join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #0f172a; margin: 0; padding: 0; }
+          .wrapper { width: 100%; background-color: #f1f5f9; padding: 30px 12px; }
+          .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(6,26,58,0.08); }
+          .header { background: linear-gradient(135deg, #061A3A 0%, #0D3B66 50%, #0D63FF 100%); padding: 36px 24px 30px; text-align: center; color: #ffffff; }
+          .logo-box { width: 76px; height: 76px; border-radius: 50%; background: #ffffff; margin: 0 auto; padding: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.3); display: block; }
+          .logo-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; display: block; }
+          .title { margin: 16px 0 2px; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
+          .subtitle { margin: 0; font-size: 11px; font-weight: 700; color: #3ed6d0; letter-spacing: 1.5px; text-transform: uppercase; }
+          .body { padding: 32px 28px; }
+          .badge-confirmed { display: inline-block; background: #ecfdf3; color: #027a48; border: 1px solid #a6f4c5; padding: 6px 16px; border-radius: 30px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+          .greeting { font-size: 20px; font-weight: 900; color: #061a3a; margin: 0 0 8px; }
+          .lead { font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 24px; }
+          .section-title { font-size: 12px; font-weight: 800; color: #061a3a; text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+          .details-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+          .details-table td { padding: 8px 0; }
+          .details-label { color: #64748b; width: 40%; font-weight: 600; }
+          .details-val { color: #061a3a; font-weight: 700; }
+          .items-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          .items-table th { background: #f8fafc; padding: 10px 12px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; }
+          .totals-table { width: 100%; border-collapse: collapse; margin-top: 16px; border-top: 2px solid #e2e8f0; padding-top: 12px; }
+          .totals-table td { padding: 6px 0; font-size: 13px; }
+          .total-highlight { border-top: 2px solid #0d63ff; padding-top: 12px !important; }
+          .notice-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #0d63ff; border-radius: 12px; padding: 14px 18px; margin-top: 28px; font-size: 12px; color: #1e40af; line-height: 1.5; }
+          .footer { background: #061a3a; padding: 28px 24px; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.6; }
+          .footer-brand { font-size: 12px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+          .footer a { color: #3ed6d0; text-decoration: none; font-weight: 600; }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="card">
+            <!-- Header with Official Club Badge -->
+            <div class="header">
+              <div class="logo-box">
+                <img src="${logoImgSrc}" alt="US Monastir" />
+              </div>
+              <h1 class="title">Union Sportive Monastirienne</h1>
+              <p class="subtitle">Boutique Officielle • alphasportofficiel.com</p>
+            </div>
+
+            <!-- Content -->
+            <div class="body">
+              <div style="text-align: center;">
+                <span class="badge-confirmed">✓ Commande Enregistrée</span>
+              </div>
+
+              <h2 class="greeting">Bonjour ${params.customerName},</h2>
+              <p class="lead">
+                Nous vous remercions pour votre commande sur la boutique officielle de l'Union Sportive Monastirienne ! Notre équipe prépare vos articles avec le plus grand soin.
+              </p>
+
+              <!-- Order Ref Banner -->
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td>
+                      <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block;">Référence de commande</span>
+                      <span style="font-size: 18px; font-weight: 900; color: #0d63ff; font-family: monospace;">${params.orderNumber}</span>
+                    </td>
+                    <td style="text-align: right;">
+                      <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; display: block;">Date</span>
+                      <span style="font-size: 13px; font-weight: 700; color: #061a3a;">${new Date().toLocaleDateString('fr-TN')}</span>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Shipping Info -->
+              <div class="section-title">Informations de livraison</div>
+              <table class="details-table" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td class="details-label">Destinataire :</td>
+                  <td class="details-val">${params.customerName}</td>
+                </tr>
+                <tr>
+                  <td class="details-label">Téléphone :</td>
+                  <td class="details-val" style="font-family: monospace;">${params.customerPhone}</td>
+                </tr>
+                <tr>
+                  <td class="details-label">Gouvernorat :</td>
+                  <td class="details-val">${params.customerCity}</td>
+                </tr>
+                ${params.customerAddress ? `
+                <tr>
+                  <td class="details-label">Adresse :</td>
+                  <td class="details-val">${params.customerAddress}</td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td class="details-label">Paiement :</td>
+                  <td class="details-val" style="color: #0d63ff;">Espèces à la livraison</td>
+                </tr>
+              </table>
+
+              <!-- Ordered Items -->
+              <div class="section-title">Articles commandés</div>
+              <table class="items-table" cellpadding="0" cellspacing="0">
+                <thead>
+                  <tr>
+                    <th style="text-align: left;">Article</th>
+                    <th style="text-align: center; width: 50px;">Qté</th>
+                    <th style="text-align: right; width: 80px;">Prix Unit.</th>
+                    <th style="text-align: right; width: 90px;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemsRows}
+                </tbody>
+              </table>
+
+              <!-- Totals Breakdown -->
+              <table class="totals-table" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color: #64748b;">Sous-total :</td>
+                  <td style="text-align: right; font-weight: 700; color: #061a3a; font-family: monospace;">${formatTnd(params.subtotal)}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b;">Frais de livraison (${params.customerCity}) :</td>
+                  <td style="text-align: right; font-weight: 700; color: #061a3a; font-family: monospace;">${formatTnd(params.shippingCost)}</td>
+                </tr>
+                ${params.discount ? `
+                <tr>
+                  <td style="color: #027a48; font-weight: 600;">Remise code promo :</td>
+                  <td style="text-align: right; font-weight: 700; color: #027a48; font-family: monospace;">-${formatTnd(params.discount)}</td>
+                </tr>
+                ` : ''}
+                <tr class="total-highlight">
+                  <td style="font-size: 15px; font-weight: 900; color: #061a3a; text-transform: uppercase;">Total à régler :</td>
+                  <td style="text-align: right; font-size: 18px; font-weight: 900; color: #0d63ff; font-family: monospace;">${formatTnd(params.total)}</td>
+                </tr>
+              </table>
+
+              <!-- Next step alert notice -->
+              <div class="notice-box">
+                <strong>📞 Prochaine étape :</strong> Notre service livraison vous contactera au <strong>${params.customerPhone}</strong> avant le passage du coursier pour confirmer le créneau horaire de livraison.
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+              <div class="footer-brand">Union Sportive Monastirienne</div>
+              <p style="margin: 0 0 8px; color: #94a3b8;">Une Ville, Un Cœur, Un Club • الاتحاد الرياضي المنستيري</p>
+              <p style="margin: 0 0 12px; color: #64748b;">Boutique Officielle en partenariat avec <a href="https://alphasportofficiel.com" target="_blank">alphasportofficiel.com</a></p>
+              <p style="margin: 0; font-size: 10px; color: #475569;">© ${new Date().getFullYear()} US Monastir. Tous droits réservés.</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendMail(params.to, subject, html, undefined, attachments);
+  }
+
+  /**
    * Generic low-level helper to send mail via Nodemailer SMTP
    */
-  async sendMail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
+  async sendMail(
+    to: string,
+    subject: string,
+    html: string,
+    text?: string,
+    attachments?: any[]
+  ): Promise<boolean> {
     try {
-      const info = await this.transporter.sendMail({
+      const mailOptions: any = {
         from: this.getFromAddress(),
         to,
         subject,
         html,
         text: text || subject,
-      });
+      };
+
+      if (attachments && attachments.length > 0) {
+        mailOptions.attachments = attachments;
+      }
+
+      const info = await this.transporter.sendMail(mailOptions);
 
       this.logger.log(`[SMTP] Email successfully dispatched to ${to} (MessageId: ${info.messageId})`);
       return true;
@@ -257,3 +509,4 @@ export class MailService {
     }
   }
 }
+

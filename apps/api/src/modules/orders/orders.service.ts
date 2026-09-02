@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order } from './order.schema';
@@ -19,6 +19,7 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<Product>,
@@ -114,19 +115,29 @@ export class OrdersService {
     }
     // Send confirmation email if email provided
     if (dto.customerEmail) {
-      const subject = 'Confirmation de votre commande';
-      const html = `
-        <html>
-        <body style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #0d63ff;">Merci pour votre commande</h2>
-          <p>Bonjour ${dto.customerName},</p>
-          <p>Nous confirmons la réception de votre commande <strong>${orderNumber}</strong> d'un montant de ${((dto.total || 0) / 1000).toFixed(3)} DT.</p>
-          <p>Vous recevrez bientôt plus de détails concernant la livraison.</p>
-          <p>À bientôt,</p>
-          <p>L'équipe US Monastir</p>
-        </body>
-        </html>`;
-      await this.mailService.sendMail(dto.customerEmail, subject, html);
+      try {
+        await this.mailService.sendOrderConfirmationEmail({
+          to: dto.customerEmail,
+          customerName: dto.customerName,
+          customerPhone: dto.customerPhone,
+          customerCity: dto.customerCity,
+          customerAddress: dto.customerAddress,
+          orderNumber,
+          items: calc.items.map((it: any) => ({
+            name: it.name,
+            size: it.size,
+            quantity: it.quantity,
+            price: it.price,
+            subtotal: it.subtotal,
+          })),
+          subtotal: calc.subtotal,
+          shippingCost: calc.shippingCost,
+          discount: calc.discount,
+          total: calc.total,
+        });
+      } catch (err: any) {
+        this.logger.error(`Failed to send order confirmation email: ${err.message}`, err.stack);
+      }
     }
 
     return saved;
