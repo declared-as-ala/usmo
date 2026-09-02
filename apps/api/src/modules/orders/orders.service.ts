@@ -102,6 +102,10 @@ export class OrdersService {
 
     const saved = await createdOrder.save();
 
+    if (calc.couponApplied) {
+      await this.cartService.incrementDiscountCodeUsage(calc.couponApplied);
+    }
+
     if (dto.userId) {
       await this.badgesService.unlock(dto.userId, 'first-order');
     }

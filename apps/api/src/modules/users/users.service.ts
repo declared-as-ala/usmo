@@ -237,6 +237,24 @@ export class UsersService {
     };
   }
 
+  async updateAdminProfile(id: string, name: string, email: string, actorId: string) {
+    const targetAdmin = await this.userModel.findById(id);
+    if (!targetAdmin) throw new NotFoundException('Administrateur introuvable');
+
+    if (email && email !== targetAdmin.email) {
+      const existing = await this.userModel.findOne({ email, _id: { $ne: id } });
+      if (existing) throw new ConflictException('Cet email est déjà utilisé par un autre compte.');
+      targetAdmin.email = email;
+      targetAdmin.emailVerified = false;
+    }
+
+    if (name) targetAdmin.name = name;
+    await targetAdmin.save();
+
+    await this.auditLogsService.logAction(actorId, 'admin_profile_updated', 'User', id);
+    return targetAdmin;
+  }
+
   async updateAdminRoleAndPermissions(
     id: string,
     role: string,

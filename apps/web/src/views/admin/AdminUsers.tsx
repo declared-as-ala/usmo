@@ -50,6 +50,8 @@ export default function AdminUsers() {
   // Edit / Role Change Modal
   const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
   const [editRole, setEditRole] = useState<'SUPER_ADMIN' | 'ADMIN' | 'USER'>('USER');
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -122,11 +124,16 @@ export default function AdminUsers() {
     if (!selectedUser) return;
     setSaving(true);
     try {
-      await api.updateAdminRole(selectedUser._id, editRole, editRole === 'SUPER_ADMIN' ? ['*'] : []);
+      if (editName !== selectedUser.name || editEmail !== selectedUser.email) {
+        await api.updateAdminProfile(selectedUser._id, { name: editName, email: editEmail });
+      }
+      if (editRole !== selectedUser.role) {
+        await api.updateAdminRole(selectedUser._id, editRole, editRole === 'SUPER_ADMIN' ? ['*'] : []);
+      }
       if (notes !== selectedUser.internalNotes) {
         await api.updateAdminUserNotes(selectedUser._id, notes);
       }
-      showToast(`Utilisateur ${selectedUser.name} mis à jour avec le rôle ${editRole}`, 'success');
+      showToast(`Utilisateur ${editName} mis à jour`, 'success');
       setSelectedUser(null);
       loadUsers();
     } catch (err: any) {
@@ -315,6 +322,8 @@ export default function AdminUsers() {
                               setEditRole(
                                 isSuper ? 'SUPER_ADMIN' : isAdmin ? 'ADMIN' : 'USER'
                               );
+                              setEditName(u.name || '');
+                              setEditEmail(u.email || '');
                               setNotes(u.internalNotes || '');
                             }}
                             className="p-1.5 text-slate-500 hover:text-usm-blue-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
@@ -370,6 +379,28 @@ export default function AdminUsers() {
               </button>
             </div>
             <form onSubmit={handleSaveUser} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nom Complet</label>
+                <input
+                  required
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 font-bold focus:outline-none focus:border-usm-blue-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Adresse Email</label>
+                <input
+                  required
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-slate-800 font-bold focus:outline-none focus:border-usm-blue-primary"
+                />
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Rôle Système (Permission)</label>
                 <select

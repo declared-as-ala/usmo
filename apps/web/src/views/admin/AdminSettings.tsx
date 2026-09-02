@@ -1,24 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { Settings as SettingsIcon, Check } from 'lucide-react';
 import { MediaUploader } from '../../components/Admin/MediaUploader';
 import { tr } from '../../utils/i18n';
+import { api } from '../../lib/api-client';
 import Link from 'next/link';
 
 export default function AdminSettings() {
   const { clubSettings, updateClubSettings, language } = useApp();
   const [form, setForm] = useState(clubSettings);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setForm(clubSettings);
+  }, [clubSettings]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateClubSettings(form);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(true);
+    try {
+      const result = await api.updateClubSettings(form as unknown as Record<string, unknown>);
+      updateClubSettings(result || form);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err: any) {
+      console.error('Failed to save club settings:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -176,11 +190,11 @@ export default function AdminSettings() {
         <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <button
             type="submit"
-            disabled={logoUploading}
+            disabled={logoUploading || saving}
             className="px-6 py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase tracking-wider rounded-xl cursor-pointer transition-all duration-300 shadow-lg shadow-usm-blue-primary/15 flex items-center gap-1.5 w-fit disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {logoUploading ? (
-              tr(language, 'Uploading image…', 'Envoi de l’image…', 'جارٍ رفع الصورة…')
+            {logoUploading || saving ? (
+              tr(language, 'Saving…', 'Enregistrement…', 'جارٍ الحفظ…')
             ) : saved ? (
               <>
                 <Check size={14} /> {tr(language, 'Saved Settings', 'Paramètres enregistrés', 'تم حفظ الإعدادات')}

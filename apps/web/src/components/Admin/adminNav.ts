@@ -24,6 +24,8 @@ import {
   Crown,
   MapPin,
   Mail,
+  ClipboardList,
+  Percent,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -74,6 +76,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: 'Synchronisation Sportive', href: '/admin/sports-sync', icon: Radio },
       { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
+      { label: 'Discount Codes', href: '/admin/discount-codes', icon: Percent },
       { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
       { label: 'Campagnes Email', href: '/admin/campaigns', icon: Mail, permission: 'users.edit' },
     ],
@@ -84,6 +87,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Administrateurs', href: '/admin/administrateurs', icon: ShieldCheck, superAdminOnly: true, permission: 'admins.view' },
       { label: 'Configuration Sports', href: '/admin/settings/sports', icon: Radio, superAdminOnly: true },
       { label: 'Notifications', href: '/admin/notifications', icon: Bell },
+      { label: 'Audit Logs', href: '/admin/audit-logs', icon: ClipboardList, superAdminOnly: true },
       { label: 'Settings', href: '/admin/settings', icon: Settings, permission: 'settings.view' },
       { label: 'SEO Config', href: '/admin/seo', icon: Search },
     ],

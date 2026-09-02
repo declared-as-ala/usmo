@@ -72,4 +72,34 @@ export class CartController {
   async deletePickupPoint(@Param('id') id: string) {
     return this.cartService.deletePickupPoint(id);
   }
+
+  // Admin: Manage Discount Codes
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Get('discount-codes')
+  async getDiscountCodes() {
+    return this.cartService.findDiscountCodes();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Post('discount-codes')
+  async createDiscountCode(@Body() dto: any) {
+    return this.cartService.createDiscountCode(dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Patch('discount-codes/:id')
+  async updateDiscountCode(@Param('id') id: string, @Body() dto: any) {
+    return this.cartService.updateDiscountCode(id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Delete('discount-codes/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteDiscountCode(@Param('id') id: string) {
+    return this.cartService.deleteDiscountCode(id);
+  }
 }

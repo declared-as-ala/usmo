@@ -103,6 +103,17 @@ export class AdminUsersController {
     });
   }
 
+  @Patch('administrateurs/:id/profile')
+  @Roles('SUPER_ADMIN')
+  @Permissions('admins.edit')
+  updateAdminProfile(
+    @Param('id') id: string,
+    @Body() body: { name: string; email: string },
+    @Req() req: any,
+  ) {
+    return this.usersService.updateAdminProfile(id, body.name, body.email, req.user._id || req.user.id);
+  }
+
   @Patch('administrateurs/:id/role')
   @Roles('SUPER_ADMIN')
   @Permissions('admins.assign_roles')

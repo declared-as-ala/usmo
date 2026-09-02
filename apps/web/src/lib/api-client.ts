@@ -86,6 +86,10 @@ export const api = {
   updateHomepageSettings: (data: Record<string, unknown>) => fetchJson('/admin/settings/homepage', {
     method: 'PATCH', body: JSON.stringify(data),
   }),
+  getClubSettings: () => fetchJson('/settings/club'),
+  updateClubSettings: (data: Record<string, unknown>) => fetchJson('/admin/settings/club', {
+    method: 'PATCH', body: JSON.stringify(data),
+  }),
 
   // ── News / Actualities (Public) ────────────────────────────────────────────
   getNews: (params: Record<string, string | number | undefined> = {}) => {
@@ -129,9 +133,13 @@ export const api = {
   getCategories: () => fetchJson('/categories'),
   getCollections: () => fetchJson('/collections'),
 
-  // Cart & Checkout
+  // Admin — Cart / Delivery / Pickup / Discount Codes
   getDeliveryZones: () => fetchJson('/cart/delivery-zones'),
   getPickupPoints: () => fetchJson('/cart/pickup-points'),
+  getDiscountCodes: () => fetchJson('/cart/discount-codes'),
+  createDiscountCode: (data: any) => fetchJson('/cart/discount-codes', { method: 'POST', body: JSON.stringify(data) }),
+  updateDiscountCode: (id: string, data: any) => fetchJson(`/cart/discount-codes/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteDiscountCode: (id: string) => fetchJson(`/cart/discount-codes/${id}`, { method: 'DELETE' }),
   calculateCart: (data: {
     items: { productId: string; size: string; quantity: number }[];
     deliveryZoneId?: string;
@@ -877,6 +885,10 @@ export const api = {
   updateAdminRole: (id: string, role: string, permissions: string[] = []) => fetchJson(`/admin/administrateurs/${id}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ role, permissions }),
+  }),
+  updateAdminProfile: (id: string, data: { name: string; email: string }) => fetchJson(`/admin/administrateurs/${id}/profile`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   }),
   createAdminInvitation: (data: any) => fetchJson('/admin/administrateurs', {
     method: 'POST',

@@ -92,19 +92,24 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
   }, [isOpen, type, search]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const fileList = e.target.files;
+    if (!fileList || fileList.length === 0) return;
 
+    const fileArray = Array.from(fileList);
     setUploading(true);
     setUploadError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', folderFilter || 'temp');
-      const result = await api.uploadMedia(formData);
-      setFiles((prev) => [result, ...prev]);
-      setSelected(result);
+      const uploaded: MediaFile[] = [];
+      for (const file of fileArray) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', folderFilter || 'temp');
+        const result = await api.uploadMedia(formData);
+        uploaded.push(result);
+      }
+      setFiles((prev) => [...uploaded, ...prev]);
+      if (uploaded.length > 0) setSelected(uploaded[uploaded.length - 1]);
     } catch (err: any) {
       setUploadError(err.message || 'Upload failed');
     } finally {
@@ -151,6 +156,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
             <label className="relative cursor-pointer">
               <input
                 type="file"
+                multiple
                 accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm"
                 onChange={handleUpload}
                 className="hidden"
@@ -163,7 +169,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({
                   : 'bg-usm-blue-primary text-white hover:bg-usm-blue-primary/90'}
               `}>
                 {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-                {uploading ? 'Uploading…' : 'Upload'}
+                {uploading ? 'Uploading…' : 'Upload Files'}
               </span>
             </label>
 

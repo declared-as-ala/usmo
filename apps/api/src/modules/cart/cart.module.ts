@@ -4,6 +4,7 @@ import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 import { DeliveryZone, DeliveryZoneSchema } from './delivery-zone.schema';
 import { PickupPoint, PickupPointSchema } from './pickup-point.schema';
+import { DiscountCode, DiscountCodeSchema } from './discount-code.schema';
 import { Product, ProductSchema } from '../products/product.schema';
 import { MembershipsModule } from '../memberships/memberships.module';
 
@@ -12,6 +13,7 @@ import { MembershipsModule } from '../memberships/memberships.module';
     MongooseModule.forFeature([
       { name: DeliveryZone.name, schema: DeliveryZoneSchema },
       { name: PickupPoint.name, schema: PickupPointSchema },
+      { name: DiscountCode.name, schema: DiscountCodeSchema },
       { name: Product.name, schema: ProductSchema },
     ]),
     MembershipsModule,

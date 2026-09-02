@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { DeliveryZone } from './delivery-zone.schema';
 import { PickupPoint } from './pickup-point.schema';
+import { DiscountCode } from './discount-code.schema';
 import { Product } from '../products/product.schema';
 import { MembershipsService } from '../memberships/memberships.service';
 
@@ -24,6 +25,7 @@ export class CartService {
   constructor(
     @InjectModel(DeliveryZone.name) private deliveryZoneModel: Model<DeliveryZone>,
     @InjectModel(PickupPoint.name) private pickupPointModel: Model<PickupPoint>,
+    @InjectModel(DiscountCode.name) private discountCodeModel: Model<DiscountCode>,
     @InjectModel(Product.name) private productModel: Model<Product>,
     private readonly membershipsService: MembershipsService,
   ) {}
@@ -98,14 +100,17 @@ export class CartService {
     let couponDiscountPercent = 0;
     if (dto.couponCode) {
       const code = dto.couponCode.toUpperCase().trim();
-      if (code === 'USM10') {
-        couponDiscountPercent = 10;
-      } else if (code === 'USM20') {
-        couponDiscountPercent = 20;
-      } else if (code === 'SUPPORTER') {
-        couponDiscountPercent = 15;
-      } else {
+      const discountCode = await this.discountCodeModel.findOne({ code }).exec();
+      if (!discountCode) {
         errors.push(`Code promo invalide: ${dto.couponCode}`);
+      } else if (!discountCode.active) {
+        errors.push(`Code promo désactivé: ${dto.couponCode}`);
+      } else if (discountCode.expiresAt && discountCode.expiresAt < new Date()) {
+        errors.push(`Code promo expiré: ${dto.couponCode}`);
+      } else if (discountCode.maxUses && discountCode.usedCount >= discountCode.maxUses) {
+        errors.push(`Code promo épuisé: ${dto.couponCode}`);
+      } else {
+        couponDiscountPercent = discountCode.discountPercent;
       }
     }
 
@@ -168,5 +173,36 @@ export class CartService {
 
   async deletePickupPoint(id: string) {
     await this.pickupPointModel.findByIdAndDelete(id).exec();
+  }
+
+  // Admin: Discount Code CRUD
+  async findDiscountCodes() {
+    return this.discountCodeModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async createDiscountCode(dto: any) {
+    const code = dto.code?.toUpperCase().trim();
+    const exists = await this.discountCodeModel.findOne({ code }).exec();
+    if (exists) throw new Error(`Ce code promo existe déjà: ${code}`);
+    return new this.discountCodeModel({ ...dto, code }).save();
+  }
+
+  async updateDiscountCode(id: string, dto: any) {
+    const update: any = { ...dto };
+    if (dto.code) update.code = dto.code.toUpperCase().trim();
+    const code = await this.discountCodeModel.findByIdAndUpdate(id, update, { new: true }).exec();
+    if (!code) throw new Error(`Code promo introuvable: ${id}`);
+    return code;
+  }
+
+  async deleteDiscountCode(id: string) {
+    await this.discountCodeModel.findByIdAndDelete(id).exec();
+  }
+
+  async incrementDiscountCodeUsage(code: string) {
+    await this.discountCodeModel.updateOne(
+      { code: code.toUpperCase().trim() },
+      { $inc: { usedCount: 1 } },
+    ).exec();
   }
 }

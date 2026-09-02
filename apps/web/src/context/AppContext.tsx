@@ -818,6 +818,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
   }, []);
 
+  // Fetch club settings (social links, contact info) from backend API on mount
+  useEffect(() => {
+    api.getClubSettings()
+      .then((data: any) => {
+        if (data) {
+          setClubSettings({
+            clubName: data.clubName || defaultClubSettings.clubName,
+            logoUrl: data.logoUrl || defaultClubSettings.logoUrl,
+            contactEmail: data.contactEmail || defaultClubSettings.contactEmail,
+            contactPhone: data.contactPhone || defaultClubSettings.contactPhone,
+            address: data.address || defaultClubSettings.address,
+            facebook: data.facebook ?? defaultClubSettings.facebook,
+            instagram: data.instagram ?? defaultClubSettings.instagram,
+            youtube: data.youtube ?? defaultClubSettings.youtube,
+            twitter: data.twitter ?? defaultClubSettings.twitter,
+            tiktok: data.tiktok ?? defaultClubSettings.tiktok,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     if (typeof window !== 'undefined') {

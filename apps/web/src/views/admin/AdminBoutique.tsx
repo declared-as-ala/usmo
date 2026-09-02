@@ -11,6 +11,7 @@ import { requestConfirmation } from '../../components/Common/ConfirmDialog';
 
 const BADGES = ['new', 'bestseller', 'limited', 'lowStock', 'soldOut', 'official'];
 const SPORTS = ['football', 'basketball', 'club', 'academy', 'fans'];
+const LOW_STOCK_THRESHOLD = 5;
 const DEFAULT_BOUTIQUE_BANNER = {
   isActive: true,
   eyebrow: 'BOUTIQUE OFFICIELLE',
@@ -463,6 +464,42 @@ export default function AdminBoutique() {
           )}
         </div>
       </div>
+
+      {/* Low stock alerts */}
+      {!loading && !error && (
+        <>
+          {(() => {
+            const lowStock = products.filter((p) => {
+              const stock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
+              return stock > 0 && stock <= LOW_STOCK_THRESHOLD;
+            });
+            if (lowStock.length === 0) return null;
+            return (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-xs">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle size={16} className="text-amber-600" />
+                  <h3 className="text-sm font-black text-amber-800">Alertes stock faible</h3>
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold">{lowStock.length}</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {lowStock.map((p) => {
+                    const stock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
+                    return (
+                      <div key={p._id} className="flex items-center gap-3 bg-white border border-amber-100 rounded-xl p-2.5">
+                        <img src={p.coverImage} alt="" className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">{p.name}</p>
+                          <p className="text-[10px] text-amber-700 font-bold">{stock} unité{stock > 1 ? 's' : ''} restante{stock > 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+        </>
+      )}
 
       {/* Loading / Error / Products Table */}
       {loading ? (
