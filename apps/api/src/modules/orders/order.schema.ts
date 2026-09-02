@@ -12,6 +12,12 @@ export class OrderItem extends Document {
   @Prop({ type: String, required: true })
   size: string;
 
+  @Prop({ type: String })
+  color?: string;
+
+  @Prop({ type: String })
+  image?: string;
+
   @Prop({ type: Number, required: true })
   quantity: number;
 
@@ -27,7 +33,7 @@ export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 @Schema()
 export class StatusHistoryEntry extends Document {
   @Prop({ type: String, required: true })
-  status: 'pending' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled' | 'tentative';
 
   @Prop({ type: Date, required: true, default: Date.now })
   updatedAt: Date;
@@ -50,6 +56,7 @@ export class Order extends Document {
     type: {
       name: { type: String, required: true },
       phone: { type: String, required: true },
+      phone2: { type: String },
       city: { type: String, required: true },
       address: { type: String },
       email: { type: String },
@@ -59,6 +66,7 @@ export class Order extends Document {
   customer: {
     name: string;
     phone: string;
+    phone2?: string;
     city: string;
     address?: string;
     email?: string;
@@ -94,14 +102,29 @@ export class Order extends Document {
   @Prop({
     type: String,
     required: true,
-    enum: ['pending', 'confirmed', 'prepared', 'shipped', 'delivered', 'cancelled'],
+    enum: ['pending', 'confirmed', 'prepared', 'shipped', 'delivered', 'cancelled', 'tentative'],
     default: 'pending',
     index: true,
   })
-  status: 'pending' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'prepared' | 'shipped' | 'delivered' | 'cancelled' | 'tentative';
 
   @Prop({ type: [StatusHistoryEntrySchema], default: [] })
   statusHistory: StatusHistoryEntry[];
+
+  @Prop({ type: String })
+  shippingCompany?: string;
+
+  @Prop({ type: String })
+  trackingNumber?: string;
+
+  @Prop({ type: String })
+  privateNote?: string;
+
+  @Prop({ type: Boolean, default: false })
+  isExchange?: boolean;
+
+  @Prop({ type: Date })
+  confirmedAt?: Date;
 
   @Prop({ type: String })
   notes?: string;

@@ -48,6 +48,17 @@ export class OrdersController {
     return this.ordersService.updateStatus(id, body.status, body.notes);
   }
 
+  // Admin only: Update order details (drawer edit)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.ordersService.update(id, body);
+  }
+
   // Admin only: Delete an order
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Super Admin')

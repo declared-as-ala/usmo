@@ -237,6 +237,45 @@ export class OrdersService {
     return saved;
   }
 
+  async update(id: string, dto: any): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
+    if (!order) {
+      throw new NotFoundException('Commande introuvable');
+    }
+
+    if (dto.status && dto.status !== order.status) {
+      await this.updateStatus(id, dto.status, dto.notes || dto.privateNote);
+    }
+
+    const updated = await this.orderModel.findById(id).exec();
+    if (!updated) {
+      throw new NotFoundException('Commande introuvable');
+    }
+
+    if (dto.customer) {
+      updated.customer = {
+        name: dto.customer.name ?? updated.customer.name,
+        phone: dto.customer.phone ?? updated.customer.phone,
+        phone2: dto.customer.phone2 ?? (updated.customer as any).phone2,
+        city: dto.customer.city ?? updated.customer.city,
+        address: dto.customer.address ?? updated.customer.address,
+        email: dto.customer.email ?? updated.customer.email,
+      };
+    }
+
+    if (dto.shippingCompany !== undefined) updated.shippingCompany = dto.shippingCompany;
+    if (dto.trackingNumber !== undefined) updated.trackingNumber = dto.trackingNumber;
+    if (dto.privateNote !== undefined) updated.privateNote = dto.privateNote;
+    if (dto.isExchange !== undefined) updated.isExchange = dto.isExchange;
+    if (dto.notes !== undefined) updated.notes = dto.notes;
+    if (dto.items !== undefined) updated.items = dto.items;
+    if (dto.subtotal !== undefined) updated.subtotal = dto.subtotal;
+    if (dto.shippingCost !== undefined) updated.shippingCost = dto.shippingCost;
+    if (dto.total !== undefined) updated.total = dto.total;
+
+    return updated.save();
+  }
+
   async delete(id: string): Promise<void> {
     const order = await this.orderModel.findById(id).exec();
     if (!order) {

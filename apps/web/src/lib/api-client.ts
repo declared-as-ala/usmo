@@ -409,6 +409,10 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ status, notes }),
   }),
+  updateOrder: (id: string, data: any) => fetchJson(`/orders/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
   deleteOrder: (id: string) => fetchJson(`/orders/${id}`, {
     method: 'DELETE',
   }),
