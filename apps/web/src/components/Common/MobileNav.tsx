@@ -17,7 +17,7 @@ export const MobileNav: React.FC = () => {
   const primaryTabs: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
     { screen: 'home', label: t('nav.home'), icon: <Home size={19} strokeWidth={2} /> },
     { screen: 'matches', label: t('nav.matches'), icon: <Trophy size={19} strokeWidth={2} /> },
-    { screen: 'news', label: t('nav.news'), icon: <Newspaper size={19} strokeWidth={2} /> },
+    { screen: 'boutique', label: t('nav.boutique'), icon: <ShoppingBag size={19} strokeWidth={2} /> },
     ...(isLoggedIn ? [{ screen: 'fanzone' as const, label: 'Fan Zone', icon: <Sparkles size={19} strokeWidth={2} /> }] : []),
   ];
 
@@ -28,7 +28,7 @@ export const MobileNav: React.FC = () => {
     { screen: 'histoire', label: 'Histoire', icon: <Landmark size={17} /> },
     { screen: 'palmares', label: 'Palmarès', icon: <Trophy size={17} /> },
     { screen: 'legendes', label: 'Légendes', icon: <Crown size={17} /> },
-    { screen: 'stadium', label: 'Stade', icon: <Map size={17} /> },
+    { screen: 'stadium', label: 'Guide du stade', icon: <Map size={17} /> },
     { screen: 'contact', label: 'Contact', icon: <Phone size={17} /> },
   ];
 
@@ -121,12 +121,12 @@ export const MobileNav: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 }}
                     onClick={() => handleTabClick(item.screen)}
-                    className="flex items-center gap-2.5 p-3 rounded-2xl bg-usm-blue-soft border border-usm-border hover:border-usm-blue-dark/30 hover:bg-usm-blue-dark/10 text-slate-700 hover:text-usm-blue-dark text-xs font-semibold cursor-pointer transition-all"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-usm-blue-soft border border-usm-border hover:border-usm-blue-dark/30 hover:bg-usm-blue-dark/10 text-slate-700 hover:text-usm-blue-dark text-xs font-semibold cursor-pointer transition-all min-w-0"
                   >
-                    <span className="h-8 w-8 rounded-full bg-usm-blue-dark/10 border border-usm-blue-dark/25 flex items-center justify-center text-usm-blue-dark shrink-0">
+                    <span className="h-7 w-7 rounded-full bg-usm-blue-dark/10 border border-usm-blue-dark/25 flex items-center justify-center text-usm-blue-dark shrink-0">
                       {item.icon}
                     </span>
-                    <span>{item.label}</span>
+                    <span className="truncate text-xs font-semibold leading-tight">{item.label}</span>
                   </motion.button>
                 ))}
               </div>

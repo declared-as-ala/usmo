@@ -69,10 +69,7 @@ export const Contact: React.FC = () => {
           }}
         />
         <div className="relative z-10 px-6 py-16 sm:px-12 sm:py-20">
-          <span className="inline-flex items-center gap-2 rounded-full border border-usm-accent-gold/40 bg-usm-accent-gold/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-usm-accent-gold">
-            <Mail size={13} /> {tr(language, 'Get in touch', 'Contact', 'اتصل بنا')}
-          </span>
-          <h1 className="mt-5 max-w-2xl font-display text-3xl font-black uppercase leading-tight tracking-wide text-white sm:text-5xl">
+          <h1 className="max-w-2xl font-display text-3xl font-black uppercase leading-tight tracking-wide text-white sm:text-5xl">
             {tr(language, 'Contact Union Sportive Monastirienne', "Contacter l'Union Sportive Monastirienne", 'اتصل بالاتحاد الرياضي المنستيري')}
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-6 text-slate-300">

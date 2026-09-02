@@ -355,6 +355,21 @@ export const Home: React.FC = () => {
                   ? `${(p.price / 1000).toFixed(3)} DT`
                   : (p.price || '0.000 DT');
                 const title = language === 'ar' ? (p.nameAr || p.name) : (p.nameFr || p.name);
+                const rawBadge = p.badges?.[0] || (p.category ? p.category : null);
+                const badgeMap: Record<string, { fr: string; ar: string; en: string }> = {
+                  new: { fr: 'Nouveau', ar: 'جديد', en: 'New' },
+                  limited: { fr: 'Limité', ar: 'محدود', en: 'Limited' },
+                  bestseller: { fr: 'Meilleure Vente', ar: 'الأكثر مبيعاً', en: 'Best Seller' },
+                  official: { fr: 'Officiel', ar: 'رسمي', en: 'Official' },
+                  jerseys: { fr: 'Maillots', ar: 'أقمصة', en: 'Jerseys' },
+                  jersey: { fr: 'Maillot', ar: 'قميص', en: 'Jersey' },
+                  apparel: { fr: 'Vêtements', ar: 'ملابس', en: 'Apparel' },
+                  accessories: { fr: 'Accessoires', ar: 'إكسسوارات', en: 'Accessories' },
+                };
+                const badgeKey = rawBadge ? String(rawBadge).toLowerCase().trim() : '';
+                const badge = badgeKey && badgeMap[badgeKey]
+                  ? (language === 'ar' ? badgeMap[badgeKey].ar : language === 'fr' ? badgeMap[badgeKey].fr : badgeMap[badgeKey].en)
+                  : rawBadge;
                 const productSlug = p.slug || p._id || p.id;
                 const discount = p.oldPrice && p.oldPrice > p.price
                   ? Math.round((1 - p.price / p.oldPrice) * 100)

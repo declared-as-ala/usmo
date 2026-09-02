@@ -189,12 +189,8 @@ async function bootstrap() {
   console.log('[USM SEEDER] Seeding delivery zones...');
   await deliveryZoneModel.deleteMany({});
   const zones = [
-    { name: 'Monastir Ville', nameFr: 'Monastir Ville', nameAr: 'المنستير المدينة', price: 4000, active: true },
-    { name: 'Sahel Region (Sousse, Mahdia)', nameFr: 'Région du Sahel (Sousse, Mahdia)', nameAr: 'جهة الساحل (سوسة، المهدية)', price: 6000, active: true },
-    { name: 'Grand Tunis', nameFr: 'Grand Tunis', nameAr: 'تونس الكبرى', price: 7000, active: true },
-    { name: 'Sfax / Center', nameFr: 'Sfax / Centre', nameAr: 'صفاقس / الوسط', price: 8000, active: true },
-    { name: 'North & West Governorates', nameFr: 'Gouvernorats du Nord & Ouest', nameAr: 'ولايات الشمال والغرب', price: 9000, active: true },
-    { name: 'South Governorates', nameFr: 'Gouvernorats du Sud', nameAr: 'ولايات الجنوب', price: 10000, active: true },
+    { name: 'Monastir', nameFr: 'Monastir (Livraison locale)', nameAr: 'المنستير (توصيل المحلي)', price: 4000, active: true },
+    { name: 'Autres Gouvernorats (23 régions)', nameFr: 'Autres Gouvernorats (23 régions)', nameAr: 'ولايات أخرى (23 ولاية)', price: 8000, active: true },
   ];
   await deliveryZoneModel.insertMany(zones);
   console.log(`[USM SEEDER] Seeded ${zones.length} delivery zones.`);

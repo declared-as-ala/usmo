@@ -55,6 +55,41 @@ export default function AdminOrders() {
   const [dialingOrder, setDialingOrder] = useState<BackendOrder | null>(null);
   const [callConnected, setCallConnected] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [zones, setZones] = useState<any[]>([]);
+  const [editingPrice, setEditingPrice] = useState<Record<string, string>>({});
+  const [savingZoneId, setSavingZoneId] = useState<string | null>(null);
+
+  const loadZones = useCallback(async () => {
+    try {
+      const z = await api.getDeliveryZones();
+      setZones(z || []);
+      const initPrices: Record<string, string> = {};
+      (z || []).forEach((item: any) => {
+        initPrices[item._id] = ((item.price || 0) / 1000).toString();
+      });
+      setEditingPrice(initPrices);
+    } catch (err) {}
+  }, []);
+
+  useEffect(() => {
+    loadZones();
+  }, [loadZones]);
+
+  const handleUpdateZonePrice = async (zoneId: string) => {
+    const val = parseFloat(editingPrice[zoneId] || '0');
+    if (isNaN(val) || val < 0) return;
+    const millimes = Math.round(val * 1000);
+    setSavingZoneId(zoneId);
+    try {
+      await api.updateDeliveryZone(zoneId, { price: millimes });
+      await loadZones();
+      alert('Tarif de livraison mis à jour avec succès !');
+    } catch (err: any) {
+      alert(`Erreur: ${err.message}`);
+    } finally {
+      setSavingZoneId(null);
+    }
+  };
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -119,6 +154,51 @@ export default function AdminOrders() {
         <StatCard label="Livrées"    value={countByStatus('delivered')} icon={CheckCircle2}  accent="emerald" />
         <StatCard label="Annulées"   value={countByStatus('cancelled')} icon={XCircle}       accent="red"     />
       </div>
+
+      {/* Delivery Fee Admin Manager */}
+      {zones.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Truck size={16} className="text-usm-blue-primary" />
+                Tarifs de Livraison par Région
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Gérez les frais de livraison appliqués aux 24 gouvernorats lors du checkout (ex: 4 DT pour Monastir, 8 DT pour les autres régions).
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {zones.map((zone) => (
+              <div key={zone._id} className="p-3.5 border border-slate-200 rounded-xl bg-slate-50 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-800">{zone.nameFr || zone.name}</p>
+                  <p className="text-[10px] text-slate-500">Zone : {zone.name}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={editingPrice[zone._id] ?? ((zone.price || 0) / 1000)}
+                    onChange={(e) => setEditingPrice({ ...editingPrice, [zone._id]: e.target.value })}
+                    className="w-20 px-2 py-1 text-xs border border-slate-300 rounded-lg text-right font-mono font-bold bg-white"
+                  />
+                  <span className="text-xs font-bold text-slate-600">DT</span>
+                  <button
+                    onClick={() => handleUpdateZonePrice(zone._id)}
+                    disabled={savingZoneId === zone._id}
+                    className="px-3 py-1 bg-usm-blue-primary text-white text-[11px] font-bold rounded-lg hover:bg-usm-blue-hover transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    {savingZoneId === zone._id ? '...' : 'Enregistrer'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         {/* Filters */}

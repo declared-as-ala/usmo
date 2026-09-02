@@ -177,20 +177,21 @@ export const OfficialCatalog: React.FC = () => {
         <div className="relative mx-auto max-w-[1440px] px-4 pb-5 pt-24 sm:px-8 sm:pb-6 sm:pt-28 lg:px-12 lg:pb-7 lg:pt-28">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
             <div className="max-w-xl">
-              <h1 className="break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-[#020814] sm:text-4xl lg:text-4xl">
-                LA BOUTIQUE OFFICIELLE DE L’US MONASTIR
+              <h1 className="break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-4xl">
+                {hasAdminCopy && banner.title?.trim() ? banner.title.trim() : 'LA BOUTIQUE OFFICIELLE DE L’US MONASTIR'}
               </h1>
               <p className="mt-2.5 max-w-lg break-words text-sm leading-6 text-[#5B6B82] sm:text-base lg:mt-3">
-                {banner?.description || 'Découvrez les maillots, vêtements et accessoires officiels de l’US Monastir. Affichez vos couleurs et vivez votre passion au quotidien.'}
+                {hasAdminCopy && banner.description?.trim()
+                  ? banner.description.trim()
+                  : "Réservez vos maillots et manteaux officiels de l'US Monastir. Affichage en temps réel, payement en magasin ou en ligne."}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 lg:mt-4">
-                {/* Trust signals — one compact inline row instead of the old 4-row,
-                    full-width strip that used to push the catalogue down ~250px. */}
+                {/* Trust signals */}
                 <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[11px] font-bold text-[#5B6B82]">
                   <span className="inline-flex items-center gap-1.5"><ShieldCheck size={13} className="text-[#0D63FF]" />Articles officiels</span>
                   <span className="inline-flex items-center gap-1.5"><Truck size={13} className="text-[#0D63FF]" />Livraison</span>
-                  <span className="hidden items-center gap-1.5 lg:inline-flex"><MessageCircle size={13} className="text-[#0D63FF]" />Assistance</span>
+                  <span className="inline-flex items-center gap-1.5"><MessageCircle size={13} className="text-[#0D63FF]" />Assistance</span>
                 </div>
               </div>
             </div>

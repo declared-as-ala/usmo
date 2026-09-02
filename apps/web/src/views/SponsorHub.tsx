@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowRight, BarChart3, Check, ChevronRight, Download, ExternalLink,
+  ArrowRight, Check, Download, ExternalLink,
   Globe2, Handshake, LineChart, Mail, ShieldCheck, Sparkles,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -30,9 +30,7 @@ export const SponsorHub = () => {
   const { language } = useApp();
   const router = useRouter();
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
-  const [activeTab, setActiveTab] = useState<'public' | 'dashboard'>('public');
   const [categoryFilter, setCategoryFilter] = useState<(typeof CATEGORY_FILTERS)[number]>('all');
-  const [selectedSponsorId, setSelectedSponsorId] = useState('');
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [leadForm, setLeadForm] = useState(emptyLeadForm);
   const [leadSubmitting, setLeadSubmitting] = useState(false);
@@ -42,14 +40,8 @@ export const SponsorHub = () => {
   useEffect(() => {
     api.getSponsors().then((data: Sponsor[]) => {
       setSponsors(data);
-      setSelectedSponsorId(current => current || data[0]?._id || '');
     }).catch(() => setSponsors([])).finally(() => setLoading(false));
   }, []);
-
-  const activeSponsor = useMemo(
-    () => sponsors.find(s => s._id === selectedSponsorId) || sponsors[0],
-    [sponsors, selectedSponsorId],
-  );
 
   const visibleSponsors = useMemo(
     () => categoryFilter === 'all' ? sponsors : sponsors.filter(s => s.category === categoryFilter),
@@ -93,14 +85,7 @@ export const SponsorHub = () => {
       </div>
     </section>
 
-    <nav aria-label="Sections partenaires" className="sticky top-20 z-30 border-b border-usm-border bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl gap-2 px-4 py-3 sm:px-6 lg:px-8">
-        <Tab active={activeTab === 'public'} onClick={() => setActiveTab('public')} icon={<Handshake size={16}/>} label="Nos partenaires"/>
-        <Tab active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} icon={<BarChart3 size={16}/>} label="Espace performance"/>
-      </div>
-    </nav>
-
-    {activeTab === 'public' ? <main>
+    <main>
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div><p className="text-xs font-bold uppercase tracking-[.2em] text-usm-blue-primary">Ils nous font confiance</p><h2 className="mt-2 text-2xl font-black sm:text-4xl">Des alliances qui font avancer le club.</h2></div>
@@ -180,19 +165,11 @@ export const SponsorHub = () => {
           </div>
         </div>
       </section>
-    </main> : <Dashboard sponsors={sponsors} active={activeSponsor} selected={selectedSponsorId} onSelect={setSelectedSponsorId}/>}
+    </main>
   </div>;
 };
 
 function Stat({ value, label, icon }: { value: string; label: string; icon: React.ReactNode }) { return <div className="rounded-2xl border border-usm-border bg-white p-4 shadow-[0_10px_25px_-18px_rgba(13,99,255,0.25)] sm:p-5"><span className="text-usm-blue-primary">{icon}</span><strong className="mt-3 block text-xl font-black sm:text-2xl">{value}</strong><span className="mt-1 block text-[10px] uppercase tracking-wider text-[#7A8AA0]">{label}</span></div>; }
-function Tab({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) { return <button onClick={onClick} className={`flex min-h-11 items-center gap-2 rounded-lg px-4 text-xs font-bold transition cursor-pointer ${active ? 'bg-usm-blue-primary text-white' : 'text-[#5B6B82] hover:bg-usm-blue-soft hover:text-usm-blue-primary'}`}>{icon}{label}</button>; }
 function Benefit({ text }: { text: string }) { return <div className="flex items-center gap-3 rounded-xl border border-usm-border bg-white p-4 text-sm text-[#071A30]"><span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-usm-blue-primary/15 text-usm-blue-primary"><Check size={13}/></span>{text}</div>; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold text-[#5B6B82]">{label}</span>{children}</label>; }
 
-function Dashboard({ sponsors, active, selected, onSelect }: { sponsors: Sponsor[]; active?: Sponsor; selected: string; onSelect: (id: string) => void }) {
-  if (!active) return <div className="mx-auto max-w-7xl px-4 py-20 text-center text-[#7A8AA0]">Aucune campagne active.</div>;
-  const metrics = active.metrics || { impressions: 0, clicks: 0, ctr: 0 };
-  return <main className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[280px_1fr] lg:px-8"><aside className="rounded-2xl border border-usm-border bg-white p-4"><p className="mb-4 text-[10px] font-bold uppercase tracking-[.18em] text-usm-blue-primary">Campagnes actives</p><div className="space-y-2">{sponsors.map(s => <button key={s._id} onClick={() => onSelect(s._id)} className={`flex min-h-12 w-full items-center justify-between rounded-xl px-3 text-left text-xs font-bold transition cursor-pointer ${selected === s._id ? 'bg-usm-blue-primary text-white' : 'bg-usm-blue-soft/60 text-[#5B6B82] hover:bg-usm-blue-soft'}`}>{s.name}<ChevronRight size={14}/></button>)}</div></aside><section className="rounded-2xl border border-usm-border bg-white p-5 sm:p-7"><div className="flex items-center gap-4 border-b border-usm-border pb-6"><div className="flex h-16 w-28 items-center justify-center rounded-xl bg-usm-blue-soft/60 p-3"><SponsorLogo name={active.name} logo={active.logo} size={42} variant="dark" className="max-w-full"/></div><div><p className="text-[10px] uppercase tracking-wider text-usm-blue-primary">Performance partenaire</p><h2 className="mt-1 text-xl font-black">{active.name}</h2></div></div><div className="mt-6 grid gap-4 sm:grid-cols-3"><Metric label="Impressions" value={metrics.impressions.toLocaleString()}/><Metric label="Clics" value={metrics.clicks.toLocaleString()}/><Metric label="Taux de clic" value={`${metrics.ctr}%`}/></div><div className="mt-6 rounded-xl border border-usm-border bg-white p-6"><div className="flex items-center gap-2 text-sm font-bold"><LineChart size={17} className="text-usm-blue-primary"/> Répartition des impressions</div><div className="mt-7 space-y-5"><Progress label="Site officiel" value={55}/><Progress label="Match Center" value={30}/><Progress label="Fan Zone" value={15}/></div></div></section></main>;
-}
-function Metric({ label, value }: { label: string; value: string }) { return <div className="rounded-xl border border-usm-border bg-white p-5"><span className="text-[10px] uppercase tracking-wider text-[#7A8AA0]">{label}</span><strong className="mt-2 block text-2xl font-black text-usm-blue-primary">{value}</strong></div>; }
-function Progress({ label, value }: { label: string; value: number }) { return <div><div className="mb-2 flex justify-between text-xs text-[#5B6B82]"><span>{label}</span><span>{value}%</span></div><div className="h-2 overflow-hidden rounded-full bg-usm-blue-soft"><div className="h-full rounded-full bg-usm-blue-primary" style={{width: `${value}%`}}/></div></div>; }

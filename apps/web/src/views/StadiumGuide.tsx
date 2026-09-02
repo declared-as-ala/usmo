@@ -54,10 +54,7 @@ export const StadiumGuide: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(13,99,255,0.35),transparent_55%)]" />
           <div className="absolute inset-0 bg-gradient-to-t from-usm-blue-dark via-usm-blue-dark/55 to-transparent" />
           <div className="relative z-10 flex h-full flex-col justify-end p-6 sm:p-12">
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-usm-accent-gold px-3 py-1 text-[10px] font-black uppercase tracking-widest text-usm-blue-dark">
-              Guide matchday
-            </span>
-            <h1 className="mt-4 font-display text-3xl font-black uppercase leading-none tracking-wide text-white sm:text-6xl">
+            <h1 className="font-display text-3xl font-black uppercase leading-none tracking-wide text-white sm:text-6xl">
               {content?.heroTitle || 'Stades & Salles USM'}
             </h1>
             <p className="mt-3 max-w-lg text-xs text-slate-200 sm:text-sm">

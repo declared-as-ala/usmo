@@ -109,7 +109,7 @@ export default function InscriptionPage() {
               Créez votre compte en quelques secondes pour accéder à votre espace personnel, gérer vos informations et rester connecté à l’Union Sportive Monastirienne.
             </p>
             <div className="pt-4 border-t border-white/10 text-[11px] text-slate-400">
-              Fondé en 1923 · Fierté du Sahel
+              Fondé en 1923 · Union Sportive Monastirienne
             </div>
           </div>
         </div>
