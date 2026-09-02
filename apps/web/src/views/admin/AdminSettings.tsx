@@ -124,7 +124,7 @@ export default function AdminSettings() {
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-4">
             {tr(language, 'Social Media', 'Réseaux Sociaux', 'وسائل التواصل الاجتماعي')}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 tracking-wider">Facebook</label>
               <input
@@ -149,6 +149,24 @@ export default function AdminSettings() {
                 type="text"
                 value={form.youtube}
                 onChange={(e) => setForm((f) => ({ ...f, youtube: e.target.value }))}
+                className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl p-3 outline-none focus:border-usm-blue-primary focus:bg-white transition-all focus:ring-4 focus:ring-usm-blue-primary/5"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 tracking-wider">X / Twitter</label>
+              <input
+                type="text"
+                value={form.twitter}
+                onChange={(e) => setForm((f) => ({ ...f, twitter: e.target.value }))}
+                className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl p-3 outline-none focus:border-usm-blue-primary focus:bg-white transition-all focus:ring-4 focus:ring-usm-blue-primary/5"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5 tracking-wider">TikTok</label>
+              <input
+                type="text"
+                value={form.tiktok}
+                onChange={(e) => setForm((f) => ({ ...f, tiktok: e.target.value }))}
                 className="w-full bg-slate-50 border border-slate-200 text-xs rounded-xl p-3 outline-none focus:border-usm-blue-primary focus:bg-white transition-all focus:ring-4 focus:ring-usm-blue-primary/5"
               />
             </div>

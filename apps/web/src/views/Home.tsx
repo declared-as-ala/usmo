@@ -343,7 +343,7 @@ export const Home: React.FC = () => {
                 onClick={() => router.push('/boutique')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-lg self-start sm:self-auto cursor-pointer"
               >
-                <span>{language === 'ar' ? 'تصفح كل المغازة' : 'Voir toute la boutique'}</span>
+                <span>{language === 'ar' ? 'تصفح كل المغازة' : 'Découvrir plus de produits !'}</span>
                 <ArrowRight size={14} />
               </button>
             </div>
@@ -355,8 +355,11 @@ export const Home: React.FC = () => {
                   ? `${(p.price / 1000).toFixed(3)} DT`
                   : (p.price || '0.000 DT');
                 const title = language === 'ar' ? (p.nameAr || p.name) : (p.nameFr || p.name);
-                const badge = p.badges?.[0] || (p.category ? p.category : null);
                 const productSlug = p.slug || p._id || p.id;
+                const discount = p.oldPrice && p.oldPrice > p.price
+                  ? Math.round((1 - p.price / p.oldPrice) * 100)
+                  : 0;
+                const hasBadge = (badge: string) => p.badges?.some((item: string) => item.toLowerCase() === badge.toLowerCase());
 
                 return (
                   <div
@@ -365,11 +368,13 @@ export const Home: React.FC = () => {
                     className="group bg-white border border-[#DDE8F8] hover:border-usm-blue-primary/50 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
                   >
                     <div className="relative aspect-square overflow-hidden bg-slate-50 p-4 flex items-center justify-center">
-                      {badge && (
-                        <span className="absolute top-3 left-3 bg-[#071328]/85 backdrop-blur-md text-usm-teal-accent text-[9px] font-black uppercase px-2.5 py-0.5 rounded-md border border-white/10 z-10 shadow-xs">
-                          {badge}
-                        </span>
-                      )}
+                      <div className="absolute inset-x-3 top-3 flex flex-wrap gap-1.5 z-10">
+                        {hasBadge('new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
+                        {hasBadge('limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
+                        {hasBadge('bestseller') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Top</span>}
+                        {hasBadge('official') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Officiel</span>}
+                        {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
+                      </div>
                       <img
                         src={cover}
                         alt={title}

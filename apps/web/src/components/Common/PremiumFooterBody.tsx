@@ -24,7 +24,16 @@ const YouTubeIcon = () => (
 type Props = {
   language: AppLanguage;
   year: number;
-  settings: { facebook?: string; instagram?: string; address?: string; contactPhone?: string; contactEmail?: string };
+  settings: {
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    twitter?: string;
+    tiktok?: string;
+    address?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+  };
   navigate: (screen: string) => void;
   install: () => void;
 };
@@ -53,7 +62,7 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
       title: tr(language, 'Institutional', 'Institutionnel', 'المؤسسة'),
       links: [
         [tr(language, 'Sponsors', 'Partenaires', 'المستشهرون'), 'sponsors'],
-        [tr(language, 'Contact Us', 'Nous contacter', 'اتصل بنا'), 'contact']
+        [tr(language, 'Contact Us', 'Contact', 'اتصل بنا'), 'contact']
       ]
     },
   ];
@@ -84,11 +93,11 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
                   )}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Social href="https://www.facebook.com/usmonastir.official/" label="Facebook"><FacebookIcon/></Social>
-              <Social href="https://www.instagram.com/usmonastir.official" label="Instagram"><InstagramIcon/></Social>
-              <Social href="https://www.tiktok.com/@usmonastir.official" label="TikTok"><TikTokIcon/></Social>
-              <Social href="https://www.youtube.com/@usmonastir.official" label="YouTube"><YouTubeIcon/></Social>
-              <Social href="https://x.com/USMonastir_1923" label="X"><XIcon/></Social>
+              <Social href={settings.facebook || 'https://www.facebook.com/usmonastir.official/'} label="Facebook"><FacebookIcon/></Social>
+              <Social href={settings.instagram || 'https://www.instagram.com/usmonastir.official'} label="Instagram"><InstagramIcon/></Social>
+              <Social href={settings.tiktok || 'https://www.tiktok.com/@usmonastir.official'} label="TikTok"><TikTokIcon/></Social>
+              <Social href={settings.youtube || 'https://www.youtube.com/@usmonastir.official'} label="YouTube"><YouTubeIcon/></Social>
+              <Social href={settings.twitter || 'https://x.com/USMonastir_1923'} label="X"><XIcon/></Social>
             </div>
           </div>
 
@@ -100,7 +109,7 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
                 <ul className="mt-5 space-y-3">
                   {group.links.map(([label, screen]) => (
                     <li key={screen}>
-                      <button onClick={() => navigate(screen)} className="inline-flex min-h-6 items-center gap-1 text-sm text-slate-400 transition hover:translate-x-1 hover:text-usm-blue-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-usm-blue-primary">
+                      <button onClick={() => navigate(screen)} className="inline-flex min-h-6 cursor-pointer items-center gap-1 text-sm text-slate-400 transition hover:translate-x-1 hover:text-usm-blue-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-usm-blue-primary">
                         {label}
                       </button>
                     </li>

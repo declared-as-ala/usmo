@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowRight, Check, Filter, Heart, MessageCircle,
   PackageCheck, Search, ShieldCheck, ShoppingBag, SlidersHorizontal,
-  Sparkles, Truck, X,
+  Truck, X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { api } from '../lib/api-client';
@@ -147,12 +147,8 @@ export const OfficialCatalog: React.FC = () => {
       && (!badge || hasBadge(product, badge));
   }).sort((a, b) => sort === 'price_asc' ? a.price - b.price : sort === 'price_desc' ? b.price - a.price : sort === 'popularity_desc' ? (b.views || 0) - (a.views || 0) : sort === 'date_desc' ? new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime() : 0), [products, category, search, inStock, badge, sort]);
 
-  const featured = products.find(product => product.isFeatured) || products[0];
   const desktopBannerImage = banner?.desktopImageUrl || banner?.imageUrl || '';
   const hasAdminImage = Boolean(banner?.isActive && desktopBannerImage);
-  // Only trust admin copy once a real title has been written — an active banner with just
-  // an image (or a blank title) should never leak the CMS's "Votre campagne boutique" preview text.
-  const hasAdminCopy = Boolean(banner?.isActive && banner.title?.trim());
 
   const reset = () => { setCategory('all'); setBadge(''); setInStock(false); setSearch(''); };
   const browse = (slug = 'all') => { setCategory(slug); requestAnimationFrame(() => catalogueRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
@@ -181,29 +177,18 @@ export const OfficialCatalog: React.FC = () => {
         <div className="relative mx-auto max-w-[1440px] px-4 pb-5 pt-24 sm:px-8 sm:pb-6 sm:pt-28 lg:px-12 lg:pb-7 lg:pt-28">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
             <div className="max-w-xl">
-              <p className="inline-flex items-center gap-2 rounded-full border border-usm-border bg-usm-blue-soft px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[.2em] text-[#0D63FF]">
-                <Sparkles size={12} />{hasAdminCopy ? (banner.eyebrow || 'Boutique officielle') : 'Boutique officielle'}
-              </p>
-              <h1 className="mt-3 break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-4xl">
-                {hasAdminCopy ? banner.title.trim() : 'Portez les couleurs de Monastir'}
+              <h1 className="break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-[#020814] sm:text-4xl lg:text-4xl">
+                LA BOUTIQUE OFFICIELLE DE L’US MONASTIR
               </h1>
               <p className="mt-2.5 max-w-lg break-words text-sm leading-6 text-[#5B6B82] sm:text-base lg:mt-3">
-                {hasAdminCopy && banner.description?.trim()
-                  ? banner.description.trim()
-                  : 'Maillots, accessoires et packs supporters officiels de l’US Monastir.'}
+                {banner?.description || 'Découvrez les maillots, vêtements et accessoires officiels de l’US Monastir. Affichez vos couleurs et vivez votre passion au quotidien.'}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 lg:mt-4">
-                {hasAdminCopy && banner.ctaHref ? (
-                  <a href={banner.ctaHref} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">{banner.ctaLabel || 'Découvrir'}<ArrowRight size={15} /></a>
-                ) : (
-                  <button onClick={() => browse()} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0D63FF] px-5 text-sm font-black text-white shadow-[0_10px_25px_-8px_rgba(13,99,255,0.55)] transition hover:bg-usm-blue-hover">Voir les produits<ArrowRight size={15} /></button>
-                )}
                 {/* Trust signals — one compact inline row instead of the old 4-row,
                     full-width strip that used to push the catalogue down ~250px. */}
                 <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[11px] font-bold text-[#5B6B82]">
                   <span className="inline-flex items-center gap-1.5"><ShieldCheck size={13} className="text-[#0D63FF]" />Articles officiels</span>
-                  <span className="hidden items-center gap-1.5 sm:inline-flex"><Check size={13} className="text-[#0D63FF]" />Commande confirmée</span>
                   <span className="inline-flex items-center gap-1.5"><Truck size={13} className="text-[#0D63FF]" />Livraison</span>
                   <span className="hidden items-center gap-1.5 lg:inline-flex"><MessageCircle size={13} className="text-[#0D63FF]" />Assistance</span>
                 </div>

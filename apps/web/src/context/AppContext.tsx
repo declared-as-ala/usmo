@@ -369,7 +369,7 @@ const translations: { [lang: string]: { [key: string]: string } } = {
     'nav.palmares': 'Palmarès',
     'nav.legendes': 'Légendes',
     'nav.downloads': 'Téléchargements',
-    'nav.stadium': 'Guide du stade',
+    'nav.stadium': 'Stade',
     
     // Header/Search/Buttons
     'btn.discover': 'Découvrir le Club',

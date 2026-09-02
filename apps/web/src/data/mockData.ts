@@ -1241,6 +1241,8 @@ export interface ClubSettings {
   facebook: string;
   instagram: string;
   youtube: string;
+  twitter: string;
+  tiktok: string;
 }
 
 export const defaultClubSettings: ClubSettings = {
@@ -1252,6 +1254,8 @@ export const defaultClubSettings: ClubSettings = {
   facebook: 'https://facebook.com/usmonastir',
   instagram: 'https://instagram.com/usmonastir',
   youtube: 'https://youtube.com/@usmonastir',
+  twitter: 'https://x.com/USMonastir_1923',
+  tiktok: 'https://tiktok.com/@usmonastir.official',
 };
 
 export interface HomepageSection {

@@ -114,7 +114,6 @@ export const Header: React.FC = () => {
         { screen: 'palmares', labelKey: 'nav.palmares' },
         { screen: 'legendes', labelKey: 'nav.legendes' },
         { screen: 'stadium', labelKey: 'nav.stadium' },
-        { screen: 'telechargements', labelKey: 'nav.downloads' },
         { screen: 'contact', labelKey: 'nav.contact' },
       ],
     },
