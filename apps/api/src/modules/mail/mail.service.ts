@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import * as path from 'path';
 import * as fs from 'fs';
+import { USM_LOGO_BASE64, IBRAND_LOGO_BASE64 } from './mail-assets';
 
 @Injectable()
 export class MailService {
@@ -262,59 +263,26 @@ export class MailService {
   }): Promise<boolean> {
     const subject = `Confirmation de commande ${params.orderNumber} — US Monastir`;
 
-    // Try resolving logo from several possible runtime paths
-    const possibleLogoPaths = [
-      path.resolve(process.cwd(), 'apps/web/public/logo foot.png'),
-      path.resolve(process.cwd(), '../web/public/logo foot.png'),
-      path.resolve(__dirname, '../../../../web/public/logo foot.png'),
-      path.resolve(__dirname, '../../../web/public/logo foot.png'),
-    ];
-
-    let logoPath: string | null = null;
-    for (const p of possibleLogoPaths) {
-      if (fs.existsSync(p)) {
-        logoPath = p;
-        break;
-      }
-    }
-
-    // Try resolving iBrand sponsor logo
-    const possibleIbrandPaths = [
-      path.resolve(process.cwd(), 'apps/web/public/sponsors/ibrand-tunisia/logo.png'),
-      path.resolve(process.cwd(), '../web/public/sponsors/ibrand-tunisia/logo.png'),
-      path.resolve(__dirname, '../../../../web/public/sponsors/ibrand-tunisia/logo.png'),
-      path.resolve(__dirname, '../../../web/public/sponsors/ibrand-tunisia/logo.png'),
-    ];
-
-    let ibrandLogoPath: string | null = null;
-    for (const p of possibleIbrandPaths) {
-      if (fs.existsSync(p)) {
-        ibrandLogoPath = p;
-        break;
-      }
-    }
-
-    const attachments: any[] = [];
-    let logoImgSrc = 'https://usmonastir.tn/logo%20foot.png';
-
-    if (logoPath) {
-      attachments.push({
+    // Inline logo attachments from reliable in-memory buffers
+    const attachments = [
+      {
         filename: 'usm-logo.png',
-        path: logoPath,
+        content: Buffer.from(USM_LOGO_BASE64, 'base64'),
         cid: 'usm-logo',
-      });
-      logoImgSrc = 'cid:usm-logo';
-    }
-
-    let ibrandLogoSrc = 'https://ibrandtunisia.tn/logo.png';
-    if (ibrandLogoPath) {
-      attachments.push({
+        contentType: 'image/png',
+        contentDisposition: 'inline',
+      },
+      {
         filename: 'ibrand-logo.png',
-        path: ibrandLogoPath,
+        content: Buffer.from(IBRAND_LOGO_BASE64, 'base64'),
         cid: 'ibrand-logo',
-      });
-      ibrandLogoSrc = 'cid:ibrand-logo';
-    }
+        contentType: 'image/png',
+        contentDisposition: 'inline',
+      },
+    ];
+
+    const logoImgSrc = 'cid:usm-logo';
+    const ibrandLogoSrc = 'cid:ibrand-logo';
 
     const formatTnd = (m: number) => ((m || 0) / 1000).toFixed(3) + ' DT';
 

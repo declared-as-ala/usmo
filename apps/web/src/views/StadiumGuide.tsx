@@ -127,11 +127,20 @@ export const StadiumGuide: React.FC = () => {
                   </div>
                 </div>
 
-                {venue.services.length > 0 && (
+                {venue.services && venue.services.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {venue.services.map((s) => (
-                      <span key={s} className="text-[10px] font-bold text-usm-blue-primary bg-usm-blue-primary/10 px-2.5 py-1 rounded-full">{s}</span>
-                    ))}
+                    {venue.services
+                      .filter((s) => {
+                        const lower = s.toLowerCase().trim();
+                        return (
+                          !lower.includes('parking vip') &&
+                          !lower.includes('postes de secours') &&
+                          !lower.includes('vip lounges')
+                        );
+                      })
+                      .map((s) => (
+                        <span key={s} className="text-[10px] font-bold text-usm-blue-primary bg-usm-blue-primary/10 px-2.5 py-1 rounded-full">{s}</span>
+                      ))}
                   </div>
                 )}
 

@@ -16,7 +16,6 @@ import {
   Truck,
   RotateCcw,
   ShieldCheck,
-  Store,
   Ban,
   Sparkles,
   RotateCw,
@@ -608,15 +607,15 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                 </span>
               </div>
               <div className="p-3 bg-white border border-usm-border rounded-xl flex items-center gap-2">
-                <Truck className="text-usm-blue-primary shrink-0" size={16} />
+                <ShoppingBag className="text-usm-blue-primary shrink-0" size={16} />
                 <span className="text-[10px] font-bold text-slate-600 leading-tight">
-                  {tr(language, 'Reserve Online', 'Réserver en Ligne', 'حجز أونلاين')}
+                  {tr(language, 'Order Online', 'Commander en Ligne', 'طلب أونلاين')}
                 </span>
               </div>
               <div className="p-3 bg-white border border-usm-border rounded-xl flex items-center gap-2">
-                <Store className="text-usm-blue-primary shrink-0" size={16} />
+                <Truck className="text-usm-blue-primary shrink-0" size={16} />
                 <span className="text-[10px] font-bold text-slate-600 leading-tight">
-                  {tr(language, 'Pickup Available', 'Retrait en Boutique', 'استلام من المتجر')}
+                  {tr(language, 'Home Delivery 🚚', 'Livraison à Domicile 🚚', 'توصيل إلى المنزل 🚚')}
                 </span>
               </div>
               <div className="p-3 bg-white border border-usm-border rounded-xl flex items-center gap-2">
@@ -684,17 +683,17 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                 <p>
                   {tr(
                     language,
-                    'Delivery is available across Tunisia within 24–48h, or pick up your reservation directly at the official boutique next to Stade Mustapha Ben Jannet.',
-                    "La livraison est disponible dans toute la Tunisie sous 24 à 48h, ou retirez votre réservation directement à la boutique officielle à côté du Stade Mustapha Ben Jannet.",
-                    'التوصيل متاح في جميع أنحاء تونس خلال 24 إلى 48 ساعة. يمكنك أيضاً استلام طلبك من المغازة الرسمية بجانب ملعب مصطفى بن جنات.'
+                    'Home delivery is available across all of Tunisia within 24–48h via express courier.',
+                    'La livraison à domicile est disponible dans toute la Tunisie sous 24 à 48h par transporteur express.',
+                    'التوصيل السريع إلى المنزل متاح في جميع أنحاء تونس خلال 24 إلى 48 ساعة عبر ناقل سريع.'
                   )}
                 </p>
                 <p className="font-bold text-usm-blue-primary">
                   {tr(
                     language,
-                    'No online payment — settle in person or on delivery.',
-                    'Aucun paiement en ligne — réglez sur place ou à la livraison.',
-                    'بدون أي دفع إلكتروني — الدفع عند الاستلام فقط.'
+                    'No online payment — pay cash on delivery directly to the courier.',
+                    'Aucun paiement en ligne — réglez en espèces à la livraison auprès du transporteur.',
+                    'بدون أي دفع إلكتروني — الدفع نقداً عند استلام الطلب من الناقل.'
                   )}
                 </p>
               </div>

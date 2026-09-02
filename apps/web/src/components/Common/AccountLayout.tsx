@@ -39,7 +39,7 @@ export const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ childre
   const initials = (fan?.firstName?.[0] || fan?.name?.[0] || username?.[0] || 'U').toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#F6F9FF] text-[#071A30] py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F6F9FF] text-[#071A30] pt-24 sm:pt-28 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Account Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-[#DDE8F8] rounded-3xl p-6 shadow-sm">

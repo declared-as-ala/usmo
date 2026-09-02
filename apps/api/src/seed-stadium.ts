@@ -57,7 +57,7 @@ const venues = [
     addressAr: 'شارع ابن الجزار، المنستير 5000',
     directions: 'Parking disponible à la Porte B pour les VIP et à la Porte C pour les supporters.',
     directionsAr: 'يتوفر موقف سيارات عند البوابة ب لكبار الزوار وعند البوابة ج لبقية الأنصار.',
-    services: ['Parking VIP', 'Guichets', 'Postes de secours'],
+    services: ['Guichets'],
     displayOrder: 1,
   },
   {
@@ -72,7 +72,7 @@ const venues = [
     addressAr: 'المجمع الأولمبي بالمنستير',
     directions: 'Lignes de bus directes depuis l’aéroport international Habib Bourguiba de Monastir et les gares centrales.',
     directionsAr: 'خطوط حافلات مباشرة من مطار الحبيب بورقيبة الدولي بالمنستير ومن المحطات المركزية.',
-    services: ['VIP Lounges', 'Media Desk'],
+    services: ['Media Desk'],
     displayOrder: 2,
   },
 ];

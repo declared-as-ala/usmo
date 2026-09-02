@@ -7,6 +7,7 @@ import { tr } from '../../utils/i18n';
 import { Logo } from './Logo';
 import { Search, Globe, User, Menu, X, ShoppingBag, ChevronDown, Bell, Zap, Award, CreditCard, LifeBuoy, Crown, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '../../lib/api-client';
 
 const LANGUAGES: { code: 'en' | 'fr' | 'ar'; label: string; native: string }[] = [
@@ -402,58 +403,70 @@ export const Header: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.18 }}
+                        onMouseDown={(e) => e.stopPropagation()}
                         className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-64 bg-white border border-usm-border rounded-2xl shadow-2xl p-4 z-50 text-usm-blue-dark"
                       >
-                        <div className="flex items-center gap-3 border-b border-usm-border pb-3 mb-3">
-                          <div className="relative h-10 w-10 rounded-full bg-usm-blue-soft flex items-center justify-center border border-usm-border overflow-hidden shrink-0">
+                        <Link
+                          href="/compte"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 border-b border-usm-border pb-3 mb-3 hover:opacity-85 transition-opacity cursor-pointer block text-left rtl:text-right"
+                        >
+                          <div className="relative h-11 w-11 rounded-2xl bg-usm-blue-soft flex items-center justify-center border border-usm-border overflow-hidden shrink-0 shadow-sm">
                             {fan?.avatar ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img src={fan.avatar} alt={username} className="h-full w-full object-cover" />
                             ) : initials ? (
-                              <span className="text-xs font-black text-usm-blue-primary">{initials}</span>
+                              <span className="text-sm font-black text-usm-blue-primary">{initials}</span>
                             ) : (
                               <User size={18} className="text-slate-400" />
                             )}
                           </div>
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-bold text-usm-blue-dark truncate">{username || fan?.name || 'Utilisateur'}</h4>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm font-black text-usm-blue-dark truncate uppercase tracking-tight">{username || fan?.name || 'Supporter USM'}</h4>
                             <p className="text-[10px] text-slate-500 truncate">{fan?.email || ''}</p>
+                            <span className="inline-block text-[9px] font-bold text-usm-blue-primary uppercase tracking-wider mt-0.5">
+                              {tr(language, 'View Profile →', 'Voir mon profil →', 'عرض الحساب ←')}
+                            </span>
                           </div>
-                        </div>
+                        </Link>
 
                         <div className="space-y-1.5 mb-3">
                           {userRole === 'admin' && (
-                            <button
-                              onClick={() => {
-                                setProfileOpen(false);
-                                handleNavClick('admin');
-                              }}
-                              className="w-full py-2 px-3 border border-usm-danger/40 text-usm-danger text-[11px] font-bold uppercase tracking-wider text-left rtl:text-right rounded-xl hover:bg-usm-danger/10 transition-all cursor-pointer"
+                            <Link
+                              href="/admin"
+                              onClick={() => setProfileOpen(false)}
+                              className="w-full block py-2 px-3 border border-usm-danger/40 text-usm-danger text-[11px] font-bold uppercase tracking-wider text-left rtl:text-right rounded-xl hover:bg-usm-danger/10 transition-all cursor-pointer"
                             >
                               {tr(language, 'Admin Panel', 'Panneau Admin', 'لوحة التحكم')}
-                            </button>
+                            </Link>
                           )}
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte'); }}
-                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
+                          <Link
+                            href="/compte"
+                            onClick={() => setProfileOpen(false)}
+                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl bg-usm-blue-primary text-white text-[11px] font-black uppercase tracking-wider hover:bg-usm-blue-primary/95 transition-all cursor-pointer shadow-md shadow-usm-blue-primary/25 text-left rtl:text-right"
                           >
-                            <User size={13} />
-                            <span>{tr(language, 'My Profile', 'Mon profil', 'ملفي الشخصي')}</span>
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte/profil'); }}
+                            <span className="flex items-center gap-2">
+                              <User size={14} />
+                              <span>{tr(language, 'My Profile', 'Mon profil', 'ملفي الشخصي')}</span>
+                            </span>
+                            <span className="text-[10px] font-black opacity-80">→</span>
+                          </Link>
+                          <Link
+                            href="/compte/profil"
+                            onClick={() => setProfileOpen(false)}
                             className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
                           >
                             <Shield size={13} />
                             <span>{tr(language, 'Account Settings', 'Paramètres du compte', 'إعدادات الحساب')}</span>
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); router.push('/compte/securite'); }}
+                          </Link>
+                          <Link
+                            href="/compte/securite"
+                            onClick={() => setProfileOpen(false)}
                             className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
                           >
                             <Shield size={13} />
                             <span>{tr(language, 'Security', 'Sécurité', 'الأمان')}</span>
-                          </button>
+                          </Link>
                         </div>
 
                         <button
