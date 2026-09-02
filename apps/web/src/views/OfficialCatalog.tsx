@@ -149,7 +149,7 @@ export const OfficialCatalog: React.FC = () => {
 
   const desktopBannerImage = banner?.desktopImageUrl || banner?.imageUrl || '';
   const hasAdminImage = Boolean(banner?.isActive && desktopBannerImage);
-
+  const hasAdminCopy = Boolean(banner?.isActive && (banner.title?.trim() || banner.description?.trim()));
   const reset = () => { setCategory('all'); setBadge(''); setInStock(false); setSearch(''); };
   const browse = (slug = 'all') => { setCategory(slug); requestAnimationFrame(() => catalogueRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); };
   const activeFilterCount = [category !== 'all', Boolean(badge), inStock, Boolean(search.trim())].filter(Boolean).length;
