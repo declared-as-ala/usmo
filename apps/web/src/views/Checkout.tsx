@@ -56,8 +56,7 @@ export const TUNISIAN_GOVERNORATES = [
 
 const TIMELINE = [
   { en: 'Order received', fr: 'Commande reçue', ar: 'تم استلام الطلب', icon: ClipboardList },
-  { en: 'Store review', fr: 'Vérification boutique', ar: 'مراجعة المتجر', icon: ShieldCheck },
-  { en: 'Confirmation call', fr: 'Appel de confirmation', ar: 'مكالمة التأكيد', icon: Handshake },
+  { en: 'Order confirmation & verification', fr: 'Confirmation commande et vérification', ar: 'تأكيد الطلب والتحقق', icon: ShieldCheck },
   { en: 'Preparation', fr: 'Préparation', ar: 'التحضير', icon: Boxes },
   { en: 'Delivery', fr: 'Livraison à domicile', ar: 'التوصيل للمنزل', icon: PackageCheck },
 ];
