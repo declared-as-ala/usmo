@@ -263,27 +263,8 @@ export class MailService {
   }): Promise<boolean> {
     const subject = `Confirmation de commande ${params.orderNumber} — US Monastir`;
 
-    // Inline logo attachments from reliable in-memory buffers
-    const attachments = [
-      {
-        filename: 'usm-logo.png',
-        content: Buffer.from(USM_LOGO_BASE64, 'base64'),
-        cid: 'usm-logo',
-        contentType: 'image/png',
-        contentDisposition: 'inline',
-      },
-      {
-        filename: 'ibrand-logo.png',
-        content: Buffer.from(IBRAND_LOGO_BASE64, 'base64'),
-        cid: 'ibrand-logo',
-        contentType: 'image/png',
-        contentDisposition: 'inline',
-      },
-    ];
-
-    // Logo sources: direct HTTPS URLs ensures instant display across all webmail and mobile clients (Gmail, Outlook, Yahoo, Apple Mail)
+    // Logo source: direct HTTPS URL ensures instant display without triggering email attachments
     const logoImgSrc = 'https://raw.githubusercontent.com/declared-as-ala/usmo/main/apps/web/public/logo%20foot.png';
-    const ibrandLogoSrc = 'https://ibrandtunisia.tn/wp-content/uploads/2025/08/icon-iBrand-Tunisia-2026-footer3.png';
 
     const formatTnd = (m: number) => ((m || 0) / 1000).toFixed(3) + ' DT';
 
@@ -340,7 +321,6 @@ export class MailService {
           .totals-table td { padding: 6px 0; font-size: 13px; }
           .total-highlight { border-top: 2px solid #0d63ff; padding-top: 12px !important; }
           .notice-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #0d63ff; border-radius: 12px; padding: 14px 18px; margin-top: 28px; font-size: 12px; color: #1e40af; line-height: 1.5; }
-          .sponsor-box { margin-top: 28px; padding: 18px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; text-align: center; }
           .footer { background: #061a3a; padding: 28px 24px; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.6; }
           .footer-brand { font-size: 12px; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
           .footer a { color: #3ed6d0; text-decoration: none; font-weight: 600; }
@@ -454,23 +434,6 @@ export class MailService {
               <div class="notice-box">
                 <strong>📞 Prochaine étape :</strong> Notre service livraison vous contactera au <strong>${params.customerPhone}</strong> avant le passage du coursier pour confirmer le créneau horaire de livraison.
               </div>
-
-              <!-- Official Sponsor Section: iBrand Tunisia -->
-              <div class="sponsor-box">
-                <span style="font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; display: block; margin-bottom: 10px;">
-                  Sponsor & Partenaire Technologique Officiel
-                </span>
-                <a href="https://ibrandtunisia.tn/" target="_blank" style="text-decoration: none; display: inline-block;">
-                  <img
-                    src="${ibrandLogoSrc}"
-                    alt="iBrand Tunisia"
-                    style="height: 42px; max-width: 160px; object-fit: contain; display: inline-block; vertical-align: middle;"
-                  />
-                </a>
-                <p style="margin: 8px 0 0; font-size: 11px; color: #64748b; font-weight: 600;">
-                  iBrand Tunisia • Partenaire Digital Officiel de l'Union Sportive Monastirienne
-                </p>
-              </div>
             </div>
 
             <!-- Footer -->
@@ -478,7 +441,7 @@ export class MailService {
               <div class="footer-brand">Boutique Officielle de l'Union Sportive Monastirienne</div>
               <p style="margin: 0 0 8px; color: #94a3b8;">Une Ville, Un Cœur, Un Club • الاتحاد الرياضي المنستيري</p>
               <p style="margin: 0 0 12px; color: #64748b;">
-                Sponsor officiel : <a href="https://ibrandtunisia.tn/" target="_blank">iBrand Tunisia</a> (ibrandtunisia.tn)
+                Partenaire : <a href="https://ibrandtunisia.tn/" target="_blank" style="color: #3ed6d0; text-decoration: none; font-weight: 700;">iBrand Tunisia</a>
               </p>
               <p style="margin: 0; font-size: 10px; color: #475569;">© ${new Date().getFullYear()} US Monastir. Tous droits réservés.</p>
             </div>
@@ -488,7 +451,7 @@ export class MailService {
       </html>
     `;
 
-    return this.sendMail(params.to, subject, html, undefined, attachments);
+    return this.sendMail(params.to, subject, html);
   }
 
   /**
