@@ -254,7 +254,7 @@ interface AppContextProps {
   username: string;
   logout: () => void;
   fan: any | null;
-  refreshMe: () => Promise<void>;
+  refreshMe: () => Promise<any>;
   loginFan: (email: string, pass: string) => Promise<any>;
   logoutFan: () => Promise<void>;
 }
@@ -719,7 +719,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshMe = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
       const data = await api.getMe();
       if (data && (data._id || data.id || data.email)) {
         setFan(data);
@@ -733,6 +732,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ? 'admin'
             : 'supporter'
         );
+        return data;
       } else {
         setFan(null);
         setIsLoggedIn(false);
@@ -740,6 +740,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAdminRole('USER');
         setCustomPermissions([]);
         setUserRole('guest');
+        return null;
       }
     } catch {
       setFan(null);
@@ -748,6 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAdminRole('USER');
       setCustomPermissions([]);
       setUserRole('guest');
+      return null;
     }
   };
 

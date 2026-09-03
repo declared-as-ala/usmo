@@ -75,7 +75,16 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { language, isSuperAdmin, isOrderManager, hasPermission, logout, username, adminRole } = useApp();
+  const { language, isSuperAdmin, isOrderManager, hasPermission, logout, username, adminRole, fan } = useApp();
+
+  const currentRole = (adminRole || fan?.role || '').toUpperCase().replace(/[\s_]+/g, '_');
+  const effectiveIsOrderManager = isOrderManager || currentRole === 'GESTIONNAIRE_COMMANDES';
+  const effectiveIsSuperAdmin =
+    isSuperAdmin ||
+    currentRole === 'SUPER_ADMIN' ||
+    adminRole === 'Super Admin' ||
+    fan?.role === 'SUPER_ADMIN' ||
+    fan?.role === 'Super Admin';
 
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
@@ -87,7 +96,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const tLabel = (label: string) => getLabelTranslation(label, language);
 
   // Filter navigation items by role and permissions
-  const filteredNav = isOrderManager
+  const filteredNav = effectiveIsOrderManager
     ? [
         {
           label: language === 'fr' ? 'Commandes & Promotions' : 'Orders & Promos',
@@ -99,7 +108,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       ]
     : ADMIN_NAV.map((group) => {
         const items = group.items.filter((item) => {
-          if (item.superAdminOnly && !isSuperAdmin) return false;
+          if (item.superAdminOnly && !effectiveIsSuperAdmin) return false;
           if (item.permission && !hasPermission(item.permission)) return false;
           return true;
         });
@@ -119,7 +128,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-usm-border shrink-0">
-          <Link href={isOrderManager ? '/admin/orders' : '/admin'} className="flex items-center gap-2.5 min-w-0">
+          <Link href={effectiveIsOrderManager ? '/admin/orders' : '/admin'} className="flex items-center gap-2.5 min-w-0">
             <Logo size={30} className="shrink-0" />
             {!collapsed && (
               <span className="text-[12px] font-black uppercase tracking-wider text-usm-blue-dark truncate">
@@ -136,7 +145,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </div>
 
         {/* Quick create — hidden for GESTIONNAIRE_COMMANDES */}
-        {!isOrderManager && (
+        {!effectiveIsOrderManager && (
           <div className="p-3 shrink-0">
             <button
               onClick={onQuickCreate}
@@ -198,9 +207,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold text-usm-blue-dark truncate">{username || 'USM Administrator'}</p>
                 <p className="text-[9px] text-slate-500 uppercase tracking-wide">
-                  {isSuperAdmin
+                  {effectiveIsSuperAdmin
                     ? 'Super Administrateur'
-                    : isOrderManager
+                    : effectiveIsOrderManager
                     ? 'Gestionnaire des commandes'
                     : 'Administrateur'}
                 </p>

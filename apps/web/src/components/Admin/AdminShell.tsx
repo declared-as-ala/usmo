@@ -24,11 +24,13 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
   const [submitting, setSubmitting] = useState(false);
 
   React.useEffect(() => {
-    api
-      .getMe()
-      .then(async () => {
-        setAuthState('authenticated');
-        await refreshMe();
+    refreshMe()
+      .then((data) => {
+        if (data && (data._id || data.id || data.email)) {
+          setAuthState('authenticated');
+        } else {
+          setAuthState('login');
+        }
       })
       .catch(() => setAuthState('login'));
   }, []);
@@ -59,7 +61,12 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
             setAuthError('');
             try {
               await api.login(email, password);
+              const data = await refreshMe();
               setAuthState('authenticated');
+              const role = (data?.role || '').toUpperCase().replace(/[\s_]+/g, '_');
+              if (role === 'GESTIONNAIRE_COMMANDES') {
+                router.replace('/admin/orders');
+              }
             } catch (error) {
               setAuthError(error instanceof Error ? error.message : 'Connexion impossible');
             } finally {
