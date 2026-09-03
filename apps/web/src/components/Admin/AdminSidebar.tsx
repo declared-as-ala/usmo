@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Plus, LogOut, Shield } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, LogOut, Shield, ShoppingCart, Percent } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { useApp } from '../../context/AppContext';
 import { ADMIN_NAV } from './adminNav';
@@ -75,7 +75,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { username, logout, language, isSuperAdmin, hasPermission, adminRole } = useApp();
+  const { language, isSuperAdmin, isOrderManager, hasPermission, logout, username, adminRole } = useApp();
 
   const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
 
@@ -87,14 +87,24 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const tLabel = (label: string) => getLabelTranslation(label, language);
 
   // Filter navigation items by role and permissions
-  const filteredNav = ADMIN_NAV.map((group) => {
-    const items = group.items.filter((item) => {
-      if (item.superAdminOnly && !isSuperAdmin) return false;
-      if (item.permission && !hasPermission(item.permission)) return false;
-      return true;
-    });
-    return { ...group, items };
-  }).filter((group) => group.items.length > 0);
+  const filteredNav = isOrderManager
+    ? [
+        {
+          label: language === 'fr' ? 'Commandes & Promotions' : 'Orders & Promos',
+          items: [
+            { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart },
+            { label: 'Discount Codes', href: '/admin/discount-codes', icon: Percent },
+          ],
+        },
+      ]
+    : ADMIN_NAV.map((group) => {
+        const items = group.items.filter((item) => {
+          if (item.superAdminOnly && !isSuperAdmin) return false;
+          if (item.permission && !hasPermission(item.permission)) return false;
+          return true;
+        });
+        return { ...group, items };
+      }).filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -109,7 +119,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-usm-border shrink-0">
-          <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
+          <Link href={isOrderManager ? '/admin/orders' : '/admin'} className="flex items-center gap-2.5 min-w-0">
             <Logo size={30} className="shrink-0" />
             {!collapsed && (
               <span className="text-[12px] font-black uppercase tracking-wider text-usm-blue-dark truncate">
@@ -125,19 +135,21 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </button>
         </div>
 
-        {/* Quick create */}
-        <div className="p-3 shrink-0">
-          <button
-            onClick={onQuickCreate}
-            className={`w-full flex items-center gap-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white rounded-xl transition-colors cursor-pointer ${
-              collapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5'
-            }`}
-            title={tLabel('Quick Create')}
-          >
-            <Plus size={16} className="shrink-0" />
-            {!collapsed && <span className="text-xs font-bold">{tLabel('Quick Create')}</span>}
-          </button>
-        </div>
+        {/* Quick create — hidden for GESTIONNAIRE_COMMANDES */}
+        {!isOrderManager && (
+          <div className="p-3 shrink-0">
+            <button
+              onClick={onQuickCreate}
+              className={`w-full flex items-center gap-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white rounded-xl transition-colors cursor-pointer ${
+                collapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5'
+              }`}
+              title={tLabel('Quick Create')}
+            >
+              <Plus size={16} className="shrink-0" />
+              {!collapsed && <span className="text-xs font-bold">{tLabel('Quick Create')}</span>}
+            </button>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-2.5 pb-4 space-y-5">
@@ -185,7 +197,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold text-usm-blue-dark truncate">{username || 'USM Administrator'}</p>
-                <p className="text-[9px] text-slate-500 uppercase tracking-wide">{adminRole || 'Super Admin'}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-wide">
+                  {isSuperAdmin
+                    ? 'Super Administrateur'
+                    : isOrderManager
+                    ? 'Gestionnaire des commandes'
+                    : 'Administrateur'}
+                </p>
               </div>
             )}
             <button

@@ -3,11 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ShieldCheck,
   Plus,
   Search,
-  Filter,
-  MoreVertical,
   UserCheck,
   UserX,
   KeyRound,
@@ -17,23 +14,13 @@ import {
   CheckCircle,
   XCircle,
   Copy,
-  Mail,
   Shield,
+  ShieldAlert,
+  Info,
 } from 'lucide-react';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { api } from '../../lib/api-client';
 import { useApp } from '../../context/AppContext';
-
-const AVAILABLE_PERMISSIONS = [
-  { group: 'Admin Management', perms: ['admins.view', 'admins.create', 'admins.edit', 'admins.delete', 'admins.assign_roles', 'admins.assign_permissions'] },
-  { group: 'Users & Fans', perms: ['users.view', 'users.edit', 'users.suspend', 'users.export'] },
-  { group: 'Boutique & Products', perms: ['products.view', 'products.create', 'products.edit', 'products.delete'] },
-  { group: 'Orders', perms: ['orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export'] },
-  { group: 'Newsroom', perms: ['news.view', 'news.create', 'news.edit', 'news.publish', 'news.delete'] },
-  { group: 'Media Portal', perms: ['media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish'] },
-  { group: 'Analytics', perms: ['analytics.view', 'analytics.export'] },
-  { group: 'Settings & Security', perms: ['settings.view', 'settings.edit', 'security.audit_logs', 'security.login_history', 'security.sessions'] },
-];
 
 export const AdminAdministrateursView: React.FC = () => {
   const { isSuperAdmin, showToast } = useApp();
@@ -54,8 +41,7 @@ export const AdminAdministrateursView: React.FC = () => {
   const [formLastName, setFormLastName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formRole, setFormRole] = useState('ADMIN');
-  const [formPermissions, setFormPermissions] = useState<string[]>([]);
+  const [formRole, setFormRole] = useState<'ADMIN' | 'GESTIONNAIRE_COMMANDES'>('ADMIN');
   const [submitting, setSubmitting] = useState(false);
 
   const fetchAdmins = async () => {
@@ -78,25 +64,18 @@ export const AdminAdministrateursView: React.FC = () => {
     fetchAdmins();
   }, [search, roleFilter, statusFilter]);
 
-  const handleTogglePermission = (perm: string) => {
-    setFormPermissions((prev) =>
-      prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm],
-    );
-  };
-
   const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
       const res = await api.inviteAdmin({
-        firstName: formFirstName,
-        lastName: formLastName,
-        email: formEmail,
-        phone: formPhone,
+        firstName: formFirstName.trim(),
+        lastName: formLastName.trim(),
+        email: formEmail.trim().toLowerCase(),
+        phone: formPhone.trim(),
         role: formRole,
-        permissions: formPermissions,
       });
-      showToast('Administrateur créé avec succès', 'success');
+      showToast('Compte administrateur créé avec succès', 'success');
       if (res.invitationUrl) {
         const fullUrl = `${window.location.origin}${res.invitationUrl}`;
         setInvitationResultUrl(fullUrl);
@@ -105,7 +84,7 @@ export const AdminAdministrateursView: React.FC = () => {
       }
       fetchAdmins();
     } catch (err: any) {
-      showToast(err.message || 'Erreur lors de la création de l\'administrateur', 'error');
+      showToast(err.message || "Erreur lors de la création de l'administrateur", 'error');
     } finally {
       setSubmitting(false);
     }
@@ -113,8 +92,9 @@ export const AdminAdministrateursView: React.FC = () => {
 
   const handleOpenEdit = (admin: any) => {
     setSelectedAdmin(admin);
-    setFormRole(admin.role);
-    setFormPermissions(admin.customPermissions || []);
+    const rawRole = (admin.role || '').toUpperCase().replace(/[\s_]+/g, '_');
+    const r = rawRole === 'GESTIONNAIRE_COMMANDES' ? 'GESTIONNAIRE_COMMANDES' : 'ADMIN';
+    setFormRole(r);
     setIsEditOpen(true);
   };
 
@@ -123,8 +103,12 @@ export const AdminAdministrateursView: React.FC = () => {
     if (!selectedAdmin) return;
     setSubmitting(true);
     try {
-      await api.updateAdminRoleAndPermissions(selectedAdmin._id || selectedAdmin.id, formRole, formPermissions);
-      showToast('Rôle et permissions mis à jour avec succès', 'success');
+      await api.updateAdminRoleAndPermissions(
+        selectedAdmin._id || selectedAdmin.id,
+        formRole,
+        [],
+      );
+      showToast('Rôle mis à jour avec succès', 'success');
       setIsEditOpen(false);
       fetchAdmins();
     } catch (err: any) {
@@ -174,19 +158,50 @@ export const AdminAdministrateursView: React.FC = () => {
 
   if (!isSuperAdmin) {
     return (
-      <div className="p-8 text-center bg-white rounded-2xl border border-red-200">
-        <Shield className="w-12 h-12 text-red-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-slate-800">Accès Réservé au Super Administrateur</h2>
-        <p className="text-sm text-slate-500 mt-1">Vous n'avez pas les permissions requises pour gérer les administrateurs de la plateforme.</p>
+      <div className="min-h-[50vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full p-8 text-center bg-white rounded-3xl border border-rose-200 shadow-xl space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
+            <ShieldAlert size={32} />
+          </div>
+          <h2 className="text-xl font-black text-[#071A30] uppercase tracking-tight font-display">
+            Accès refusé
+          </h2>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            Cette section et la gestion des administrateurs sont strictement réservées au Super Administrateur de la plateforme.
+          </p>
+        </div>
       </div>
     );
   }
+
+  const getRoleBadge = (role: string) => {
+    const r = (role || '').toUpperCase().replace(/[\s_]+/g, '_');
+    if (r === 'SUPER_ADMIN') {
+      return {
+        label: 'Super Administrateur',
+        cls: 'bg-purple-100 text-purple-700 border border-purple-200',
+        scope: 'Accès absolu (*)',
+      };
+    }
+    if (r === 'GESTIONNAIRE_COMMANDES') {
+      return {
+        label: 'Gestionnaire des commandes',
+        cls: 'bg-teal-100 text-teal-700 border border-teal-200',
+        scope: 'Commandes + Codes promo (lecture)',
+      };
+    }
+    return {
+      label: 'Administrateur',
+      cls: 'bg-blue-100 text-blue-700 border border-blue-200',
+      scope: 'Toutes les fonctionnalités (sauf admins)',
+    };
+  };
 
   return (
     <div className="space-y-6 pb-12">
       <AdminPageHeader
         title="Gestion des Administrateurs"
-        description="Gérez les comptes administratifs, assignez les rôles RBAC, définissez les permissions explicites et suivez la sécurité."
+        description="Gérez les comptes administratifs et attribuez les rôles système fixes."
         actions={
           <button
             onClick={() => {
@@ -195,19 +210,19 @@ export const AdminAdministrateursView: React.FC = () => {
               setFormEmail('');
               setFormPhone('');
               setFormRole('ADMIN');
-              setFormPermissions([]);
               setInvitationResultUrl(null);
               setIsInviteOpen(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md shadow-usm-blue-primary/20 transition-all"
           >
-            <Plus size={14} /> Nouvel Administrateur
+            <Plus size={15} />
+            <span>Nouvel Administrateur</span>
           </button>
         }
       />
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-xl border border-usm-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl border border-usm-border flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <input
@@ -215,7 +230,7 @@ export const AdminAdministrateursView: React.FC = () => {
             placeholder="Rechercher par nom, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-usm-blue-primary"
+            className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary bg-slate-50 focus:bg-white transition-colors"
           />
         </div>
 
@@ -223,18 +238,18 @@ export const AdminAdministrateursView: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none"
+            className="px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none cursor-pointer"
           >
             <option value="">Tous les Rôles</option>
-            <option value="SUPER_ADMIN">Super Admin</option>
-            <option value="ADMIN">Admin</option>
-            <option value="USER">Supporter / Fan</option>
+            <option value="SUPER_ADMIN">Super Administrateur</option>
+            <option value="ADMIN">Administrateur</option>
+            <option value="GESTIONNAIRE_COMMANDES">Gestionnaire des commandes</option>
           </select>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none"
+            className="px-3 py-2 text-xs border border-slate-200 rounded-xl bg-white text-slate-700 focus:outline-none cursor-pointer"
           >
             <option value="">Tous les Statuts</option>
             <option value="Active">Actif</option>
@@ -256,7 +271,7 @@ export const AdminAdministrateursView: React.FC = () => {
                 <tr>
                   <th className="px-5 py-3.5">Administrateur</th>
                   <th className="px-5 py-3.5">Rôle</th>
-                  <th className="px-5 py-3.5">Permissions Explicites</th>
+                  <th className="px-5 py-3.5">Périmètre d&apos;Accès</th>
                   <th className="px-5 py-3.5">Statut</th>
                   <th className="px-5 py-3.5">Dernière Connexion</th>
                   <th className="px-5 py-3.5 text-right">Actions</th>
@@ -265,6 +280,7 @@ export const AdminAdministrateursView: React.FC = () => {
               <tbody className="divide-y divide-usm-border">
                 {admins.map((adm) => {
                   const isSuper = adm.role === 'SUPER_ADMIN' || adm.role === 'Super Admin';
+                  const badge = getRoleBadge(adm.role);
                   return (
                     <tr key={adm._id || adm.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="px-5 py-4">
@@ -279,21 +295,13 @@ export const AdminAdministrateursView: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                            isSuper
-                              ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                              : 'bg-blue-100 text-blue-700 border border-blue-200'
-                          }`}
-                        >
-                          {adm.role}
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${badge.cls}`}>
+                          {badge.label}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="text-slate-500 font-medium">
-                          {isSuper
-                            ? 'Toutes (*)'
-                            : (adm.customPermissions?.length || 0) + ' permissions'}
+                        <span className="text-slate-600 font-medium text-xs">
+                          {badge.scope}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -327,13 +335,15 @@ export const AdminAdministrateursView: React.FC = () => {
                           >
                             <Eye size={15} />
                           </Link>
-                          <button
-                            onClick={() => handleOpenEdit(adm)}
-                            className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
-                            title="Modifier rôle & permissions"
-                          >
-                            <Edit size={15} />
-                          </button>
+                          {!isSuper && (
+                            <button
+                              onClick={() => handleOpenEdit(adm)}
+                              className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                              title="Modifier le rôle"
+                            >
+                              <Edit size={15} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleResetAccess(adm)}
                             className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
@@ -341,24 +351,28 @@ export const AdminAdministrateursView: React.FC = () => {
                           >
                             <KeyRound size={15} />
                           </button>
-                          <button
-                            onClick={() => handleSuspendToggle(adm)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              adm.isSuspended
-                                ? 'text-emerald-600 hover:bg-emerald-50'
-                                : 'text-amber-600 hover:bg-amber-50'
-                            }`}
-                            title={adm.isSuspended ? 'Réactiver' : 'Suspendre'}
-                          >
-                            {adm.isSuspended ? <UserCheck size={15} /> : <UserX size={15} />}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteAdmin(adm)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          {!isSuper && (
+                            <>
+                              <button
+                                onClick={() => handleSuspendToggle(adm)}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  adm.isSuspended
+                                    ? 'text-emerald-600 hover:bg-emerald-50'
+                                    : 'text-amber-600 hover:bg-amber-50'
+                                }`}
+                                title={adm.isSuspended ? 'Réactiver' : 'Suspendre'}
+                              >
+                                {adm.isSuspended ? <UserCheck size={15} /> : <UserX size={15} />}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAdmin(adm)}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="Supprimer"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -370,13 +384,20 @@ export const AdminAdministrateursView: React.FC = () => {
         )}
       </div>
 
-      {/* Invite Modal */}
+      {/* Invite Modal — Checkboxes completely removed */}
       {isInviteOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-usm-border pb-4">
-              <h3 className="text-base font-bold text-usm-blue-dark">Créer un Compte Administrateur</h3>
-              <button onClick={() => setIsInviteOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <h3 className="text-base font-black text-usm-blue-dark uppercase tracking-tight">
+                Créer un compte administrateur
+              </h3>
+              <button
+                onClick={() => setIsInviteOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer text-sm font-bold"
+              >
+                ✕
+              </button>
             </div>
 
             {invitationResultUrl ? (
@@ -384,80 +405,120 @@ export const AdminAdministrateursView: React.FC = () => {
                 <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
                   <CheckCircle className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-slate-800">Invitation Générée avec Succès !</h4>
-                <p className="text-xs text-slate-500">Transmettez ce lien sécurisé à l'administrateur afin qu'il définisse son mot de passe :</p>
+                <h4 className="font-bold text-slate-800">Invitation générée avec succès !</h4>
+                <p className="text-xs text-slate-500">
+                  Transmettez ce lien sécurisé à l&apos;administrateur afin qu&apos;il active son compte :
+                </p>
                 <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
-                  <input readOnly value={invitationResultUrl} className="text-xs text-slate-600 bg-transparent flex-1 focus:outline-none" />
+                  <input
+                    readOnly
+                    value={invitationResultUrl}
+                    className="text-xs text-slate-600 bg-transparent flex-1 focus:outline-none font-mono"
+                  />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(invitationResultUrl);
                       showToast('Lien copié !', 'success');
                     }}
-                    className="px-3 py-1.5 bg-usm-blue-primary text-white text-xs font-bold rounded-lg hover:bg-usm-blue-primary/90 flex items-center gap-1.5 cursor-pointer"
+                    className="px-3 py-1.5 bg-usm-blue-primary text-white text-xs font-bold rounded-lg hover:bg-usm-blue-primary/90 flex items-center gap-1.5 cursor-pointer shrink-0"
                   >
                     <Copy size={13} /> Copier
                   </button>
                 </div>
-                <button onClick={() => setIsInviteOpen(false)} className="w-full py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl mt-4 cursor-pointer">
+                <button
+                  onClick={() => setIsInviteOpen(false)}
+                  className="w-full py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl mt-4 hover:bg-slate-200 cursor-pointer"
+                >
                   Fermer
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleCreateAdmin} className="space-y-5 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleCreateAdmin} className="space-y-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Prénom *</label>
-                    <input required value={formFirstName} onChange={(e) => setFormFirstName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary" />
+                    <input
+                      required
+                      placeholder="Prénom"
+                      value={formFirstName}
+                      onChange={(e) => setFormFirstName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary bg-slate-50 focus:bg-white"
+                    />
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Nom *</label>
-                    <input required value={formLastName} onChange={(e) => setFormLastName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary" />
+                    <input
+                      required
+                      placeholder="Nom de famille"
+                      value={formLastName}
+                      onChange={(e) => setFormLastName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary bg-slate-50 focus:bg-white"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Email Professionnel *</label>
-                    <input required type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary" />
+                    <label className="block font-bold text-slate-700 mb-1">Email professionnel *</label>
+                    <input
+                      required
+                      type="email"
+                      placeholder="nom@usmonastir.com.tn"
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary bg-slate-50 focus:bg-white"
+                    />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Téléphone (Optionnel)</label>
-                    <input value={formPhone} onChange={(e) => setFormPhone(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary" />
+                    <label className="block font-bold text-slate-700 mb-1">Téléphone</label>
+                    <input
+                      placeholder="Ex: 98 123 456"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-usm-blue-primary bg-slate-50 focus:bg-white font-mono"
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Rôle Principal *</label>
-                  <select value={formRole} onChange={(e) => setFormRole(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary">
-                    <option value="ADMIN">ADMIN (Administrateur)</option>
-                    <option value="SUPER_ADMIN">SUPER_ADMIN (Super Administrateur)</option>
-                    <option value="USER">USER (Supporter / Fan)</option>
+                  <label className="block font-bold text-slate-700 mb-1">Rôle principal *</label>
+                  <select
+                    value={formRole}
+                    onChange={(e) => setFormRole(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary cursor-pointer font-semibold text-slate-800"
+                  >
+                    <option value="ADMIN">Administrateur</option>
+                    <option value="GESTIONNAIRE_COMMANDES">Gestionnaire des commandes</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-2">Permissions Granulaires Explicites</label>
-                  <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 max-h-48 overflow-y-auto">
-                    {AVAILABLE_PERMISSIONS.map((group) => (
-                      <div key={group.group}>
-                        <p className="font-bold text-[11px] text-slate-500 uppercase tracking-wide mb-1">{group.group}</p>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {group.perms.map((p) => (
-                            <label key={p} className="flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox" checked={formPermissions.includes(p)} onChange={() => handleTogglePermission(p)} className="rounded text-usm-blue-primary" />
-                              <span className="text-[11px] font-mono text-slate-600">{p}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                {/* Read-only Role Summary */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <Info size={13} className="text-usm-blue-primary" />
+                    <span>Accès attribués automatiquement</span>
                   </div>
+                  <p className="text-xs text-slate-700 font-medium">
+                    {formRole === 'GESTIONNAIRE_COMMANDES'
+                      ? 'Accès uniquement aux commandes et à la consultation des codes promo.'
+                      : 'Accès à toutes les fonctionnalités, sauf la gestion des administrateurs.'}
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-usm-border">
-                  <button type="button" onClick={() => setIsInviteOpen(false)} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200">Annuler</button>
-                  <button type="submit" disabled={submitting} className="px-5 py-2 bg-usm-blue-primary text-white font-bold rounded-xl hover:bg-usm-blue-primary/90">
-                    {submitting ? 'Création...' : 'Générer l\'Invitation'}
+                  <button
+                    type="button"
+                    onClick={() => setIsInviteOpen(false)}
+                    className="px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-5 py-2.5 bg-usm-blue-primary text-white font-bold rounded-xl hover:bg-usm-blue-primary/90 transition-all shadow-md shadow-usm-blue-primary/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {submitting ? 'Génération...' : "Générer l'invitation"}
                   </button>
                 </div>
               </form>
@@ -466,48 +527,62 @@ export const AdminAdministrateursView: React.FC = () => {
         </div>
       )}
 
-      {/* Edit Role & Permissions Modal */}
+      {/* Edit Role Modal — Checkboxes completely removed */}
       {isEditOpen && selectedAdmin && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-5 text-xs">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 text-xs shadow-2xl">
             <div className="flex items-center justify-between border-b border-usm-border pb-3">
-              <h3 className="font-bold text-usm-blue-dark">Modifier Rôle & Permissions : {selectedAdmin.name}</h3>
-              <button onClick={() => setIsEditOpen(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+              <h3 className="font-bold text-usm-blue-dark">
+                Modifier le rôle : {selectedAdmin.name}
+              </h3>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Rôle Principal</label>
-                <select value={formRole} onChange={(e) => setFormRole(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary">
-                  <option value="ADMIN">ADMIN (Administrateur)</option>
-                  <option value="SUPER_ADMIN">SUPER_ADMIN (Super Administrateur)</option>
-                  <option value="USER">USER (Supporter / Fan)</option>
+                <label className="block font-bold text-slate-700 mb-1">Rôle principal</label>
+                <select
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value as any)}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-usm-blue-primary cursor-pointer font-semibold text-slate-800"
+                >
+                  <option value="ADMIN">Administrateur</option>
+                  <option value="GESTIONNAIRE_COMMANDES">Gestionnaire des commandes</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-2">Permissions Granulaires</label>
-                <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200 max-h-56 overflow-y-auto">
-                  {AVAILABLE_PERMISSIONS.map((group) => (
-                    <div key={group.group}>
-                      <p className="font-bold text-[11px] text-slate-500 uppercase tracking-wide mb-1">{group.group}</p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {group.perms.map((p) => (
-                          <label key={p} className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={formPermissions.includes(p)} onChange={() => handleTogglePermission(p)} className="rounded text-usm-blue-primary" />
-                            <span className="text-[11px] font-mono text-slate-600">{p}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              {/* Read-only Role Summary */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-1">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <Info size={13} className="text-usm-blue-primary" />
+                  <span>Accès attribués automatiquement</span>
                 </div>
+                <p className="text-xs text-slate-700 font-medium">
+                  {formRole === 'GESTIONNAIRE_COMMANDES'
+                    ? 'Accès uniquement aux commandes et à la consultation des codes promo.'
+                    : 'Accès à toutes les fonctionnalités, sauf la gestion des administrateurs.'}
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-usm-border">
-                <button type="button" onClick={() => setIsEditOpen(false)} className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl">Annuler</button>
-                <button type="submit" disabled={submitting} className="px-5 py-2 bg-usm-blue-primary text-white font-bold rounded-xl hover:bg-usm-blue-primary/90">
-                  Enregistrer
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-usm-blue-primary text-white font-bold rounded-xl hover:bg-usm-blue-primary/90 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {submitting ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
               </div>
             </form>

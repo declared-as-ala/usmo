@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -15,9 +16,10 @@ import { AdminInvitation } from '../auth/admin-invitation.schema';
 import { AdminSession } from '../auth/admin-session.schema';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
 import { MailService } from '../mail/mail.service';
+import { getRolePermissions } from '../roles/default-roles';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(AdminInvitation.name) private readonly invitationModel: Model<AdminInvitation>,
@@ -26,6 +28,33 @@ export class UsersService {
     private readonly auditLogsService: AuditLogsService,
     private readonly mailService: MailService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      // 1. Ensure master admin remains SUPER_ADMIN
+      await this.userModel.updateOne(
+        { email: 'admin@usmonastir.com.tn' },
+        { $set: { role: 'SUPER_ADMIN', customPermissions: ['*'] } },
+      );
+
+      // 2. Normalize existing admin accounts: assign clean role-based permissions and strip obsolete manual checkboxes
+      const legacyAdmins = await this.userModel.find({
+        role: { $in: ['ADMIN', 'Admin', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes'] },
+      });
+
+      for (const adm of legacyAdmins) {
+        const normRole =
+          adm.role === 'GESTIONNAIRE_COMMANDES' || adm.role === 'Gestionnaire des commandes'
+            ? 'GESTIONNAIRE_COMMANDES'
+            : 'ADMIN';
+        adm.role = normRole;
+        adm.customPermissions = getRolePermissions(normRole);
+        await adm.save();
+      }
+    } catch (err: any) {
+      console.warn('[USERS MIGRATION WARN]', err?.message);
+    }
+  }
 
   async findOne(filter: any): Promise<User | null> {
     return this.userModel.findOne(filter).exec();
@@ -154,7 +183,16 @@ export class UsersService {
       ];
     }
     if (query.role) {
-      filter.role = query.role;
+      const r = query.role.toUpperCase().replace(/[\s_]+/g, '_');
+      if (r === 'SUPER_ADMIN') {
+        filter.role = { $in: ['SUPER_ADMIN', 'Super Admin'] };
+      } else if (r === 'ADMIN') {
+        filter.role = { $in: ['ADMIN', 'Admin'] };
+      } else if (r === 'GESTIONNAIRE_COMMANDES') {
+        filter.role = { $in: ['GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes'] };
+      } else {
+        filter.role = query.role;
+      }
     }
     if (query.status) {
       filter.status = query.status;
@@ -192,10 +230,21 @@ export class UsersService {
     const token = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
+    // Normalize role and ignore any manually sent permissions: permissions are strictly role-derived
+    const rawRole = (dto.role || '').toUpperCase().replace(/[\s_]+/g, '_');
+    const normalizedRole =
+      rawRole === 'GESTIONNAIRE_COMMANDES'
+        ? 'GESTIONNAIRE_COMMANDES'
+        : rawRole === 'SUPER_ADMIN'
+        ? 'SUPER_ADMIN'
+        : 'ADMIN';
+
+    const autoPermissions = getRolePermissions(normalizedRole);
+
     const invitation = await this.invitationModel.create({
       email: dto.email.toLowerCase().trim(),
-      role: dto.role,
-      permissions: dto.permissions || [],
+      role: normalizedRole,
+      permissions: autoPermissions,
       token,
       expiresAt,
       createdBy: new Types.ObjectId(dto.actorId),
@@ -207,8 +256,8 @@ export class UsersService {
       lastName: dto.lastName,
       email: dto.email.toLowerCase().trim(),
       phone: dto.phone,
-      role: dto.role,
-      customPermissions: dto.permissions || [],
+      role: normalizedRole,
+      customPermissions: autoPermissions,
       status: 'Active',
       isSuspended: false,
       createdBy: new Types.ObjectId(dto.actorId),
@@ -225,7 +274,7 @@ export class UsersService {
       dto.email.toLowerCase().trim(),
       `${dto.firstName} ${dto.lastName}`,
       fullInvitationUrl,
-      dto.role,
+      normalizedRole === 'GESTIONNAIRE_COMMANDES' ? 'Gestionnaire des commandes' : 'Administrateur',
     ).catch((err) => {
       console.error('[SMTP INVITATION ERROR]', err);
     });
@@ -258,14 +307,17 @@ export class UsersService {
   async updateAdminRoleAndPermissions(
     id: string,
     role: string,
-    permissions: string[],
+    permissions: string[] = [],
     actorId: string,
   ) {
     const targetAdmin = await this.userModel.findById(id);
     if (!targetAdmin) throw new NotFoundException('Administrateur introuvable');
 
     const targetIsSuperAdmin = targetAdmin.role === 'SUPER_ADMIN' || targetAdmin.role === 'Super Admin';
-    if (targetIsSuperAdmin && role !== 'SUPER_ADMIN' && role !== 'Super Admin') {
+    const rawRole = (role || '').toUpperCase().replace(/[\s_]+/g, '_');
+    const isNewRoleSuperAdmin = rawRole === 'SUPER_ADMIN';
+
+    if (targetIsSuperAdmin && !isNewRoleSuperAdmin) {
       const activeSuperCount = await this.countActiveSuperAdmins();
       if (activeSuperCount <= 1) {
         throw new BadRequestException(
@@ -274,9 +326,20 @@ export class UsersService {
       }
     }
 
-    targetAdmin.role = role;
-    targetAdmin.customPermissions = permissions;
+    const normalizedRole =
+      rawRole === 'GESTIONNAIRE_COMMANDES'
+        ? 'GESTIONNAIRE_COMMANDES'
+        : isNewRoleSuperAdmin
+        ? 'SUPER_ADMIN'
+        : 'ADMIN';
+
+    // Permissions are automatically recalculated based on the selected role
+    targetAdmin.role = normalizedRole;
+    targetAdmin.customPermissions = getRolePermissions(normalizedRole);
     await targetAdmin.save();
+
+    // Invalidate active sessions to force refresh of credentials and permissions
+    await this.sessionModel.updateMany({ adminId: targetAdmin._id }, { $set: { isRevoked: true } });
 
     await this.auditLogsService.logAction(actorId, 'admin_role_permissions_updated', 'User', id);
     return targetAdmin;
@@ -366,6 +429,9 @@ export class UsersService {
     const user = await this.userModel.findOne({ email: invitation.email });
     if (!user) throw new NotFoundException('Compte introuvable');
 
+    const targetRole = invitation.role || user.role || 'ADMIN';
+    user.role = targetRole;
+    user.customPermissions = getRolePermissions(targetRole);
     user.password = await bcrypt.hash(newPass, 10);
     user.status = 'Active';
     user.isSuspended = false;

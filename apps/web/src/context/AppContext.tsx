@@ -248,6 +248,7 @@ interface AppContextProps {
   adminRole: string;
   customPermissions: string[];
   isSuperAdmin: boolean;
+  isOrderManager: boolean;
   hasPermission: (permission: string) => boolean;
   isLoggedIn: boolean;
   username: string;
@@ -687,17 +688,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     logActivity('Updated boutique hero banner', url);
   };
 
-  const normalizedRole = (adminRole || '').toUpperCase().replace(/[\s_]+/g, '_');
+  const normalizedRole = (adminRole || fan?.role || '').toUpperCase().replace(/[\s_]+/g, '_');
   const isSuperAdmin =
     isLoggedIn &&
     (normalizedRole === 'SUPER_ADMIN' ||
       adminRole === 'Super Admin' ||
-      normalizedRole === 'ADMIN' ||
-      (fan && (fan.role === 'SUPER_ADMIN' || fan.role === 'Super Admin')));
+      fan?.role === 'SUPER_ADMIN' ||
+      fan?.role === 'Super Admin');
+
+  const isOrderManager = isLoggedIn && normalizedRole === 'GESTIONNAIRE_COMMANDES';
 
   const hasPermission = (permission: string): boolean => {
     if (!isLoggedIn) return false;
-    if (isSuperAdmin || customPermissions.includes('*')) return true;
+    if (isSuperAdmin) return true;
+    if (normalizedRole === 'ADMIN') {
+      // Normal admin has everything EXCEPT administrator management and system audit logs
+      if (permission.startsWith('admins.') || permission.startsWith('security.')) {
+        return false;
+      }
+      return true;
+    }
+    if (normalizedRole === 'GESTIONNAIRE_COMMANDES') {
+      return (
+        permission.startsWith('orders.') ||
+        permission === 'discount_codes.view'
+      );
+    }
     return customPermissions.includes(permission);
   };
 
@@ -1317,6 +1333,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       adminRole,
       customPermissions,
       isSuperAdmin,
+      isOrderManager,
       hasPermission,
       isLoggedIn,
       username,

@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../lib/api-client';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
-import { Plus, X, Trash2, Pencil, Loader2, AlertCircle, Percent, Check } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, Loader2, AlertCircle, Percent, Check, Eye } from 'lucide-react';
 import { requestConfirmation } from '../../components/Common/ConfirmDialog';
+import { useApp } from '../../context/AppContext';
 
 interface DiscountCode {
   _id: string;
@@ -27,6 +28,7 @@ const emptyForm = {
 };
 
 export default function AdminDiscountCodes() {
+  const { isOrderManager } = useApp();
   const [codes, setCodes] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,12 +120,19 @@ export default function AdminDiscountCodes() {
         title="Codes Promo"
         description="Gérez les codes de réduction utilisables sur la boutique."
         actions={
-          <button
-            onClick={openAdd}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/90 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
-          >
-            <Plus size={14} /> Ajouter un code
-          </button>
+          isOrderManager ? (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-bold rounded-xl shadow-xs">
+              <Eye size={14} />
+              <span>Consultation seule (Gestionnaire)</span>
+            </div>
+          ) : (
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/90 text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition-colors"
+            >
+              <Plus size={14} /> Ajouter un code
+            </button>
+          )
         }
       />
 
@@ -234,20 +243,20 @@ export default function AdminDiscountCodes() {
                 <th className="py-3.5 px-4">Utilisations</th>
                 <th className="py-3.5 px-4">Expiration</th>
                 <th className="py-3.5 px-4">Statut</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+                {!isOrderManager && <th className="py-3.5 px-5 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-usm-border">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={isOrderManager ? 6 : 7} className="py-12 text-center text-slate-400">
                     <Loader2 size={20} className="animate-spin inline-block mr-2" />
                     Chargement…
                   </td>
                 </tr>
               ) : codes.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={isOrderManager ? 6 : 7} className="py-12 text-center text-slate-400">
                     Aucun code promo configuré.
                   </td>
                 </tr>
@@ -270,24 +279,26 @@ export default function AdminDiscountCodes() {
                         {c.active ? 'Actif' : 'Inactif'}
                       </span>
                     </td>
-                    <td className="py-3 px-5 text-right rtl:text-left">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => openEdit(c)}
-                          className="p-1.5 text-slate-500 hover:text-usm-blue-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                          title="Modifier"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
+                    {!isOrderManager && (
+                      <td className="py-3 px-5 text-right rtl:text-left">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openEdit(c)}
+                            className="p-1.5 text-slate-500 hover:text-usm-blue-primary hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            title="Modifier"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(c)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Supprimer"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

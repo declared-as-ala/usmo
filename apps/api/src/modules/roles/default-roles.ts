@@ -25,6 +25,10 @@ export const SYSTEM_PERMISSIONS = {
   ORDERS_CONFIRM: 'orders.confirm',
   ORDERS_CANCEL: 'orders.cancel',
   ORDERS_EXPORT: 'orders.export',
+  ORDERS_UPDATE_STATUS: 'orders.update_status',
+
+  // Discount Codes
+  DISCOUNT_CODES_VIEW: 'discount_codes.view',
 
   // News
   NEWS_VIEW: 'news.view',
@@ -48,7 +52,7 @@ export const SYSTEM_PERMISSIONS = {
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_EDIT: 'settings.edit',
 
-  // Security & Audit
+  // Security & Audit (SUPER_ADMIN ONLY)
   SECURITY_AUDIT_LOGS: 'security.audit_logs',
   SECURITY_LOGIN_HISTORY: 'security.login_history',
   SECURITY_SESSIONS: 'security.sessions',
@@ -60,7 +64,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
   ADMIN: [
     'users.view', 'users.edit', 'users.suspend', 'users.export',
     'products.view', 'products.create', 'products.edit', 'products.delete',
-    'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export',
+    'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export', 'orders.update_status',
+    'discount_codes.view',
     'news.view', 'news.create', 'news.edit', 'news.publish', 'news.delete',
     'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
     'analytics.view', 'analytics.export',
@@ -69,13 +74,41 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
   Admin: [
     'users.view', 'users.edit', 'users.suspend', 'users.export',
     'products.view', 'products.create', 'products.edit', 'products.delete',
-    'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export',
+    'orders.view', 'orders.edit', 'orders.confirm', 'orders.cancel', 'orders.export', 'orders.update_status',
+    'discount_codes.view',
     'news.view', 'news.create', 'news.edit', 'news.publish', 'news.delete',
     'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
     'analytics.view', 'analytics.export',
     'settings.view', 'settings.edit',
   ],
+  GESTIONNAIRE_COMMANDES: [
+    'orders.view',
+    'orders.edit',
+    'orders.confirm',
+    'orders.cancel',
+    'orders.export',
+    'orders.update_status',
+    'discount_codes.view',
+  ],
+  'Gestionnaire des commandes': [
+    'orders.view',
+    'orders.edit',
+    'orders.confirm',
+    'orders.cancel',
+    'orders.export',
+    'orders.update_status',
+    'discount_codes.view',
+  ],
   USER: [],
   User: [],
   Fan: [],
 };
+
+export function getRolePermissions(role?: string): string[] {
+  if (!role) return [];
+  if (DEFAULT_ROLE_PERMISSIONS[role]) {
+    return [...DEFAULT_ROLE_PERMISSIONS[role]];
+  }
+  const normalized = role.toUpperCase().replace(/[\s_]+/g, '_');
+  return DEFAULT_ROLE_PERMISSIONS[normalized] ? [...DEFAULT_ROLE_PERMISSIONS[normalized]] : [];
+}

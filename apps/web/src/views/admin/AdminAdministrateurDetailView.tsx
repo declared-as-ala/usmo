@@ -22,6 +22,7 @@ import {
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { api } from '../../lib/api-client';
 import { useApp } from '../../context/AppContext';
+import { permissionsForRole } from '../../lib/rbac';
 
 export const AdminAdministrateurDetailView: React.FC = () => {
   const params = useParams();
@@ -144,7 +145,7 @@ export const AdminAdministrateurDetailView: React.FC = () => {
             activeTab === 'permissions' ? 'border-usm-blue-primary text-usm-blue-primary' : 'border-transparent text-slate-500 hover:text-slate-700'
           }`}
         >
-          Permissions ({isSuper ? 'Toutes' : admin.customPermissions?.length || 0})
+          Périmètre RBAC ({isSuper ? 'Tout (*)' : permissionsForRole(admin.role).length})
         </button>
         <button
           onClick={() => setActiveTab('sessions')}
@@ -176,7 +177,13 @@ export const AdminAdministrateurDetailView: React.FC = () => {
               </div>
               <div className="flex justify-between py-1 border-b border-slate-50">
                 <span className="text-slate-500">Rôle RBAC:</span>
-                <span className="font-bold text-slate-800">{admin.role}</span>
+                <span className="font-bold text-slate-800">
+                  {admin.role === 'SUPER_ADMIN' || admin.role === 'Super Admin'
+                    ? 'Super Administrateur'
+                    : admin.role === 'GESTIONNAIRE_COMMANDES'
+                    ? 'Gestionnaire des commandes'
+                    : 'Administrateur'}
+                </span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-slate-500">Dernière Connexion IP:</span>
@@ -209,19 +216,27 @@ export const AdminAdministrateurDetailView: React.FC = () => {
 
       {activeTab === 'permissions' && (
         <div className="bg-white p-6 rounded-2xl border border-usm-border space-y-4">
-          <h3 className="font-bold text-sm text-usm-blue-dark">Matrice des Permissions Déclarées</h3>
+          <h3 className="font-bold text-sm text-usm-blue-dark">Périmètre des Permissions RBAC</h3>
           {isSuper ? (
             <p className="text-xs text-purple-700 bg-purple-50 p-4 rounded-xl border border-purple-200 font-bold">
               Cet administrateur possède le rôle SUPER_ADMIN et dispose de toutes les permissions système sans restriction (*).
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {(admin.customPermissions || []).map((perm: string) => (
-                <div key={perm} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="text-xs font-mono font-bold text-slate-700">{perm}</span>
-                </div>
-              ))}
+            <div className="space-y-4">
+              <p className="text-xs text-slate-500">
+                Permissions attribuées automatiquement selon le rôle{' '}
+                <strong className="text-slate-800">
+                  {admin.role === 'GESTIONNAIRE_COMMANDES' ? 'Gestionnaire des commandes' : 'Administrateur'}
+                </strong> :
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {permissionsForRole(admin.role).map((perm: string) => (
+                  <div key={perm} className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="text-xs font-mono font-bold text-slate-700">{perm}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

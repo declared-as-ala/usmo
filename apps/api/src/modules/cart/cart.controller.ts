@@ -75,7 +75,7 @@ export class CartController {
 
   // Admin: Manage Discount Codes
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin', 'Super Admin')
+  @Roles('Admin', 'Super Admin', 'GESTIONNAIRE_COMMANDES')
   @Get('discount-codes')
   async getDiscountCodes() {
     return this.cartService.findDiscountCodes();

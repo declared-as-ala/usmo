@@ -20,7 +20,7 @@ interface AdminTopbarProps {
 
 export const AdminTopbar: React.FC<AdminTopbarProps> = ({ onOpenMobileNav, onQuickCreate }) => {
   const pathname = usePathname();
-  const { language, setLanguage } = useApp();
+  const { language, setLanguage, isOrderManager } = useApp();
   const [langOpen, setLangOpen] = useState(false);
 
   const activeItem = ADMIN_NAV.flatMap((g) => g.items.map((i) => ({ ...i, group: g.label }))).find((i) =>
@@ -38,7 +38,7 @@ export const AdminTopbar: React.FC<AdminTopbarProps> = ({ onOpenMobileNav, onQui
 
       {/* Breadcrumb */}
       <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-500 min-w-0">
-        <Link href="/admin" className="hover:text-usm-blue-primary transition-colors">
+        <Link href={isOrderManager ? '/admin/orders' : '/admin'} className="hover:text-usm-blue-primary transition-colors">
           Admin
         </Link>
         {activeItem && activeItem.href !== '/admin' && (
@@ -51,28 +51,32 @@ export const AdminTopbar: React.FC<AdminTopbarProps> = ({ onOpenMobileNav, onQui
         )}
       </div>
 
-      {/* Global search */}
-      <div className="hidden md:flex flex-1 max-w-sm ms-4">
-        <div className="relative w-full">
-          <Search size={14} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search matches, players, orders..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-9 rtl:pl-3 rtl:pr-9 pr-3 text-xs text-slate-700 outline-none focus:border-usm-blue-primary focus:bg-white transition-colors"
-          />
+      {/* Global search — hidden for GESTIONNAIRE_COMMANDES */}
+      {!isOrderManager && (
+        <div className="hidden md:flex flex-1 max-w-sm ms-4">
+          <div className="relative w-full">
+            <Search size={14} className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search matches, players, orders..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-9 rtl:pl-3 rtl:pr-9 pr-3 text-xs text-slate-700 outline-none focus:border-usm-blue-primary focus:bg-white transition-colors"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1" />
 
       {/* Actions */}
       <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          onClick={onQuickCreate}
-          className="hidden sm:flex items-center gap-1.5 px-3 h-9 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
-        >
-          <Plus size={14} /> Create
-        </button>
+        {!isOrderManager && (
+          <button
+            onClick={onQuickCreate}
+            className="hidden sm:flex items-center gap-1.5 px-3 h-9 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
+          >
+            <Plus size={14} /> Create
+          </button>
+        )}
 
         <div className="relative">
           <button

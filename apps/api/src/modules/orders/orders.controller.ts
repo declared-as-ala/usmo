@@ -31,7 +31,7 @@ export class OrdersController {
 
   // Admin only: List all orders with optional filters
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin', 'Super Admin')
+  @Roles('Admin', 'Super Admin', 'GESTIONNAIRE_COMMANDES')
   @Get()
   async findAll(@Query() query: any) {
     return this.ordersService.findAll(query);
@@ -39,7 +39,7 @@ export class OrdersController {
 
   // Admin only: Update order status
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin', 'Super Admin')
+  @Roles('Admin', 'Super Admin', 'GESTIONNAIRE_COMMANDES')
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
@@ -50,7 +50,7 @@ export class OrdersController {
 
   // Admin only: Update order details (drawer edit)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin', 'Super Admin')
+  @Roles('Admin', 'Super Admin', 'GESTIONNAIRE_COMMANDES')
   @Patch(':id')
   async update(
     @Param('id') id: string,

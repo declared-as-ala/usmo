@@ -1,13 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminTopbar } from './AdminTopbar';
 import { AdminQuickCreate } from './AdminQuickCreate';
 import { api } from '../../lib/api-client';
-import { Loader2, LockKeyhole } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { Loader2, LockKeyhole, ShieldAlert, ArrowLeft } from 'lucide-react';
 
 export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const pathname = usePathname() || '';
+  const router = useRouter();
+  const { isSuperAdmin, isOrderManager, refreshMe } = useApp();
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -18,8 +24,21 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
   const [submitting, setSubmitting] = useState(false);
 
   React.useEffect(() => {
-    api.getMe().then(() => setAuthState('authenticated')).catch(() => setAuthState('login'));
+    api
+      .getMe()
+      .then(async () => {
+        setAuthState('authenticated');
+        await refreshMe();
+      })
+      .catch(() => setAuthState('login'));
   }, []);
+
+  // Redirect GESTIONNAIRE_COMMANDES landing on /admin directly to /admin/orders
+  React.useEffect(() => {
+    if (authState === 'authenticated' && isOrderManager && pathname === '/admin') {
+      router.replace('/admin/orders');
+    }
+  }, [authState, isOrderManager, pathname, router]);
 
   if (authState === 'checking') {
     return <div className="flex min-h-dvh items-center justify-center bg-white"><Loader2 className="animate-spin text-blue-400" aria-label="Vérification de la session" /></div>;
@@ -137,6 +156,35 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
     );
   }
 
+  // 1. If GESTIONNAIRE_COMMANDES: only /admin/orders* and /admin/discount-codes*
+  const isOrderManagerAllowed =
+    pathname.startsWith('/admin/orders') || pathname.startsWith('/admin/discount-codes');
+
+  // 2. Super Admin only routes (Administrators, Audit logs, Sports configuration)
+  const isSuperAdminOnlyRoute =
+    pathname.startsWith('/admin/administrateurs') ||
+    pathname.startsWith('/admin/audit-logs') ||
+    pathname.startsWith('/admin/settings/sports');
+
+  let accessDenied = false;
+  let accessDeniedMessage = '';
+  let accessDeniedReturnUrl = '/admin';
+  let accessDeniedReturnLabel = 'Retour au tableau de bord';
+
+  if (isOrderManager && !isOrderManagerAllowed) {
+    accessDenied = true;
+    accessDeniedMessage =
+      'Votre rôle (Gestionnaire des commandes) ne vous autorise pas à accéder à cette section. Vous avez accès exclusivement à la gestion des commandes et à la consultation des codes promo.';
+    accessDeniedReturnUrl = '/admin/orders';
+    accessDeniedReturnLabel = 'Aller aux commandes';
+  } else if (!isSuperAdmin && isSuperAdminOnlyRoute) {
+    accessDenied = true;
+    accessDeniedMessage =
+      'Cette section est strictement réservée au Super Administrateur de la plateforme.';
+    accessDeniedReturnUrl = '/admin';
+    accessDeniedReturnLabel = 'Retour au tableau de bord';
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
       <AdminSidebar
@@ -149,7 +197,34 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
 
       <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 ${collapsed ? 'lg:pl-[76px]' : 'lg:pl-64'}`}>
         <AdminTopbar onOpenMobileNav={() => setMobileNavOpen(true)} onQuickCreate={() => setQuickCreateOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 space-y-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 space-y-6">
+          {accessDenied ? (
+            <div className="min-h-[55vh] flex items-center justify-center p-4">
+              <div className="max-w-md w-full p-8 text-center bg-white rounded-3xl border border-rose-200 shadow-xl space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-100 shadow-inner">
+                  <ShieldAlert size={32} />
+                </div>
+                <h2 className="text-xl font-black text-[#071A30] uppercase tracking-tight font-display">
+                  Accès refusé
+                </h2>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  {accessDeniedMessage}
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => router.push(accessDeniedReturnUrl)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-usm-blue-primary text-white text-xs font-bold rounded-xl shadow-md hover:bg-usm-blue-primary/90 transition-all cursor-pointer"
+                  >
+                    <ArrowLeft size={14} />
+                    <span>{accessDeniedReturnLabel}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
 
       <AdminQuickCreate open={quickCreateOpen} onClose={() => setQuickCreateOpen(false)} />
