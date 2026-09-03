@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { StatCard } from '../../components/Admin/StatCard';
+import { api } from '../../lib/api-client';
 import {
   ShoppingCart,
   Clock,
@@ -15,12 +16,9 @@ import {
   Newspaper,
   Users,
   ExternalLink,
-  Calendar,
-  MapPin,
   TrendingUp,
   Activity,
   Plus,
-  ShoppingBag,
 } from 'lucide-react';
 
 const timeAgo = (iso: string): string => {
@@ -37,19 +35,36 @@ export default function AdminHome() {
   const router = useRouter();
   const { matches, sponsors, products, orders, newsList, bluePoints, auditLog } = useApp();
 
-  const upcomingFootball = matches.find((m) => m.sport === 'football' && (m.status === 'upcoming' || m.status === 'live'));
-  const upcomingBasketball = matches.find((m) => m.sport === 'basketball' && (m.status === 'upcoming' || m.status === 'live'));
+  const [adminOrders, setAdminOrders] = useState<any[]>([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
 
-  const pendingOrders = orders.filter((o) => o.status === 'pending');
+  useEffect(() => {
+    api
+      .getAdminOrders()
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : data?.orders || [];
+        setAdminOrders(list);
+        setTotalOrdersCount(data?.total !== undefined ? data.total : list.length);
+      })
+      .catch((err) => {
+        console.error('[Dashboard] Error fetching admin orders:', err);
+      });
+  }, []);
+
+  const effectiveOrders = adminOrders.length > 0 ? adminOrders : orders;
+  const pendingOrders = effectiveOrders.filter((o) => o.status === 'pending');
+  const confirmedOrders = effectiveOrders.filter((o) => o.status === 'confirmed');
+  const cancelledOrders = effectiveOrders.filter((o) => o.status === 'cancelled');
+
   const lowStockProducts = products.filter((p) => typeof p.stock === 'number' && p.stock > 0 && p.stock <= 10);
   const outOfStockProducts = products.filter((p) => p.available === false || p.stock === 0);
   const activeSponsors = sponsors.length;
   const publishedArticles = newsList.filter((n) => n.published !== false).length;
 
   const ordersByStatus = [
-    { label: 'Pending', count: orders.filter((o) => o.status === 'pending').length, color: 'bg-amber-400' },
-    { label: 'Confirmed', count: orders.filter((o) => o.status === 'confirmed').length, color: 'bg-emerald-400' },
-    { label: 'Cancelled', count: orders.filter((o) => o.status === 'cancelled').length, color: 'bg-red-400' },
+    { label: 'Pending', count: pendingOrders.length, color: 'bg-amber-400' },
+    { label: 'Confirmed', count: confirmedOrders.length, color: 'bg-emerald-400' },
+    { label: 'Cancelled', count: cancelledOrders.length, color: 'bg-red-400' },
   ];
   const maxOrderCount = Math.max(1, ...ordersByStatus.map((o) => o.count));
 
@@ -121,49 +136,13 @@ export default function AdminHome() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Pending Orders" value={pendingOrders.length} icon={Clock} accent="amber" />
-        <StatCard label="Total Orders" value={orders.length} icon={ShoppingCart} accent="blue" />
+        <StatCard label="Total Orders" value={totalOrdersCount || effectiveOrders.length} icon={ShoppingCart} accent="blue" />
         <StatCard label="Products in Catalog" value={products.length} icon={Package} accent="slate" />
         <StatCard label="Out of Stock" value={outOfStockProducts.length} icon={AlertTriangle} accent="red" />
         <StatCard label="Active Sponsors" value={activeSponsors} icon={Handshake} accent="blue" />
         <StatCard label="Published Articles" value={publishedArticles} icon={Newspaper} accent="emerald" />
         <StatCard label="Live/Upcoming Matches" value={matches.filter((m) => m.status !== 'finished').length} icon={Radio} accent="blue" />
         <StatCard label="Fan Blue Points (session)" value={bluePoints} icon={Users} accent="emerald" />
-      </div>
-
-      {/* Next matches */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {[
-          { label: 'Next Football Match', match: upcomingFootball },
-          { label: 'Next Basketball Match', match: upcomingBasketball },
-        ].map(({ label, match }) => (
-          <div key={label} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-              {match?.status === 'live' && (
-                <span className="flex items-center gap-1 text-[10px] font-black uppercase text-red-500">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" /> Live
-                </span>
-              )}
-            </div>
-            {match ? (
-              <div>
-                <p className="text-sm font-black text-slate-900">
-                  {match.homeTeam} <span className="text-slate-400 font-normal">vs</span> {match.awayTeam}
-                </p>
-                <div className="flex items-center gap-4 mt-2 text-[11px] text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={12} /> {match.date} • {match.time}
-                  </span>
-                  <span className="flex items-center gap-1 truncate">
-                    <MapPin size={12} /> {match.venue}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-slate-400">No upcoming fixture scheduled.</p>
-            )}
-          </div>
-        ))}
       </div>
 
       {/* Charts */}
