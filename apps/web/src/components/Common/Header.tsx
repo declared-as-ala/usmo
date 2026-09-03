@@ -347,28 +347,6 @@ export const Header: React.FC = () => {
                     </span>
                   )}
                 </button>
-
-                {/* Notifications — logged-in fans only */}
-                {isLoggedIn && (
-                  <>
-                    <span className="w-px h-4 bg-white/10" />
-                    <button
-                      onClick={() => {
-                        setProfileOpen(false);
-                        router.push('/compte/notifications');
-                      }}
-                      className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
-                      title="Notifications"
-                    >
-                      <Bell size={15} />
-                      {unreadCount > 0 && (
-                        <span className="absolute top-0.5 end-0.5 hidden sm:flex h-3.5 w-3.5 items-center justify-center rounded-full bg-usm-teal-accent text-[7px] font-black text-usm-blue-dark ring-2 ring-[#040b1c]">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  </>
-                )}
               </div>
 
               {/* Supporter profile (authenticated) or Connexion / S'inscrire buttons (guests) */}
@@ -406,9 +384,13 @@ export const Header: React.FC = () => {
                         onMouseDown={(e) => e.stopPropagation()}
                         className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-64 bg-white border border-usm-border rounded-2xl shadow-2xl p-4 z-50 text-usm-blue-dark"
                       >
-                        <Link
+                        <a
                           href="/compte"
-                          onClick={() => setProfileOpen(false)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setProfileOpen(false);
+                            window.location.href = '/compte';
+                          }}
                           className="flex items-center gap-3 border-b border-usm-border pb-3 mb-3 hover:opacity-85 transition-opacity cursor-pointer block text-left rtl:text-right"
                         >
                           <div className="relative h-11 w-11 rounded-2xl bg-usm-blue-soft flex items-center justify-center border border-usm-border overflow-hidden shrink-0 shadow-sm">
@@ -428,7 +410,7 @@ export const Header: React.FC = () => {
                               {tr(language, 'View Profile →', 'Voir mon profil →', 'عرض الحساب ←')}
                             </span>
                           </div>
-                        </Link>
+                        </a>
 
                         <div className="space-y-1.5 mb-3">
                           {userRole === 'admin' && (
@@ -440,33 +422,21 @@ export const Header: React.FC = () => {
                               {tr(language, 'Admin Panel', 'Panneau Admin', 'لوحة التحكم')}
                             </Link>
                           )}
-                          <Link
+                          <a
                             href="/compte"
-                            onClick={() => setProfileOpen(false)}
-                            className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl bg-usm-blue-primary text-white text-[11px] font-black uppercase tracking-wider hover:bg-usm-blue-primary/95 transition-all cursor-pointer shadow-md shadow-usm-blue-primary/25 text-left rtl:text-right"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setProfileOpen(false);
+                              window.location.href = '/compte';
+                            }}
+                            className="w-full flex items-center justify-between py-2.5 px-3.5 rounded-xl bg-usm-blue-primary text-white text-[11px] font-black uppercase tracking-wider hover:bg-usm-blue-primary/95 transition-all cursor-pointer shadow-md shadow-usm-blue-primary/25 text-left rtl:text-right"
                           >
                             <span className="flex items-center gap-2">
                               <User size={14} />
                               <span>{tr(language, 'My Profile', 'Mon profil', 'ملفي الشخصي')}</span>
                             </span>
-                            <span className="text-[10px] font-black opacity-80">→</span>
-                          </Link>
-                          <Link
-                            href="/compte/profil"
-                            onClick={() => setProfileOpen(false)}
-                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
-                          >
-                            <Shield size={13} />
-                            <span>{tr(language, 'Account Settings', 'Paramètres du compte', 'إعدادات الحساب')}</span>
-                          </Link>
-                          <Link
-                            href="/compte/securite"
-                            onClick={() => setProfileOpen(false)}
-                            className="w-full flex items-center gap-2.5 py-2 px-3 rounded-xl bg-usm-blue-soft/60 text-usm-blue-dark text-[11px] font-bold uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer text-left rtl:text-right"
-                          >
-                            <Shield size={13} />
-                            <span>{tr(language, 'Security', 'Sécurité', 'الأمان')}</span>
-                          </Link>
+                            <span className="text-[11px] font-black opacity-80">→</span>
+                          </a>
                         </div>
 
                         <button
