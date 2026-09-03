@@ -85,17 +85,47 @@ export class ApiFootballProvider implements SportsDataProvider {
   }
 
   /**
+   * Normalize season string (e.g. '2026-2027' -> '2026', or '2024/2025' -> '2024')
+   * API-Football requires a strict 4-digit integer year for the season query parameter.
+   */
+  private normalizeSeason(season?: string): string {
+    if (!season) return '2024';
+    const match = season.match(/\b(19\d\d|20\d\d)\b/);
+    if (match) return match[1];
+    const digits = season.replace(/[^\d]/g, '');
+    return digits.length >= 4 ? digits.slice(0, 4) : '2024';
+  }
+
+  /**
    * Fetch standings for a league and season.
    */
   async getStandings(leagueExternalId: string, season: string): Promise<StandingDto[]> {
-    const targetSeason = season || '2024';
-    const data = await this.request<any>(`/standings?league=${leagueExternalId}&season=${targetSeason}`);
+    const targetSeason = this.normalizeSeason(season);
+    let data = await this.request<any>(`/standings?league=${leagueExternalId}&season=${targetSeason}`);
 
-    if (!data || !data.response || !data.response[0] || !data.response[0].league || !data.response[0].league.standings) {
-      return [];
+    let standingsRows = data?.response?.[0]?.league?.standings?.[0];
+
+    // Fallback if target season has no standings on API-Football yet (e.g. 2026 before season starts)
+    if (!Array.isArray(standingsRows) || standingsRows.length === 0) {
+      const yearNum = parseInt(targetSeason, 10);
+      const fallbackYears = [String(yearNum - 1), '2025', '2024'].filter(
+        (y) => y !== targetSeason && parseInt(y, 10) >= 2023,
+      );
+
+      for (const fallbackYear of fallbackYears) {
+        this.logger.log(
+          `Standings empty for league ${leagueExternalId} season ${targetSeason}. Trying fallback season ${fallbackYear}...`,
+        );
+        const fallbackData = await this.request<any>(`/standings?league=${leagueExternalId}&season=${fallbackYear}`);
+        const rows = fallbackData?.response?.[0]?.league?.standings?.[0];
+        if (Array.isArray(rows) && rows.length > 0) {
+          standingsRows = rows;
+          this.logger.log(`Found ${rows.length} standings rows on fallback season ${fallbackYear}`);
+          break;
+        }
+      }
     }
 
-    const standingsRows = data.response[0].league.standings[0] || [];
     if (!Array.isArray(standingsRows) || standingsRows.length === 0) {
       return [];
     }
@@ -215,15 +245,28 @@ export class ApiFootballProvider implements SportsDataProvider {
    * Fetch upcoming fixtures.
    */
   async getFixtures(teamExternalId: string, leagueExternalId?: string, season?: string): Promise<FixtureDto[]> {
-    const targetSeason = season || '2024';
+    const targetSeason = this.normalizeSeason(season);
     const targetTeam = teamExternalId || USM_TEAM_ID;
-    const data = await this.request<any>(`/fixtures?team=${targetTeam}&season=${targetSeason}`);
+    let data = await this.request<any>(`/fixtures?team=${targetTeam}&season=${targetSeason}`);
 
-    if (!data || !Array.isArray(data.response)) {
+    let responseList = data?.response;
+    if (!Array.isArray(responseList) || responseList.length === 0) {
+      const yearNum = parseInt(targetSeason, 10);
+      for (const fallbackYear of [String(yearNum - 1), '2025', '2024']) {
+        if (fallbackYear === targetSeason) continue;
+        const fallbackData = await this.request<any>(`/fixtures?team=${targetTeam}&season=${fallbackYear}`);
+        if (Array.isArray(fallbackData?.response) && fallbackData.response.length > 0) {
+          responseList = fallbackData.response;
+          break;
+        }
+      }
+    }
+
+    if (!Array.isArray(responseList)) {
       return [];
     }
 
-    const fixtures = data.response.map((item: any) => this.normalizeFixture(item));
+    const fixtures = responseList.map((item: any) => this.normalizeFixture(item));
     return fixtures
       .filter((f) => f.status === 'upcoming' || f.status === 'live')
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -233,15 +276,28 @@ export class ApiFootballProvider implements SportsDataProvider {
    * Fetch past results.
    */
   async getResults(teamExternalId: string, leagueExternalId?: string, season?: string, limit = 10): Promise<FixtureDto[]> {
-    const targetSeason = season || '2024';
+    const targetSeason = this.normalizeSeason(season);
     const targetTeam = teamExternalId || USM_TEAM_ID;
-    const data = await this.request<any>(`/fixtures?team=${targetTeam}&season=${targetSeason}`);
+    let data = await this.request<any>(`/fixtures?team=${targetTeam}&season=${targetSeason}`);
 
-    if (!data || !Array.isArray(data.response)) {
+    let responseList = data?.response;
+    if (!Array.isArray(responseList) || responseList.length === 0) {
+      const yearNum = parseInt(targetSeason, 10);
+      for (const fallbackYear of [String(yearNum - 1), '2025', '2024']) {
+        if (fallbackYear === targetSeason) continue;
+        const fallbackData = await this.request<any>(`/fixtures?team=${targetTeam}&season=${fallbackYear}`);
+        if (Array.isArray(fallbackData?.response) && fallbackData.response.length > 0) {
+          responseList = fallbackData.response;
+          break;
+        }
+      }
+    }
+
+    if (!Array.isArray(responseList)) {
       return [];
     }
 
-    const fixtures = data.response.map((item: any) => this.normalizeFixture(item));
+    const fixtures = responseList.map((item: any) => this.normalizeFixture(item));
     return fixtures
       .filter((f) => f.status === 'finished')
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

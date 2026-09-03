@@ -124,6 +124,7 @@ export class SportsSyncService {
 
     if (params.status === 'SUCCESS') {
       statusUpdate.lastSuccessfulSyncAt = new Date();
+      statusUpdate.errorMessage = null;
     }
 
     await this.statusModel.findOneAndUpdate(
@@ -212,8 +213,12 @@ export class SportsSyncService {
       // Validation
       const validation = await this.validateStandingsResponse(sport, season, rows);
       if (!validation.valid) {
-        const errorMsg = `Aucune donnée valide reçue (${validation.reason}) — données existantes conservées.`;
-        this.logger.warn(`Standings validation failed for ${sport}: ${validation.reason}`);
+        const existingCount = await this.standingModel.countDocuments({ sport, season });
+        const errorMsg =
+          existingCount > 0
+            ? `Données protégées (${existingCount} équipes actives en base) — ${validation.reason} — données existantes conservées.`
+            : `Aucune donnée valide reçue (${validation.reason}) — données existantes conservées.`;
+        this.logger.warn(`Standings validation notice for ${sport}: ${validation.reason}`);
 
         await this.recordSyncResult({
           provider: providerName,
@@ -228,7 +233,7 @@ export class SportsSyncService {
           skippedCount: fetchedCount,
           durationMs: Date.now() - startTime,
           triggeredBy,
-          errorMessage: validation.reason,
+          errorMessage: existingCount > 0 ? null : validation.reason,
         });
 
         return { status: 'SKIPPED', updated: 0, fetched: fetchedCount, message: errorMsg };
@@ -729,7 +734,7 @@ export class SportsSyncService {
         lastSuccessfulSyncAt: lastStandingFootball?.lastSuccessfulSyncAt || null,
         lastAttemptAt: lastStandingFootball?.lastAttemptAt || null,
         lastStatus: lastStandingFootball?.status || 'UNKNOWN',
-        lastError: lastStandingFootball?.errorMessage || null,
+        lastError: lastStandingFootball?.status === 'FAILED' ? (lastStandingFootball?.errorMessage || null) : null,
       },
       basketball: {
         provider: config.basketball.provider,
@@ -742,7 +747,7 @@ export class SportsSyncService {
         lastSuccessfulSyncAt: lastStandingBasketball?.lastSuccessfulSyncAt || null,
         lastAttemptAt: lastStandingBasketball?.lastAttemptAt || null,
         lastStatus: lastStandingBasketball?.status || 'UNKNOWN',
-        lastError: lastStandingBasketball?.errorMessage || null,
+        lastError: lastStandingBasketball?.status === 'FAILED' ? (lastStandingBasketball?.errorMessage || null) : null,
       },
       statuses,
       serverTime: new Date().toISOString(),
