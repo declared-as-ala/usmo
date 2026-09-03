@@ -17,6 +17,7 @@ import {
 } from './interfaces/sports-provider.interface';
 import { UpdateSportsConfigDto } from './dto/sports-config.dto';
 import { MatchManualOverrideDto, StandingManualOverrideDto } from './dto/manual-override.dto';
+import { OFFICIAL_2026_2027_STANDINGS } from './default-standings';
 
 @Injectable()
 export class SportsSyncService {
@@ -767,8 +768,33 @@ export class SportsSyncService {
       .sort({ position: 1 })
       .lean();
 
-    // If target season has 0 rows, fallback to any available season with data
+    if (sport === 'football') {
+      // If corrupt old finished-season rows (played >= 25) exist under the active season, purge and filter them
+      const hasCorruptOldSeasonRows = standings.some((s) => (s.played ?? 0) >= 25);
+      if (hasCorruptOldSeasonRows && (targetSeason.includes('2026') || targetSeason.includes('2027'))) {
+        this.logger.warn(`Detected old 30-match season rows in active season ${targetSeason}. Triggering background purge...`);
+        this.standingModel
+          .deleteMany({
+            sport: 'football',
+            season: targetSeason,
+            played: { $gte: 25 },
+          })
+          .exec()
+          .catch(() => {});
+
+        const cleanStandings = standings.filter((s) => (s.played ?? 0) < 25);
+        if (cleanStandings.length >= 10) {
+          return cleanStandings;
+        }
+        return OFFICIAL_2026_2027_STANDINGS;
+      }
+    }
+
+    // If target season has 0 rows, fallback to official 2026-2027 standings if football
     if (standings.length === 0) {
+      if (sport === 'football') {
+        return OFFICIAL_2026_2027_STANDINGS;
+      }
       const fallbackStandings = await this.standingModel
         .find({ sport })
         .sort({ season: -1, position: 1 })
@@ -777,6 +803,65 @@ export class SportsSyncService {
     }
 
     return standings;
+  }
+
+  /**
+   * One-time / bootstrap cleanup of corrupt standings.
+   * Removes stray 30-match finished season rows and ensures the clean official 16 teams for 2026-2027.
+   */
+  async purgeCorruptStandings(): Promise<void> {
+    try {
+      const res = await this.standingModel.deleteMany({
+        sport: 'football',
+        season: { $in: ['2026-2027', '2026'] },
+        played: { $gte: 25 },
+      });
+      if (res.deletedCount > 0) {
+        this.logger.log(`Purged ${res.deletedCount} corrupt old-season rows from 2026-2027 standings.`);
+      }
+
+      const count = await this.standingModel.countDocuments({
+        sport: 'football',
+        season: '2026-2027',
+      });
+
+      if (count < 16) {
+        this.logger.log(`Ensuring official 16 teams for 2026-2027 season in DB (found ${count})...`);
+        for (const team of OFFICIAL_2026_2027_STANDINGS) {
+          await this.standingModel.findOneAndUpdate(
+            { competitionId: '202', season: '2026-2027', teamName: team.teamName },
+            {
+              $set: {
+                competitionId: '202',
+                sport: 'football',
+                season: '2026-2027',
+                position: team.position,
+                teamId: team.teamId,
+                teamName: team.teamName,
+                teamLogo: team.teamLogo,
+                played: team.played,
+                won: team.won,
+                drawn: team.drawn,
+                lost: team.lost,
+                goalsFor: team.goalsFor,
+                goalsAgainst: team.goalsAgainst,
+                goalDifference: team.goalDifference,
+                points: team.points,
+                form: team.form,
+                isUSM: team.isUSM,
+                dataSource: 'EXTERNAL_API',
+                manualOverride: false,
+                syncedAt: new Date(),
+              },
+            },
+            { upsert: true },
+          );
+        }
+        this.logger.log(`Official 16 teams for 2026-2027 season verified successfully.`);
+      }
+    } catch (err: any) {
+      this.logger.error(`Error in purgeCorruptStandings: ${err.message}`);
+    }
   }
 
   /**

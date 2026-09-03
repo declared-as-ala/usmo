@@ -22,6 +22,9 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
    */
   async onApplicationBootstrap() {
     this.logger.log('SportsSyncScheduler initialized for timezone Africa/Tunis.');
+    // Clean up any corrupt old-season rows and ensure official 2026-2027 standings
+    this.syncService.purgeCorruptStandings().catch((e) => this.logger.warn(`Standings purge notice: ${e.message}`));
+
     setTimeout(async () => {
       try {
         const health = await this.syncService.getHealthStatus();

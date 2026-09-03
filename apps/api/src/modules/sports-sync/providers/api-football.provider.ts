@@ -103,28 +103,7 @@ export class ApiFootballProvider implements SportsDataProvider {
     const targetSeason = this.normalizeSeason(season);
     let data = await this.request<any>(`/standings?league=${leagueExternalId}&season=${targetSeason}`);
 
-    let standingsRows = data?.response?.[0]?.league?.standings?.[0];
-
-    // Fallback if target season has no standings on API-Football yet (e.g. 2026 before season starts)
-    if (!Array.isArray(standingsRows) || standingsRows.length === 0) {
-      const yearNum = parseInt(targetSeason, 10);
-      const fallbackYears = [String(yearNum - 1), '2025', '2024'].filter(
-        (y) => y !== targetSeason && parseInt(y, 10) >= 2023,
-      );
-
-      for (const fallbackYear of fallbackYears) {
-        this.logger.log(
-          `Standings empty for league ${leagueExternalId} season ${targetSeason}. Trying fallback season ${fallbackYear}...`,
-        );
-        const fallbackData = await this.request<any>(`/standings?league=${leagueExternalId}&season=${fallbackYear}`);
-        const rows = fallbackData?.response?.[0]?.league?.standings?.[0];
-        if (Array.isArray(rows) && rows.length > 0) {
-          standingsRows = rows;
-          this.logger.log(`Found ${rows.length} standings rows on fallback season ${fallbackYear}`);
-          break;
-        }
-      }
-    }
+    const standingsRows = data?.response?.[0]?.league?.standings?.[0];
 
     if (!Array.isArray(standingsRows) || standingsRows.length === 0) {
       return [];
