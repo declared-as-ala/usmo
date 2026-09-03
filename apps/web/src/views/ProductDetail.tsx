@@ -615,7 +615,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               <div className="p-3 bg-white border border-usm-border rounded-xl flex items-center gap-2">
                 <Truck className="text-usm-blue-primary shrink-0" size={16} />
                 <span className="text-[10px] font-bold text-slate-600 leading-tight">
-                  {tr(language, 'Home Delivery 🚚', 'Livraison à Domicile 🚚', 'توصيل إلى المنزل 🚚')}
+                  {tr(language, 'Home Delivery', 'Livraison à Domicile', 'توصيل إلى المنزل')}
                 </span>
               </div>
               <div className="p-3 bg-white border border-usm-border rounded-xl flex items-center gap-2">
