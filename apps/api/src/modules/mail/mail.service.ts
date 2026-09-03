@@ -281,8 +281,9 @@ export class MailService {
       },
     ];
 
-    const logoImgSrc = 'cid:usm-logo';
-    const ibrandLogoSrc = 'cid:ibrand-logo';
+    // Logo sources: direct HTTPS URLs ensures instant display across all webmail and mobile clients (Gmail, Outlook, Yahoo, Apple Mail)
+    const logoImgSrc = 'https://raw.githubusercontent.com/declared-as-ala/usmo/main/apps/web/public/logo%20foot.png';
+    const ibrandLogoSrc = 'https://ibrandtunisia.tn/wp-content/uploads/2025/08/icon-iBrand-Tunisia-2026-footer3.png';
 
     const formatTnd = (m: number) => ((m || 0) / 1000).toFixed(3) + ' DT';
 
@@ -350,8 +351,8 @@ export class MailService {
           <div class="card">
             <!-- Header with Official Club Badge -->
             <div class="header">
-              <div class="logo-box">
-                <img src="${logoImgSrc}" alt="US Monastir" />
+              <div class="logo-box" style="width: 76px; height: 76px; border-radius: 50%; background: #ffffff; margin: 0 auto; padding: 4px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); text-align: center;">
+                <img src="${logoImgSrc}" alt="US Monastir" width="68" height="68" style="display: block; width: 68px; height: 68px; border-radius: 50%; object-fit: contain; margin: 0 auto; border: 0;" />
               </div>
               <h1 class="title">Union Sportive Monastirienne</h1>
               <p class="subtitle">Boutique Officielle de l'Union Sportive Monastirienne</p>
