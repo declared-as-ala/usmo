@@ -321,8 +321,8 @@ export class MailService {
           .wrapper { width: 100%; background-color: #f1f5f9; padding: 30px 12px; }
           .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(6,26,58,0.08); }
           .header { background: linear-gradient(135deg, #061A3A 0%, #0D3B66 50%, #0D63FF 100%); padding: 36px 24px 30px; text-align: center; color: #ffffff; }
-          .logo-box { width: 76px; height: 76px; border-radius: 50%; background: #ffffff; margin: 0 auto; padding: 6px; box-shadow: 0 6px 16px rgba(0,0,0,0.3); display: block; }
-          .logo-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; display: block; }
+          .logo-box { margin: 0 auto 12px; text-align: center; }
+          .logo-box img { width: 80px; height: 80px; object-fit: contain; display: block; margin: 0 auto; border: 0; }
           .title { margin: 16px 0 2px; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; }
           .subtitle { margin: 0; font-size: 11px; font-weight: 700; color: #3ed6d0; letter-spacing: 1px; text-transform: uppercase; }
           .body { padding: 32px 28px; }
@@ -351,8 +351,8 @@ export class MailService {
           <div class="card">
             <!-- Header with Official Club Badge -->
             <div class="header">
-              <div class="logo-box" style="width: 76px; height: 76px; border-radius: 50%; background: #ffffff; margin: 0 auto; padding: 4px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); text-align: center;">
-                <img src="${logoImgSrc}" alt="US Monastir" width="68" height="68" style="display: block; width: 68px; height: 68px; border-radius: 50%; object-fit: contain; margin: 0 auto; border: 0;" />
+              <div class="logo-box" style="margin: 0 auto 14px; text-align: center;">
+                <img src="${logoImgSrc}" alt="US Monastir" width="80" height="80" style="display: block; width: 80px; height: 80px; object-fit: contain; margin: 0 auto; border: 0;" />
               </div>
               <h1 class="title">Union Sportive Monastirienne</h1>
               <p class="subtitle">Boutique Officielle de l'Union Sportive Monastirienne</p>
