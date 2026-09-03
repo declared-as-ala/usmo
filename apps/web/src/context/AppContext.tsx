@@ -847,11 +847,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             contactEmail: data.contactEmail || defaultClubSettings.contactEmail,
             contactPhone: data.contactPhone || defaultClubSettings.contactPhone,
             address: data.address || defaultClubSettings.address,
-            facebook: data.facebook ?? defaultClubSettings.facebook,
-            instagram: data.instagram ?? defaultClubSettings.instagram,
-            youtube: data.youtube ?? defaultClubSettings.youtube,
-            twitter: data.twitter ?? defaultClubSettings.twitter,
-            tiktok: data.tiktok ?? defaultClubSettings.tiktok,
+            facebook: data.facebook || defaultClubSettings.facebook,
+            instagram: data.instagram || defaultClubSettings.instagram,
+            youtube: data.youtube || defaultClubSettings.youtube,
+            twitter: data.twitter || defaultClubSettings.twitter,
+            tiktok: data.tiktok || defaultClubSettings.tiktok,
           });
         }
       })
