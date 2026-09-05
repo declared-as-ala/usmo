@@ -27,14 +27,14 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
     >
       {repetitions.map((i) => (
         <span key={i} className="inline-flex items-center">
-          <span className="inline-flex items-center gap-1.5 xs:gap-2 mx-3.5 xs:mx-5 sm:mx-6 text-[10px] xs:text-[11px] sm:text-xs font-black uppercase tracking-[0.12em] xs:tracking-[0.15em] text-white">
-            <span className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 xs:gap-2 mx-3.5 xs:mx-5 sm:mx-6 text-[10px] xs:text-[11px] sm:text-xs font-black uppercase tracking-[0.12em] xs:tracking-[0.15em] text-white no-underline">
+            <span className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.45)] whitespace-nowrap no-underline">
               🔥 PRÉCOMMANDES OUVERTES
             </span>
-            <span className="text-amber-400 font-black drop-shadow-[0_0_12px_rgba(251,191,36,0.6)] whitespace-nowrap">
+            <span className="text-amber-400 font-black drop-shadow-[0_0_12px_rgba(251,191,36,0.6)] whitespace-nowrap no-underline">
               🔥 STOCK LIMITÉ
             </span>
-            <span className="text-[#38BDF8] font-black underline decoration-[#38BDF8]/60 underline-offset-2 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)] whitespace-nowrap">
+            <span className="text-[#38BDF8] font-black drop-shadow-[0_0_12px_rgba(56,189,248,0.6)] whitespace-nowrap no-underline">
               🔥 PRÉCOMMANDEZ MAINTENANT
             </span>
           </span>
@@ -66,7 +66,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
       {/* Clickable ticker marquee leading to official boutique */}
       <Link
         href={href}
-        className="flex items-center h-8 sm:h-8.5 w-full cursor-pointer hover:brightness-110 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D63FF]"
+        className="flex items-center h-8 sm:h-8.5 w-full cursor-pointer no-underline hover:no-underline hover:brightness-110 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D63FF]"
         title="Précommander sur la Boutique Officielle USM"
       >
         <div className="flex w-max animate-usm-ticker">

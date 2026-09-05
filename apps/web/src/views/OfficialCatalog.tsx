@@ -174,7 +174,7 @@ export const OfficialCatalog: React.FC = () => {
           no second block of section padding stacked on top of the hero's own. */}
       <section className="relative isolate overflow-hidden bg-white text-usm-blue-dark">
         <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-usm-blue-primary/10 blur-[110px] sm:h-96 sm:w-96" />
-        <div className="relative mx-auto max-w-[1440px] px-4 pb-5 pt-24 sm:px-8 sm:pb-6 sm:pt-28 lg:px-12 lg:pb-7 lg:pt-28">
+        <div className="relative mx-auto max-w-[1440px] px-4 pb-5 pt-28 sm:px-8 sm:pb-6 sm:pt-32 lg:px-12 lg:pb-7 lg:pt-36 xl:pt-40">
           <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:gap-10">
             <div className="max-w-xl">
               <h1 className="break-words font-display text-3xl font-black uppercase leading-[.95] tracking-[-.02em] text-usm-blue-dark sm:text-4xl lg:text-4xl">

@@ -10,6 +10,7 @@ import { Match, MatchSchema } from '../matches/match.schema';
 import { ApiFootballProvider } from './providers/api-football.provider';
 import { TheSportsDbProvider } from './providers/thesportsdb.provider';
 import { BasketballProvider } from './providers/basketball.provider';
+import { KawarjiProvider } from './providers/kawarji.provider';
 import { SportsProviderService } from './sports-provider.service';
 import { SportsSyncService } from './sports-sync.service';
 import { SportsSyncScheduler } from './sports-sync.scheduler';
@@ -32,6 +33,7 @@ import { SportsSyncController } from './sports-sync.controller';
     ApiFootballProvider,
     TheSportsDbProvider,
     BasketballProvider,
+    KawarjiProvider,
     SportsProviderService,
     SportsSyncService,
     SportsSyncScheduler,

@@ -165,7 +165,8 @@ export default function AdminSportsSettings() {
                 onChange={(e) => setForm({ ...form, football: { ...form.football, provider: e.target.value } })}
                 className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
               >
-                <option value="api-football">API-Football / API-Sports (Recommandé - Couverture Complète)</option>
+                <option value="kawarji">Kawarji Live (Ligue 1 Tunisienne — Données Réelles Directes)</option>
+                <option value="api-football">API-Football / API-Sports (Fixtures & Calendrier)</option>
                 <option value="thesportsdb">TheSportsDB</option>
                 <option value="manual">Mode Manuel Exclusif</option>
               </select>

@@ -7,6 +7,8 @@ import { BasketballProvider } from './providers/basketball.provider';
 import { SportsConfig } from './schemas/sports-config.schema';
 import { SportsDataProvider, SportType } from './interfaces/sports-provider.interface';
 
+import { KawarjiProvider } from './providers/kawarji.provider';
+
 @Injectable()
 export class SportsProviderService {
   private readonly logger = new Logger(SportsProviderService.name);
@@ -16,6 +18,7 @@ export class SportsProviderService {
     private readonly apiFootballProvider: ApiFootballProvider,
     private readonly theSportsDbProvider: TheSportsDbProvider,
     private readonly basketballProvider: BasketballProvider,
+    private readonly kawarjiProvider: KawarjiProvider,
   ) {}
 
   /**
@@ -47,11 +50,14 @@ export class SportsProviderService {
       };
     }
 
-    // Default: Football
+    // Default: Football — use Kawarji live by default for real-time Tunisian Ligue 1
     const fSettings = config.football;
-    let provider: SportsDataProvider = this.apiFootballProvider;
+    let provider: SportsDataProvider = this.kawarjiProvider;
     if (fSettings.provider === 'thesportsdb') {
       provider = this.theSportsDbProvider;
+    } else {
+      // KawarjiProvider handles live standings directly and delegates fixtures to ApiFootballProvider
+      provider = this.kawarjiProvider;
     }
 
     return {

@@ -231,8 +231,8 @@ export const Home: React.FC = () => {
         {/* Standings */}
         <div>
           <h3 className="font-display font-extrabold text-2xl uppercase tracking-wider text-usm-blue-dark border-b-2 border-usm-blue-primary/40 pb-2 mb-6 flex items-center justify-between">
-            <span>📈 {language === 'ar' ? 'ترتيب البطولة المحترفة الأولى' : 'Ligue 1 Standings'}</span>
-            <span className="text-[9px] font-bold text-slate-500 normal-case tracking-normal">TheSportsDB</span>
+            <span>📈 {language === 'ar' ? 'ترتيب البطولة المحترفة الأولى' : 'Tableau de classement de la ligue'}</span>
+            <span className="text-[9px] font-bold text-slate-500 normal-case tracking-normal">Ligue 1 Professionnelle</span>
           </h3>
           <LeagueStandingsTable
             limit={5}

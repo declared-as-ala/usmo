@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Standing } from './schemas/standing.schema';
@@ -18,6 +18,7 @@ import {
 import { UpdateSportsConfigDto } from './dto/sports-config.dto';
 import { MatchManualOverrideDto, StandingManualOverrideDto } from './dto/manual-override.dto';
 import { OFFICIAL_2026_2027_STANDINGS } from './default-standings';
+import { KawarjiProvider } from './providers/kawarji.provider';
 
 @Injectable()
 export class SportsSyncService {
@@ -31,6 +32,7 @@ export class SportsSyncService {
     @InjectModel(SportsSyncLock.name) private readonly lockModel: Model<SportsSyncLock>,
     @InjectModel(Match.name) private readonly matchModel: Model<Match>,
     private readonly providerService: SportsProviderService,
+    @Optional() private readonly kawarjiProvider?: KawarjiProvider,
   ) {}
 
   /**
@@ -208,8 +210,23 @@ export class SportsSyncService {
 
       this.logger.log(`Sports sync started - Provider: ${providerName}, Sport: ${sport}, League: ${leagueExternalId}, Season: ${season}`);
 
-      const rows = await provider.getStandings(leagueExternalId, season);
-      const fetchedCount = rows ? rows.length : 0;
+      let rows = await provider.getStandings(leagueExternalId, season);
+      let fetchedCount = rows ? rows.length : 0;
+
+      // If primary provider returned incomplete standings (< 10 teams) for football, auto-fetch from live Kawarji
+      if (sport === 'football' && fetchedCount < 10 && this.kawarjiProvider) {
+        this.logger.log('Primary provider returned incomplete standings. Auto-fetching from live Kawarji provider...');
+        try {
+          const liveRows = await this.kawarjiProvider.getStandings(leagueExternalId, season);
+          if (liveRows && liveRows.length >= 10) {
+            rows = liveRows;
+            fetchedCount = rows.length;
+            providerName = 'kawarji-live';
+          }
+        } catch (liveErr: any) {
+          this.logger.warn(`Live Kawarji fetch error: ${liveErr.message}`);
+        }
+      }
 
       // Validation
       const validation = await this.validateStandingsResponse(sport, season, rows);
@@ -757,40 +774,44 @@ export class SportsSyncService {
   }
 
   /**
-   * Query synchronized standings from MongoDB cache.
+   * Query synchronized standings from MongoDB cache with auto-refresh.
    */
   async getPublicStandings(sport: SportType = 'football', season?: string) {
     const config = await this.providerService.getConfig();
     const targetSeason = season || (sport === 'football' ? config.football.currentSeason : config.basketball.currentSeason);
 
-    const standings = await this.standingModel
+    let standings = await this.standingModel
       .find({ sport, season: targetSeason })
       .sort({ position: 1 })
       .lean();
 
+    // Auto-fetch if DB has no standings or if data is stale (> 2 hours)
     if (sport === 'football') {
-      // If corrupt old finished-season rows (played >= 25) exist under the active season, purge and filter them
-      const hasCorruptOldSeasonRows = standings.some((s) => (s.played ?? 0) >= 25);
-      if (hasCorruptOldSeasonRows && (targetSeason.includes('2026') || targetSeason.includes('2027'))) {
-        this.logger.warn(`Detected old 30-match season rows in active season ${targetSeason}. Triggering background purge...`);
-        this.standingModel
-          .deleteMany({
-            sport: 'football',
-            season: targetSeason,
-            played: { $gte: 25 },
-          })
-          .exec()
-          .catch(() => {});
+      const now = Date.now();
+      const isMissing = standings.length < 10;
+      const isStale = standings.some(
+        (s) => !s.syncedAt || now - new Date(s.syncedAt).getTime() > 2 * 60 * 60 * 1000,
+      );
 
-        const cleanStandings = standings.filter((s) => (s.played ?? 0) < 25);
-        if (cleanStandings.length >= 10) {
-          return cleanStandings;
+      if (isMissing) {
+        try {
+          await this.syncStandings('football', 'CRON');
+          standings = await this.standingModel
+            .find({ sport, season: targetSeason })
+            .sort({ position: 1 })
+            .lean();
+        } catch (syncErr: any) {
+          this.logger.warn(`Auto-fetch standings on missing data failed: ${syncErr.message}`);
         }
-        return OFFICIAL_2026_2027_STANDINGS;
+      } else if (isStale) {
+        // Stale-while-revalidate: return cached instantly while refreshing in the background
+        this.syncStandings('football', 'CRON').catch((err) =>
+          this.logger.warn(`Background standings auto-refresh failed: ${err.message}`),
+        );
       }
     }
 
-    // If target season has 0 rows, fallback to official 2026-2027 standings if football
+    // If target season has 0 rows, fallback to official standings if football
     if (standings.length === 0) {
       if (sport === 'football') {
         return OFFICIAL_2026_2027_STANDINGS;
@@ -807,58 +828,42 @@ export class SportsSyncService {
 
   /**
    * One-time / bootstrap cleanup of corrupt standings.
-   * Removes stray 30-match finished season rows and ensures the clean official 16 teams for 2026-2027.
+   * Ensures the clean official 16 teams for the season.
    */
   async purgeCorruptStandings(): Promise<void> {
     try {
-      const res = await this.standingModel.deleteMany({
-        sport: 'football',
-        season: { $in: ['2026-2027', '2026'] },
-        played: { $gte: 25 },
-      });
-      if (res.deletedCount > 0) {
-        this.logger.log(`Purged ${res.deletedCount} corrupt old-season rows from 2026-2027 standings.`);
-      }
-
-      const count = await this.standingModel.countDocuments({
-        sport: 'football',
-        season: '2026-2027',
-      });
-
-      if (count < 16) {
-        this.logger.log(`Ensuring official 16 teams for 2026-2027 season in DB (found ${count})...`);
-        for (const team of OFFICIAL_2026_2027_STANDINGS) {
-          await this.standingModel.findOneAndUpdate(
-            { competitionId: '202', season: '2026-2027', teamName: team.teamName },
-            {
-              $set: {
-                competitionId: '202',
-                sport: 'football',
-                season: '2026-2027',
-                position: team.position,
-                teamId: team.teamId,
-                teamName: team.teamName,
-                teamLogo: team.teamLogo,
-                played: team.played,
-                won: team.won,
-                drawn: team.drawn,
-                lost: team.lost,
-                goalsFor: team.goalsFor,
-                goalsAgainst: team.goalsAgainst,
-                goalDifference: team.goalDifference,
-                points: team.points,
-                form: team.form,
-                isUSM: team.isUSM,
-                dataSource: 'EXTERNAL_API',
-                manualOverride: false,
-                syncedAt: new Date(),
-              },
+      this.logger.log('Ensuring official 16 teams for Tunisian Ligue 1 season in DB...');
+      for (const team of OFFICIAL_2026_2027_STANDINGS) {
+        await this.standingModel.findOneAndUpdate(
+          { competitionId: '202', sport: 'football', position: team.position },
+          {
+            $set: {
+              competitionId: '202',
+              sport: 'football',
+              season: '2026-2027',
+              position: team.position,
+              teamId: team.teamId,
+              teamName: team.teamName,
+              teamLogo: team.teamLogo,
+              played: team.played,
+              won: team.won,
+              drawn: team.drawn,
+              lost: team.lost,
+              goalsFor: team.goalsFor,
+              goalsAgainst: team.goalsAgainst,
+              goalDifference: team.goalDifference,
+              points: team.points,
+              form: team.form,
+              isUSM: team.isUSM,
+              dataSource: 'EXTERNAL_API',
+              manualOverride: false,
+              syncedAt: new Date(),
             },
-            { upsert: true },
-          );
-        }
-        this.logger.log(`Official 16 teams for 2026-2027 season verified successfully.`);
+          },
+          { upsert: true, new: true }
+        );
       }
+      this.logger.log(`Official 16 teams for 2026-2027 season verified successfully.`);
     } catch (err: any) {
       this.logger.error(`Error in purgeCorruptStandings: ${err.message}`);
     }

@@ -601,8 +601,13 @@ body {
 .animate-usm-ticker {
   display: flex;
   width: max-content;
-  animation: usm-ticker 28s linear infinite;
+  animation: usm-ticker 55s linear infinite;
   will-change: transform;
+  text-decoration: none !important;
+}
+
+.animate-usm-ticker * {
+  text-decoration: none !important;
 }
 
 .group:hover .animate-usm-ticker,

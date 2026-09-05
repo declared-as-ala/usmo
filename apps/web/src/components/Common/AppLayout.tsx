@@ -137,7 +137,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               </button>
 
               <h3 className="text-lg font-display font-extrabold text-usm-blue-primary uppercase tracking-wider mb-4 border-b border-usm-border pb-2">
-                USM Global Search
+                {tr(language, 'USM Global Search', 'Recherche Globale USM', 'البحث في الاتحاد')}
               </h3>
 
               <div className="relative flex items-center mb-6">
@@ -145,7 +145,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 <input
                   type="text"
                   autoFocus
-                  placeholder={t('search.placeholder')}
+                  placeholder={tr(language, 'Search players, news, matches...', 'Rechercher joueurs, actualités, matchs...', 'ابحث عن لاعبين، أخبار، مباريات...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-white border-2 border-usm-border focus:border-usm-blue-primary text-usm-blue-dark pl-12 pr-4 py-3 rounded-xl outline-none text-sm transition-all rtl:pl-4 rtl:pr-12"
@@ -156,7 +156,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               {searchQuery && (
                 <div className="space-y-2">
                   <p className="text-xs text-slate-500 font-semibold mb-2">
-                    {searchLoading ? 'Recherche…' : `Search Results (${searchResults.length})`}
+                    {searchLoading 
+                      ? tr(language, 'Searching…', 'Recherche en cours…', 'جارٍ البحث…') 
+                      : `${tr(language, 'Search Results', 'Résultats de recherche', 'نتائج البحث')} (${searchResults.length})`}
                   </p>
                   {searchResults.length > 0 ? (
                     searchResults.map((res, i) => (
@@ -166,19 +168,34 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         className="w-full text-left rtl:text-right p-3 rounded-lg bg-usm-blue-soft hover:bg-usm-blue-primary/25 border border-usm-border flex justify-between items-center text-xs font-medium cursor-pointer transition-colors"
                       >
                         <span className="text-usm-blue-dark">{res.label}</span>
-                        <span className="text-[10px] text-usm-blue-primary uppercase bg-usm-blue-primary/20 px-2 py-0.5 rounded">
-                          {res.type}
+                        <span className="text-[10px] text-usm-blue-primary uppercase bg-usm-blue-primary/20 px-2 py-0.5 rounded font-bold">
+                          {res.type === 'player'
+                            ? tr(language, 'Player', 'Joueur', 'لاعب')
+                            : res.type === 'news'
+                            ? tr(language, 'News', 'Actualité', 'خبر')
+                            : res.type === 'match'
+                            ? tr(language, 'Match', 'Match', 'مباراة')
+                            : res.type === 'product'
+                            ? tr(language, 'Product', 'Boutique', 'منتج')
+                            : res.type}
                         </span>
                       </button>
                     ))
                   ) : (
-                    <p className="text-xs text-slate-500 py-4 text-center">No matching entities found for this query.</p>
+                    <p className="text-xs text-slate-500 py-4 text-center">
+                      {tr(language, 'No matching entities found for this query.', 'Aucun résultat trouvé pour cette recherche.', 'لم يتم العثور على أي نتائج مطابقة')}
+                    </p>
                   )}
                 </div>
               )}
               {!searchQuery && (
                 <div className="py-6 text-center text-xs text-slate-500">
-                  Type above to query players, club news, or matches.
+                  {tr(
+                    language,
+                    'Type above to query players, club news, or matches.',
+                    'Tapez votre recherche ci-dessus pour trouver des joueurs, des actualités ou des matchs.',
+                    'اكتب أعلاه للبحث عن اللاعبين، أخبار النادي، أو المباريات.'
+                  )}
                 </div>
               )}
             </div>
