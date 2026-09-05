@@ -142,40 +142,40 @@ export const Header: React.FC = () => {
           scrolled ? 'shadow-[0_8px_30px_rgba(13,99,255,0.16)]' : 'shadow-[0_8px_30px_rgba(13,99,255,0.08)]'
         }`}
       >
-        <div className="relative w-full px-3 sm:px-8 lg:px-12">
-          <div className="flex items-center justify-between h-20">
+        <div className="relative w-full px-2.5 xs:px-4 sm:px-8 lg:px-12">
+          <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo lockup — crest medallion + two-line wordmark visible on all devices */}
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-2 sm:gap-3.5 md:gap-4 shrink-0 cursor-pointer group min-w-0"
+              className="flex items-center gap-1.5 xs:gap-2.5 sm:gap-3.5 md:gap-4 shrink min-w-0 cursor-pointer group"
               aria-label="US Monastir — Home"
             >
-              <span className="relative flex h-[40px] w-[40px] xs:h-[44px] xs:w-[44px] sm:h-[48px] sm:w-[48px] md:h-[52px] md:w-[52px] items-center justify-center shrink-0">
+              <span className="relative flex h-[34px] w-[34px] xs:h-[38px] xs:w-[38px] sm:h-[48px] sm:w-[48px] md:h-[52px] md:w-[52px] items-center justify-center shrink-0">
                 {/* soft blue aura, revealed on hover */}
                 <span className="absolute -inset-1.5 rounded-full bg-[radial-gradient(circle,rgba(13,99,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 {/* medallion ring framing the crest */}
                 <span className="absolute inset-0 rounded-full ring-1 ring-white/12 group-hover:ring-usm-teal-accent/60 shadow-[0_0_0_3px_rgba(255,255,255,0.03)] transition-all duration-500" />
                 <Logo
-                  size={38}
+                  size={34}
                   variant="color"
                   className="relative rounded-full transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               </span>
               <span className="hidden sm:block w-px self-stretch my-2 bg-gradient-to-b from-transparent via-usm-teal-accent/40 to-transparent shrink-0" />
               <div className="flex flex-col leading-none select-none text-left rtl:text-right min-w-0">
-                <span className="font-display text-[12px] xs:text-[13px] sm:text-[14px] md:text-[15px] font-black tracking-[0.10em] xs:tracking-[0.14em] sm:tracking-[0.20em] text-white uppercase whitespace-nowrap">
+                <span className="font-display text-[11px] xs:text-[13px] sm:text-[14px] md:text-[15px] font-black tracking-[0.05em] xs:tracking-[0.10em] sm:tracking-[0.20em] text-white uppercase whitespace-nowrap">
                   US&nbsp;Monastir
                 </span>
-                <span className="mt-[3px] mb-[2.5px] sm:mt-[6px] sm:mb-[5px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
-                <span className="flex items-baseline gap-1.5 sm:gap-2 whitespace-nowrap">
+                <span className="mt-[2px] mb-[2px] sm:mt-[6px] sm:mb-[5px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
+                <span className="flex items-baseline gap-1 sm:gap-2 whitespace-nowrap min-w-0">
                   <span
-                    className={`text-[7px] xs:text-[7.5px] sm:text-[8px] uppercase font-bold text-usm-teal-accent tracking-[0.05em] xs:tracking-[0.08em] sm:tracking-[0.18em] truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none ${
-                      language === 'ar' ? 'font-arabic text-[9px]' : ''
+                    className={`text-[6.5px] xs:text-[7.5px] sm:text-[8px] uppercase font-bold text-usm-teal-accent tracking-[0.02em] xs:tracking-[0.08em] sm:tracking-[0.18em] truncate max-w-[75px] xs:max-w-[120px] sm:max-w-none ${
+                      language === 'ar' ? 'font-arabic text-[8px] xs:text-[9px]' : ''
                     }`}
                   >
                     {language === 'ar' ? 'الاتحاد الرياضي المنستيري' : 'Union Sportive Monastirienne'}
                   </span>
-                  <span className="font-serif italic text-[9px] sm:text-xs text-white/50 shrink-0">1923</span>
+                  <span className="font-serif italic text-[8px] sm:text-xs text-white/50 shrink-0">1923</span>
                 </span>
               </div>
             </button>
@@ -315,34 +315,34 @@ export const Header: React.FC = () => {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-4">
+            <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-4">
               {/* Utility cluster — search, cart & notifications */}
-              <div className="flex items-center h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
+              <div className="flex items-center h-8 sm:h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden shrink-0">
                 {/* Search */}
                 <button
                   onClick={() => {
                     setIsSearchOpen(true);
                     setIsCartOpen(false);
                   }}
-                  className="h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
                   title={tr(language, 'Search', 'Recherche', 'بحث')}
                 >
-                  <Search size={15} />
+                  <Search size={14} className="sm:w-[15px] sm:h-[15px]" />
                 </button>
 
                 {/* Cart / Panier */}
-                <span className="w-px h-4 bg-white/10" />
+                <span className="w-px h-3.5 sm:h-4 bg-white/10" />
                 <button
                   onClick={() => {
                     setIsCartOpen(true);
                     setIsSearchOpen(false);
                   }}
-                  className="relative h-9 w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
+                  className="relative h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center text-white/75 hover:text-usm-blue-primary hover:bg-white/[0.06] transition-colors duration-300 cursor-pointer"
                   title={tr(language, 'Shopping Cart', 'Panier', 'سلة التسوق')}
                 >
-                  <ShoppingBag size={15} />
+                  <ShoppingBag size={14} className="sm:w-[15px] sm:h-[15px]" />
                   {cartCount > 0 && (
-                    <span className="absolute top-1 end-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#0D63FF] text-[7px] font-black text-white ring-2 ring-[#040b1c]">
+                    <span className="absolute top-0.5 end-0.5 sm:top-1 sm:end-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#0D63FF] text-[7px] font-black text-white ring-2 ring-[#040b1c]">
                       {cartCount > 9 ? '9+' : cartCount}
                     </span>
                   )}
@@ -351,13 +351,14 @@ export const Header: React.FC = () => {
 
               {/* Supporter profile (authenticated) or Connexion / S'inscrire buttons (guests) */}
               {isLoggedIn ? (
-                <div className="relative" ref={profileRef}>
+                <div className="relative shrink-0" ref={profileRef}>
                   <button
                     onClick={() => {
                       setProfileOpen(!profileOpen);
                       setLangOpen(false);
                     }}
-                    className="flex items-center gap-2 pl-1.5 pr-3 h-9 rounded-full bg-white/[0.06] border border-white/15 hover:border-usm-blue-primary hover:bg-white/[0.1] transition-all cursor-pointer"
+                    className="flex items-center justify-center sm:gap-2 h-8 w-8 sm:h-9 sm:w-auto sm:pl-1.5 sm:pr-3 rounded-full bg-white/[0.06] border border-white/15 hover:border-usm-blue-primary hover:bg-white/[0.1] transition-all cursor-pointer shrink-0"
+                    title={username || 'Mon Compte'}
                   >
                     <span className="relative h-6 w-6 rounded-full bg-usm-blue-primary/20 border border-usm-blue-primary/50 flex items-center justify-center overflow-hidden shrink-0">
                       {fan?.avatar ? (
@@ -372,7 +373,7 @@ export const Header: React.FC = () => {
                     <span className="hidden sm:inline text-[11px] font-semibold text-white tracking-wide max-w-[110px] truncate">
                       {username || 'Mon Compte'}
                     </span>
-                    <ChevronDown size={12} className={`text-white/60 transition-transform duration-200 ${profileOpen ? 'rotate-180 text-usm-blue-primary' : ''}`} />
+                    <ChevronDown size={12} className={`hidden sm:inline-block text-white/60 transition-transform duration-200 ${profileOpen ? 'rotate-180 text-usm-blue-primary' : ''}`} />
                   </button>
                   <AnimatePresence>
                     {profileOpen && (
@@ -453,17 +454,18 @@ export const Header: React.FC = () => {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="hidden sm:flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => router.push('/connexion')}
-                    className="flex items-center gap-1.5 px-3.5 h-9 rounded-full bg-transparent border border-white/25 hover:border-usm-blue-primary hover:text-usm-blue-primary text-white text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer"
+                    className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3.5 rounded-full bg-white/[0.06] border border-white/15 hover:border-usm-blue-primary hover:text-usm-blue-primary text-white flex items-center justify-center sm:gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer shrink-0"
+                    title={tr(language, 'Sign In', 'CONNEXION', 'تسجيل الدخول')}
                   >
                     <User size={13} />
-                    <span>{tr(language, 'Sign In', 'CONNEXION', 'تسجيل الدخول')}</span>
+                    <span className="hidden sm:inline">{tr(language, 'Sign In', 'CONNEXION', 'تسجيل الدخول')}</span>
                   </button>
                   <button
                     onClick={() => router.push('/inscription')}
-                    className="flex items-center gap-1.5 px-4 h-9 rounded-full bg-usm-blue-primary hover:bg-[#0052D9] text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-usm-blue-primary/25 transition-all cursor-pointer"
+                    className="hidden sm:flex items-center gap-1.5 px-4 h-9 rounded-full bg-usm-blue-primary hover:bg-[#0052D9] text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-usm-blue-primary/25 transition-all cursor-pointer shrink-0"
                   >
                     <span>{tr(language, 'Sign Up', "S'INSCRIRE", 'إنشاء حساب')}</span>
                   </button>
@@ -473,9 +475,10 @@ export const Header: React.FC = () => {
               {/* Mobile menu toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden h-9 w-9 rounded-full border border-white/12 bg-white/[0.03] flex items-center justify-center text-white cursor-pointer"
+                className="lg:hidden h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-white/12 bg-white/[0.03] flex items-center justify-center text-white cursor-pointer shrink-0"
+                aria-label="Menu"
               >
-                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
               </button>
             </div>
           </div>
