@@ -10,7 +10,15 @@ interface TrackedOrder {
   orderNumber: string;
   customer: { name: string; phone: string; city: string; address?: string };
   deliveryMethod: 'delivery' | 'pickup';
-  items: { name: string; size: string; quantity: number; price: number; subtotal: number }[];
+  items: {
+    name: string;
+    size: string;
+    quantity: number;
+    price: number;
+    subtotal: number;
+    customName?: string;
+    customNumber?: string;
+  }[];
   subtotal: number;
   shippingCost: number;
   discount: number;
@@ -210,6 +218,11 @@ export default function OrderTrackingPage() {
                     <div>
                       <p className="text-sm font-semibold text-usm-blue-dark">{item.name}</p>
                       <p className="text-xs text-slate-500">Taille: {item.size} · Qté: {item.quantity}</p>
+                      {(item.customName || item.customNumber) && (
+                        <span className="inline-block mt-1 text-[11px] font-bold text-[#0D63FF] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                          Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                        </span>
+                      )}
                     </div>
                     <p className="font-bold text-usm-blue-dark font-mono text-sm">{formatTND(item.subtotal)}</p>
                   </div>

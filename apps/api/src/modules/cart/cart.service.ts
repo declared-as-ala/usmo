@@ -11,6 +11,8 @@ interface CartCalculationItemDto {
   productId: string;
   size: string;
   quantity: number;
+  customName?: string;
+  customNumber?: string;
 }
 
 interface CartCalculationDto {
@@ -78,6 +80,8 @@ export class CartService {
         subtotal: itemSubtotal,
         inStock: isAvailable,
         availableStock: stock,
+        customName: item.customName || undefined,
+        customNumber: item.customNumber || undefined,
       });
     }
 

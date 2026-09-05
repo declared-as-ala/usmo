@@ -83,6 +83,8 @@ export interface CartItem {
   product: CatalogItem;
   size: string;
   quantity: number;
+  customName?: string;
+  customNumber?: string;
 }
 
 export interface Order {
@@ -200,9 +202,22 @@ interface AppContextProps {
   cart: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  addToCart: (product: CatalogItem, size: string) => void;
-  removeFromCart: (productId: string, size: string) => void;
-  updateCartQuantity: (productId: string, size: string, quantity: number) => void;
+  addToCart: (
+    product: CatalogItem,
+    size: string,
+    customization?: { customName?: string; customNumber?: string }
+  ) => void;
+  removeFromCart: (
+    productId: string,
+    size: string,
+    customization?: { customName?: string; customNumber?: string }
+  ) => void;
+  updateCartQuantity: (
+    productId: string,
+    size: string,
+    quantity: number,
+    customization?: { customName?: string; customNumber?: string }
+  ) => void;
   clearCart: () => void;
 
   // Orders / Boutique Checkout
@@ -621,36 +636,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [toast.visible, toast.message]);
 
-  const addToCart = (product: CatalogItem, size: string) => {
+  const addToCart = (
+    product: CatalogItem,
+    size: string,
+    customization?: { customName?: string; customNumber?: string }
+  ) => {
+    const cName = customization?.customName?.trim() || undefined;
+    const cNumber = customization?.customNumber?.trim() || undefined;
+
     setCart(prev => {
-      const existing = prev.find(item => item.product.id === product.id && item.size === size);
+      const existing = prev.find(
+        item =>
+          item.product.id === product.id &&
+          item.size === size &&
+          (item.customName || '') === (cName || '') &&
+          (item.customNumber || '') === (cNumber || '')
+      );
       if (existing) {
         return prev.map(item => 
-          item.product.id === product.id && item.size === size
+          item === existing
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
-      return [...prev, { product, size, quantity: 1 }];
+      return [...prev, { product, size, quantity: 1, customName: cName, customNumber: cNumber }];
     });
     setIsCartOpen(true);
-    showToast(`${product.name} (${size}) ajouté au panier !`, 'success');
+    const customSuffix = cName || cNumber ? ` [Flocage: ${[cName, cNumber ? '#' + cNumber : ''].filter(Boolean).join(' ')}]` : '';
+    showToast(`${product.name} (${size})${customSuffix} ajouté au panier !`, 'success');
   };
 
-  const removeFromCart = (productId: string, size: string) => {
-    setCart(prev => prev.filter(item => !(item.product.id === productId && item.size === size)));
+  const removeFromCart = (
+    productId: string,
+    size: string,
+    customization?: { customName?: string; customNumber?: string }
+  ) => {
+    setCart(prev =>
+      prev.filter(item => {
+        if (item.product.id !== productId || item.size !== size) return true;
+        if (customization) {
+          return (
+            (item.customName || '') !== (customization.customName?.trim() || '') ||
+            (item.customNumber || '') !== (customization.customNumber?.trim() || '')
+          );
+        }
+        return false;
+      })
+    );
   };
 
-  const updateCartQuantity = (productId: string, size: string, quantity: number) => {
+  const updateCartQuantity = (
+    productId: string,
+    size: string,
+    quantity: number,
+    customization?: { customName?: string; customNumber?: string }
+  ) => {
     if (quantity <= 0) {
-      removeFromCart(productId, size);
+      removeFromCart(productId, size, customization);
       return;
     }
-    setCart(prev => prev.map(item => 
-      item.product.id === productId && item.size === size
-        ? { ...item, quantity }
-        : item
-    ));
+    setCart(prev =>
+      prev.map(item => {
+        const matches =
+          item.product.id === productId &&
+          item.size === size &&
+          (customization
+            ? (item.customName || '') === (customization.customName?.trim() || '') &&
+              (item.customNumber || '') === (customization.customNumber?.trim() || '')
+            : true);
+        return matches ? { ...item, quantity } : item;
+      })
+    );
   };
 
   const clearCart = () => setCart([]);

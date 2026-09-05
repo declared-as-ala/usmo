@@ -661,6 +661,20 @@ export default function ComptePage() {
                         <span className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
                           <Clock size={12} /> {orderDate} • {ord.items?.length || 1} article(s)
                         </span>
+                        {ord.items && ord.items.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {ord.items.map((it: any, idx: number) => (
+                              <div key={idx} className="text-xs text-[#071A30] font-semibold flex items-center gap-2 flex-wrap">
+                                <span>• {it.name} ({it.size}) × {it.quantity}</span>
+                                {(it.customName || it.customNumber) && (
+                                  <span className="text-[10px] font-black uppercase text-[#0D63FF] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                                    Flocage: {[it.customName, it.customNumber ? '#' + it.customNumber : ''].filter(Boolean).join(' ')}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 

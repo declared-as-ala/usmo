@@ -80,14 +80,20 @@ export class OrdersService {
       deliveryMethod: dto.deliveryMethod,
       deliveryZoneId: dto.deliveryZoneId,
       pickupPointId: dto.pickupPointId,
-      items: calc.items.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        size: item.size,
-        quantity: item.quantity,
-        price: item.price,
-        subtotal: item.subtotal,
-      })),
+      items: calc.items.map((item: any, idx: number) => {
+        const fallback = dto.items?.[idx];
+        return {
+          productId: item.productId,
+          name: item.name,
+          size: item.size,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal,
+          image: item.coverImage,
+          customName: item.customName || fallback?.customName || undefined,
+          customNumber: item.customNumber || fallback?.customNumber || undefined,
+        };
+      }),
       subtotal: calc.subtotal,
       shippingCost: calc.shippingCost,
       discount: calc.discount,
@@ -123,12 +129,14 @@ export class OrdersService {
           customerCity: dto.customerCity,
           customerAddress: dto.customerAddress,
           orderNumber,
-          items: calc.items.map((it: any) => ({
+          items: saved.items.map((it: any) => ({
             name: it.name,
             size: it.size,
             quantity: it.quantity,
             price: it.price,
             subtotal: it.subtotal,
+            customName: it.customName,
+            customNumber: it.customNumber,
           })),
           subtotal: calc.subtotal,
           shippingCost: calc.shippingCost,

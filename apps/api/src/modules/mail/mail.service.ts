@@ -255,6 +255,8 @@ export class MailService {
       quantity: number;
       price: number;
       subtotal?: number;
+      customName?: string;
+      customNumber?: string;
     }>;
     subtotal: number;
     shippingCost: number;
@@ -275,6 +277,11 @@ export class MailService {
         <td style="padding: 12px 14px; font-size: 13px; font-weight: 700; color: #061a3a;">
           ${item.name}
           ${item.size ? `<span style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-top: 2px;">Taille : ${item.size}</span>` : ''}
+          ${
+            item.customName || item.customNumber
+              ? `<span style="display: inline-block; font-size: 11px; font-weight: 700; color: #0d63ff; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; padding: 2px 6px; margin-top: 3px;">Flocage : ${[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}</span>`
+              : ''
+          }
         </td>
         <td style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 700; color: #061a3a;">
           ${item.quantity}

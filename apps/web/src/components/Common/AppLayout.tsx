@@ -244,11 +244,23 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
                       </p>
                       <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{item.size} • {item.product.price}</p>
+                      {(item.customName || item.customNumber) && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-[#0D63FF] text-[9px] font-black uppercase tracking-wider mt-1">
+                          Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
-                        onClick={() => updateCartQuantity(item.product.id, item.size, item.quantity - 1)}
+                        onClick={() =>
+                          updateCartQuantity(
+                            item.product.id,
+                            item.size,
+                            item.quantity - 1,
+                            { customName: item.customName, customNumber: item.customNumber }
+                          )
+                        }
                         className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
                       >
                         <Minus size={10} />
@@ -256,14 +268,26 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       <span className="font-mono text-[11px] w-4 text-center text-usm-blue-dark">{item.quantity}</span>
                       <button
                         type="button"
-                        onClick={() => updateCartQuantity(item.product.id, item.size, item.quantity + 1)}
+                        onClick={() =>
+                          updateCartQuantity(
+                            item.product.id,
+                            item.size,
+                            item.quantity + 1,
+                            { customName: item.customName, customNumber: item.customNumber }
+                          )
+                        }
                         className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
                       >
                         <Plus size={10} />
                       </button>
                       <button
                         type="button"
-                        onClick={() => removeFromCart(item.product.id, item.size)}
+                        onClick={() =>
+                          removeFromCart(item.product.id, item.size, {
+                            customName: item.customName,
+                            customNumber: item.customNumber,
+                          })
+                        }
                         className="p-1 text-red-400 hover:text-red-500 rounded cursor-pointer ml-1 rtl:mr-1"
                       >
                         <Trash2 size={12} />

@@ -37,6 +37,8 @@ export interface OrderItem {
   quantity: number;
   price: number; // in millimes
   subtotal: number; // in millimes
+  customName?: string;
+  customNumber?: string;
 }
 
 export interface BackendOrder {
@@ -754,10 +756,15 @@ export default function AdminOrders() {
                       <td className="py-3.5 px-4">
                         <button
                           onClick={() => openDrawer(order, 'edit')}
-                          className="font-bold text-slate-900 hover:text-[#0D63FF] transition-colors cursor-pointer text-xs"
+                          className="font-bold text-slate-900 hover:text-[#0D63FF] transition-colors cursor-pointer text-xs block"
                         >
                           #{order.orderNumber?.replace(/^ORD-/, '') || order.orderNumber}
                         </button>
+                        {order.items?.some((it) => it.customName || it.customNumber) && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-50 text-amber-800 border border-amber-200 mt-1 whitespace-nowrap">
+                            ⭐ Personnalisé
+                          </span>
+                        )}
                       </td>
 
                       {/* CLIENT */}
@@ -1260,9 +1267,36 @@ export default function AdminOrders() {
                                   alt=""
                                   className="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0"
                                 />
-                                <span className="font-bold text-slate-900 line-clamp-2 max-w-[140px]">
-                                  {item.name}
-                                </span>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-slate-900 line-clamp-2 max-w-[150px] block">
+                                    {item.name}
+                                  </span>
+                                  {(item.customName || item.customNumber) && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded mt-1">
+                                      ⭐ Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                                    </span>
+                                  )}
+                                  {/* Inputs for admin editing of flocage */}
+                                  <div className="mt-1 flex items-center gap-1">
+                                    <input
+                                      type="text"
+                                      placeholder="Nom flocage"
+                                      value={item.customName || ''}
+                                      onChange={(e) => handleUpdateItem(idx, 'customName', e.target.value.toUpperCase())}
+                                      className="w-24 px-1.5 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-slate-700 outline-none focus:border-[#0D63FF]"
+                                      title="Nom floqué sur le maillot"
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="N°"
+                                      maxLength={2}
+                                      value={item.customNumber || ''}
+                                      onChange={(e) => handleUpdateItem(idx, 'customNumber', e.target.value.replace(/[^0-9]/g, ''))}
+                                      className="w-10 px-1.5 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-center text-slate-700 outline-none focus:border-[#0D63FF]"
+                                      title="Numéro floqué"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </td>
 
@@ -1283,7 +1317,7 @@ export default function AdminOrders() {
                               />
                             </td>
 
-                            {/* ATTRIBUTS (Couleur & Taille) */}
+                            {/* ATTRIBUTS (Couleur, Taille & Flocage) */}
                             <td className="py-3 px-3 text-center">
                               <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                 <div className="border border-blue-200 bg-blue-50/50 rounded-lg px-2 py-1 text-[11px] font-semibold text-blue-700">
@@ -1298,6 +1332,18 @@ export default function AdminOrders() {
                                   </span>
                                   <span>{item.size || 'Unique'}</span>
                                 </div>
+                                {(item.customName || item.customNumber) ? (
+                                  <div className="border border-amber-300 bg-amber-50 rounded-lg px-2 py-1 text-[11px] font-bold text-amber-900 shadow-2xs">
+                                    <span className="text-[9px] text-amber-600 block uppercase font-extrabold leading-none">
+                                      Flocage
+                                    </span>
+                                    <span className="font-mono">{[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}</span>
+                                  </div>
+                                ) : (
+                                  <div className="border border-slate-200 bg-slate-50 rounded-lg px-2 py-1 text-[10px] font-medium text-slate-400">
+                                    <span>Sans flocage</span>
+                                  </div>
+                                )}
                               </div>
                             </td>
 

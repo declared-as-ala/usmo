@@ -126,6 +126,8 @@ export const Checkout: React.FC = () => {
           productId: item.product.id || (item.product as any)._id,
           size: item.size,
           quantity: item.quantity,
+          customName: item.customName,
+          customNumber: item.customNumber,
         }));
 
         const payload: any = {
@@ -186,6 +188,8 @@ export const Checkout: React.FC = () => {
         productId: item.product.id || (item.product as any)._id,
         size: item.size,
         quantity: item.quantity,
+        customName: item.customName,
+        customNumber: item.customNumber,
       }));
 
       const orderPayload: any = {
@@ -359,9 +363,16 @@ export const Checkout: React.FC = () => {
               <p className="font-bold text-usm-blue-dark truncate">
                 {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
               </p>
-              <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                Qté {item.quantity} • Taille {item.size}
-              </p>
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                <span className="text-[10px] text-slate-500 font-mono">
+                  Qté {item.quantity} • Taille {item.size}
+                </span>
+                {(item.customName || item.customNumber) && (
+                  <span className="text-[9px] font-black uppercase text-[#0D63FF] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                    Flocage : {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                  </span>
+                )}
+              </div>
             </div>
             <span className="font-mono text-usm-blue-dark font-bold shrink-0">{item.product.price}</span>
           </div>

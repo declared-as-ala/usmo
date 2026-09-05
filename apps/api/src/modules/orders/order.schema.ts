@@ -26,6 +26,12 @@ export class OrderItem extends Document {
 
   @Prop({ type: Number, required: true })
   subtotal: number; // in millimes
+
+  @Prop({ type: String })
+  customName?: string;
+
+  @Prop({ type: String })
+  customNumber?: string;
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

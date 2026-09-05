@@ -163,13 +163,27 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     : null;
 
   const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      id: product._id,
-      image: product.coverImage || product.image,
-      price: formatMoney(product.price),
-    }, selectedSize);
-    if (quantity > 1) updateCartQuantity(product._id, selectedSize, quantity);
+    const hasCustomization = isJersey && (customName.trim() !== '' || customNumber.trim() !== '');
+    const customization = hasCustomization
+      ? {
+          customName: customName.trim().toUpperCase(),
+          customNumber: customNumber.trim(),
+        }
+      : undefined;
+
+    addToCart(
+      {
+        ...product,
+        id: product._id,
+        image: product.coverImage || product.image,
+        price: formatMoney(product.price),
+      },
+      selectedSize,
+      customization
+    );
+    if (quantity > 1) {
+      updateCartQuantity(product._id, selectedSize, quantity, customization);
+    }
   };
 
   // Get unique colors
