@@ -220,46 +220,46 @@ export default function ComptePage() {
   return (
     <div className="space-y-6">
       {/* ── 1. SUPPORTER HERO IDENTIFIER ─────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#061A3A] via-[#092754] to-[#0D63FF] p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#061A3A] via-[#092754] to-[#0D63FF] p-4 sm:p-6 md:p-8 text-white shadow-xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-[#3ED6D0]/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="relative h-20 w-20 rounded-3xl bg-white/10 backdrop-blur-md border-2 border-white/20 p-1 shrink-0 shadow-lg">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3.5 sm:gap-5 min-w-0">
+            <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl sm:rounded-3xl bg-white/10 backdrop-blur-md border-2 border-white/20 p-1 shrink-0 shadow-lg">
               {fan?.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={fan.avatar}
                   alt={fullName}
-                  className="h-full w-full object-cover rounded-2xl"
+                  className="h-full w-full object-cover rounded-xl sm:rounded-2xl"
                 />
               ) : (
-                <div className="h-full w-full rounded-2xl bg-[#061A3A] flex items-center justify-center font-display font-black text-2xl text-[#3ED6D0]">
+                <div className="h-full w-full rounded-xl sm:rounded-2xl bg-[#061A3A] flex items-center justify-center font-display font-black text-xl sm:text-2xl text-[#3ED6D0]">
                   {initials}
                 </div>
               )}
-              <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-[#061A3A]" />
+              <span className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-emerald-500 border-2 border-[#061A3A]" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[10px] font-black uppercase tracking-wider text-[#3ED6D0] border border-white/10">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#3ED6D0] border border-white/10 whitespace-nowrap">
                   Supporter Officiel USM
                 </span>
-                <span className="text-[10px] text-white/70 font-semibold">● Compte Actif</span>
+                <span className="text-[9px] sm:text-[10px] text-white/70 font-semibold whitespace-nowrap">● Compte Actif</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black font-display uppercase tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black font-display uppercase tracking-tight text-white truncate">
                 {fullName}
               </h1>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-white/80 mt-1">
-                <span className="flex items-center gap-1.5">
-                  <Mail size={13} className="text-[#3ED6D0]" />
-                  <span>{email || '—'}</span>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-white/80 mt-1">
+                <span className="flex items-center gap-1 sm:gap-1.5 truncate max-w-full">
+                  <Mail size={12} className="text-[#3ED6D0] shrink-0" />
+                  <span className="truncate">{email || '—'}</span>
                 </span>
-                <span className="opacity-40">•</span>
-                <span className="flex items-center gap-1.5">
-                  <Calendar size={13} className="text-[#3ED6D0]" />
+                <span className="opacity-40 hidden xs:inline">•</span>
+                <span className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+                  <Calendar size={12} className="text-[#3ED6D0] shrink-0" />
                   <span>Membre depuis {memberSince}</span>
                 </span>
               </div>
@@ -269,47 +269,61 @@ export default function ComptePage() {
       </div>
 
       {/* ── 2. SECTION NAVIGATION TABS ─────────────────────────────────── */}
-      <div className="flex items-center gap-2 bg-white border border-[#DDE8F8] p-1.5 rounded-2xl shadow-sm">
-        <button
-          onClick={() => setActiveTab('info')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeTab === 'info'
-              ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
-              : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
-          }`}
-        >
-          <User size={15} />
-          <span>Mes Informations</span>
-        </button>
+      <div className="bg-white border border-[#DDE8F8] p-1.5 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-full sm:min-w-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('info')}
+            className={`flex-1 min-w-max sm:min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 sm:shrink ${
+              activeTab === 'info'
+                ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
+                : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
+            }`}
+          >
+            <User size={14} className="sm:w-[15px] sm:h-[15px] shrink-0" />
+            <span>
+              <span className="sm:hidden">Informations</span>
+              <span className="hidden sm:inline">Mes Informations</span>
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeTab === 'security'
-              ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
-              : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
-          }`}
-        >
-          <Shield size={15} />
-          <span>Sécurité & Mot de Passe</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`flex-1 min-w-max sm:min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 sm:shrink ${
+              activeTab === 'security'
+                ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
+                : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
+            }`}
+          >
+            <Shield size={14} className="sm:w-[15px] sm:h-[15px] shrink-0" />
+            <span>
+              <span className="sm:hidden">Sécurité</span>
+              <span className="hidden sm:inline">Sécurité & Mot de Passe</span>
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeTab === 'orders'
-              ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
-              : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
-          }`}
-        >
-          <Package size={15} />
-          <span>Mes Commandes ({orders.length})</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('orders')}
+            className={`flex-1 min-w-max sm:min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap shrink-0 sm:shrink ${
+              activeTab === 'orders'
+                ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/25'
+                : 'text-[#5B6B82] hover:bg-[#F6F9FF]'
+            }`}
+          >
+            <Package size={14} className="sm:w-[15px] sm:h-[15px] shrink-0" />
+            <span>
+              <span className="sm:hidden">Commandes</span>
+              <span className="hidden sm:inline">Mes Commandes</span> ({orders.length})
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* ── 3. TAB 1: PERSONAL INFORMATION & DATA MANAGEMENT ────────────── */}
       {activeTab === 'info' && (
-        <div className="bg-white border border-[#DDE8F8] rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white border border-[#DDE8F8] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm">
           <div className="pb-5 border-b border-[#DDE8F8] mb-6">
             <h3 className="text-base font-black uppercase tracking-wider text-[#071A30] flex items-center gap-2">
               <User className="text-[#0D63FF]" size={18} />
@@ -462,7 +476,7 @@ export default function ComptePage() {
 
       {/* ── 4. TAB 2: SECURITY & PASSWORD MANAGEMENT ────────────────────── */}
       {activeTab === 'security' && (
-        <div className="bg-white border border-[#DDE8F8] rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white border border-[#DDE8F8] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm">
           <div className="pb-5 border-b border-[#DDE8F8] mb-6">
             <h3 className="text-base font-black uppercase tracking-wider text-[#071A30] flex items-center gap-2">
               <Lock className="text-[#0D63FF]" size={18} />
@@ -576,7 +590,7 @@ export default function ComptePage() {
 
       {/* ── 5. TAB 3: ORDERS MANAGEMENT ─────────────────────────────────── */}
       {activeTab === 'orders' && (
-        <div className="bg-white border border-[#DDE8F8] rounded-3xl p-6 sm:p-8 shadow-sm">
+        <div className="bg-white border border-[#DDE8F8] rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm">
           <div className="flex items-center justify-between pb-5 border-b border-[#DDE8F8] mb-6">
             <div>
               <h3 className="text-base font-black uppercase tracking-wider text-[#071A30] flex items-center gap-2">

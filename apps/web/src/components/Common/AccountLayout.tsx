@@ -80,7 +80,7 @@ export const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ childre
         </div>
 
         {/* Mobile Navigation Tabs */}
-        <div className="md:hidden flex items-center gap-1 bg-white border border-[#DDE8F8] p-1.5 rounded-2xl overflow-x-auto">
+        <div className="md:hidden flex items-center gap-1 bg-white border border-[#DDE8F8] p-1.5 rounded-2xl overflow-x-auto no-scrollbar">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -88,7 +88,7 @@ export const AccountLayout: React.FC<{ children: React.ReactNode }> = ({ childre
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`flex-1 min-w-max flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition-all ${
                   isActive
                     ? 'bg-[#0D63FF] text-white shadow-md shadow-[#0D63FF]/20'
                     : 'text-[#5B6B82] hover:bg-slate-50'
