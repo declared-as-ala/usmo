@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import { tr } from '../../utils/i18n';
 import { Logo } from './Logo';
+import { AnnouncementBar } from './AnnouncementBar';
 import { Search, Globe, User, Menu, X, ShoppingBag, ChevronDown, Bell, Zap, Award, CreditCard, LifeBuoy, Crown, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -137,6 +138,9 @@ export const Header: React.FC = () => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 text-white">
+      {/* Top Animated Announcement Bar (Preorders & Limited Stock) */}
+      <AnnouncementBar />
+
       <div
         className={`relative bg-usm-blue-dark border-b border-usm-teal-accent/20 transition-shadow duration-500 ${
           scrolled ? 'shadow-[0_8px_30px_rgba(13,99,255,0.16)]' : 'shadow-[0_8px_30px_rgba(13,99,255,0.08)]'

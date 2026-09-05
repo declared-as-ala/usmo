@@ -585,7 +585,39 @@ body {
   text-decoration: underline;
 }
 
+/* ==========================================================================
+   ANNOUNCEMENT TICKER (MARQUEE)
+   Seamless, infinite looping ticker for top announcement bar
+   ========================================================================== */
+@keyframes usm-ticker {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-usm-ticker {
+  display: flex;
+  width: max-content;
+  animation: usm-ticker 28s linear infinite;
+  will-change: transform;
+}
+
+.group:hover .animate-usm-ticker,
+.animate-usm-ticker:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-usm-ticker {
+    animation: none !important;
+    transform: none !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
   *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
@@ -593,3 +625,4 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
