@@ -194,7 +194,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
       {/* Background Lighting */}
       <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-usm-blue-primary/5 rounded-full blur-[180px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-16 space-y-12 relative z-10">
         
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">

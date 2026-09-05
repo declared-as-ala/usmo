@@ -182,7 +182,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({ slug }) => {
   const displayedPhotos = album.locked ? album.teaserPhotos : album.photos;
 
   return (
-    <div className="usm-premium-bg text-usm-blue-dark min-h-screen pb-16 pt-16">
+    <div className="usm-premium-bg text-usm-blue-dark min-h-screen pb-16 pt-24 sm:pt-28 lg:pt-32">
       {/* ALBUM HERO BANNER */}
       <div className="relative min-h-[350px] bg-white flex items-end p-6 sm:p-12 border-b border-usm-border overflow-hidden">
         <div

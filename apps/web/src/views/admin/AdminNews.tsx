@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/api-client';
 import { requestConfirmation } from '../../components/Common/ConfirmDialog';
+import { MediaUploader } from '../../components/Admin/MediaUploader';
 
 const CATEGORIES = ['Football', 'Basketball', 'Club', 'Academy', 'Announcements', 'Sponsors'] as const;
 type Category = typeof CATEGORIES[number];
@@ -77,6 +78,7 @@ export default function AdminNews() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // ── Filter state ──
   const [searchQuery, setSearchQuery] = useState('');
@@ -489,26 +491,33 @@ export default function AdminNews() {
                 </div>
               </div>
 
-              {/* Image URL */}
+              {/* Image à la une (Téléversement ou URL) */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Image à la une (URL) *</label>
-                <input
-                  required
-                  type="text"
-                  value={form.image}
-                  onChange={e => setForm(f => ({ ...f, image: e.target.value }))}
-                  placeholder="https://..."
-                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-mono"
-                />
-                {form.image && (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={form.image}
-                    alt="preview"
-                    className="mt-2 h-24 w-full object-cover rounded-lg border border-slate-200"
-                    onError={e => (e.currentTarget.style.display = 'none')}
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">
+                  Image à la une *
+                </label>
+                <div className="space-y-3">
+                  <MediaUploader
+                    folder="news"
+                    currentUrl={form.image}
+                    label="Déposez une image ici ou cliquez pour choisir un fichier"
+                    onUpload={(file) => setForm((f) => ({ ...f, image: file.url }))}
+                    onRemove={() => setForm((f) => ({ ...f, image: '' }))}
+                    onUploadingChange={setImageUploading}
                   />
-                )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase shrink-0">
+                      Ou coller une URL :
+                    </span>
+                    <input
+                      type="text"
+                      value={form.image}
+                      onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
+                      placeholder="https://..."
+                      className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 outline-none focus:border-usm-blue-primary font-mono"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Summary EN */}
@@ -628,13 +637,17 @@ export default function AdminNews() {
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || imageUploading}
                 className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {saving
-                  ? <><Loader2 size={14} className="animate-spin" /> Sauvegarde…</>
-                  : editingId ? 'Enregistrer les modifications' : 'Publier l\'article'
-                }
+                {saving || imageUploading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>{imageUploading ? "Téléversement de l'image…" : 'Sauvegarde…'}</span>
+                  </>
+                ) : (
+                  <span>{editingId ? 'Enregistrer les modifications' : 'Publier l\'article'}</span>
+                )}
               </button>
             </form>
           </div>

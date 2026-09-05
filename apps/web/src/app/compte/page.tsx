@@ -14,7 +14,6 @@ import {
   ShoppingBag,
   Phone,
   MapPin,
-  Sparkles,
   ArrowRight,
   Clock,
   Package,
@@ -55,7 +54,7 @@ const GOVERNORATES = [
 ];
 
 export default function ComptePage() {
-  const { fan, username, language, bluePoints, refreshMe, showToast } = useApp();
+  const { fan, username, language, refreshMe, showToast } = useApp();
 
   // Navigation tab inside the profile page
   const [activeTab, setActiveTab] = useState<'info' | 'security' | 'orders'>('info');
@@ -266,20 +265,6 @@ export default function ComptePage() {
               </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/15 p-3 rounded-2xl">
-            <div className="h-10 w-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-white/70 block">
-                Points Supporter
-              </span>
-              <span className="text-base font-black text-white font-mono">
-                {fan?.bluePoints || bluePoints || 0} pts
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -452,11 +437,11 @@ export default function ComptePage() {
               </div>
             </div>
 
-            <div className="pt-4 flex justify-end">
+            <div className="pt-4 flex justify-center">
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[#0D63FF] hover:bg-[#0052D9] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#0D63FF] hover:bg-[#0052D9] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all cursor-pointer disabled:opacity-50"
               >
                 {savingProfile ? (
                   <>
@@ -566,11 +551,11 @@ export default function ComptePage() {
               />
             </div>
 
-            <div className="pt-3">
+            <div className="pt-4 flex justify-center">
               <button
                 type="submit"
                 disabled={savingPassword}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-[#0D63FF] hover:bg-[#0052D9] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-[#0D63FF] hover:bg-[#0052D9] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all cursor-pointer disabled:opacity-50"
               >
                 {savingPassword ? (
                   <>

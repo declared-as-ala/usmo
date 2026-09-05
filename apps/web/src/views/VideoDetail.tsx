@@ -109,7 +109,7 @@ export const VideoDetail: React.FC<VideoDetailProps> = ({ slug }) => {
   };
 
   return (
-    <div className="usm-premium-bg text-usm-blue-dark min-h-screen pb-16 pt-16">
+    <div className="usm-premium-bg text-usm-blue-dark min-h-screen pb-16 pt-24 sm:pt-28 lg:pt-32">
       <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-usm-blue-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

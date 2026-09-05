@@ -27,7 +27,7 @@ const getLabelTranslation = (label: string, lang: 'en' | 'fr' | 'ar') => {
     // Items
     'Dashboard': { fr: 'Tableau de bord', ar: 'لوحة القيادة' },
     'Analytics': { fr: 'Statistiques', ar: 'التحليلات' },
-    'Homepage Hero': { fr: 'Accueil Hero', ar: 'واجهة الصفحة الرئيسية' },
+    'Homepage Hero': { fr: 'Bannière Accueil', ar: 'بانر الصفحة الرئيسية' },
     'Boutique Catalog': { fr: 'Catalogue Boutique', ar: 'كتالوج المغازة' },
     'Football Section': { fr: 'Section Football', ar: 'فرع كرة القدم' },
     'Basketball Section': { fr: 'Section Basket', ar: 'فرع كرة السلة' },

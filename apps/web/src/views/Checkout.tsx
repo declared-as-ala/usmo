@@ -217,7 +217,7 @@ export const Checkout: React.FC = () => {
   if (success) {
     const finalTotalText = calcResult ? formatMoney(calcResult.total) : '0.000 DT';
     return (
-      <div className="usm-premium-bg text-usm-blue-dark min-h-screen py-20 relative overflow-hidden">
+      <div className="usm-premium-bg text-usm-blue-dark min-h-screen pt-36 sm:pt-40 lg:pt-44 pb-24 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-usm-blue-primary/10 rounded-full blur-[150px] pointer-events-none" />
         
         <div className="max-w-2xl mx-auto px-4 text-center space-y-8 relative z-10">
@@ -321,7 +321,7 @@ export const Checkout: React.FC = () => {
   // 2. Empty cart state
   if (cart.length === 0) {
     return (
-      <div className="usm-premium-bg text-usm-blue-dark min-h-screen py-24 flex items-center justify-center">
+      <div className="usm-premium-bg text-usm-blue-dark min-h-screen pt-28 sm:pt-32 pb-24 flex items-center justify-center">
         <div className="max-w-md mx-auto px-4 text-center space-y-6">
           <div className="mx-auto h-20 w-20 rounded-full bg-white border border-usm-border flex items-center justify-center shadow-md">
             <ShoppingBag size={28} className="text-slate-600" />
@@ -423,7 +423,7 @@ export const Checkout: React.FC = () => {
           Boutique Officielle USM
         </span>
         <span className="text-xs font-bold text-usm-blue-primary inline-flex items-center gap-1 mt-0.5">
-          Paiement sécurisé à la livraison
+          Paiement à la livraison
         </span>
       </div>
     </>
@@ -435,7 +435,7 @@ export const Checkout: React.FC = () => {
       {/* Background Glow */}
       <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-usm-blue-primary/5 rounded-full blur-[180px] pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 pb-32 lg:pb-12 space-y-8 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 lg:pt-40 pb-32 lg:pb-16 space-y-8 relative z-10">
         <div>
           <button
             onClick={() => router.push('/boutique')}

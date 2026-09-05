@@ -88,7 +88,7 @@ export const BasketballStandingsView: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-usm-blue-dark py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white text-usm-blue-dark pt-28 sm:pt-32 lg:pt-36 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
         {/* Cinematic Basketball Header Banner */}
         <div className="relative rounded-3xl overflow-hidden border border-usm-border p-8 sm:p-12 bg-gradient-to-r from-amber-500/10 via-white to-usm-blue-soft shadow-2xl">

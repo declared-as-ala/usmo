@@ -17,7 +17,7 @@ export const PressCenter: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 animate-[fadeIn_0.2s_ease-out]">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-16 space-y-12 animate-[fadeIn_0.2s_ease-out]">
       
       {/* Visual Header */}
       <div className="relative h-48 rounded-3xl overflow-hidden bg-white flex items-end p-6 border border-usm-blue-primary/20 shadow-lg">

@@ -36,7 +36,7 @@ export function StaffGrid({ sport }: { sport: 'football' | 'basketball' }) {
   return (
     <main className="min-h-screen usm-premium-bg text-usm-blue-dark">
       <header className="border-b border-[#DDE8F8] bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
+        <div className="mx-auto max-w-5xl px-4 pt-28 sm:pt-32 pb-14 sm:px-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-usm-blue-primary/25 bg-usm-blue-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-usm-blue-primary">
             <Users size={13} /> {tr(language, 'Technical Staff', 'Staff Technique', 'الطاقم الفني')}
           </span>

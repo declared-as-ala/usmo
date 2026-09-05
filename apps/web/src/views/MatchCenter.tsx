@@ -181,7 +181,7 @@ export const MatchCenter: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-16 space-y-10">
 
       {/* HERO */}
       <div className="relative overflow-hidden rounded-3xl border border-usm-blue-primary/20 usm-premium-bg p-8 sm:p-10 shadow-2xl">

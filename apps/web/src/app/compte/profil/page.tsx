@@ -162,11 +162,11 @@ export default function ProfilPage() {
           </div>
         )}
 
-        <div className="pt-4">
+        <div className="pt-4 flex justify-center">
           <button
             type="submit"
             disabled={loading || !firstName.trim() || !lastName.trim() || !email.trim()}
-            className="py-3 px-6 rounded-xl bg-[#0D63FF] hover:bg-[#0052D9] disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="py-3 px-8 rounded-2xl bg-[#0D63FF] hover:bg-[#0052D9] disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#0D63FF]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>

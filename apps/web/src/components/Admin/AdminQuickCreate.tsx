@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Newspaper, Radio, ImageIcon, ShoppingBag, Handshake, Bell, Users } from 'lucide-react';
+import { X, Newspaper, Radio, ImageIcon, ShoppingBag, Handshake, Bell, Users, GalleryHorizontal } from 'lucide-react';
 
 interface AdminQuickCreateProps {
   open: boolean;
@@ -10,6 +10,7 @@ interface AdminQuickCreateProps {
 }
 
 const ACTIONS = [
+  { label: 'Bannière Accueil (Hero)', href: '/admin/homepage/hero', icon: GalleryHorizontal, desc: 'Mettre à jour le carrousel de la page d’accueil' },
   { label: 'Create News Article', href: '/admin/news?new=1', icon: Newspaper, desc: 'Publish a new story to the newsroom' },
   { label: 'Upload Media', href: '/admin/media', icon: ImageIcon, desc: 'Add photos or videos to the gallery' },
   { label: 'Add Product', href: '/admin/boutique?new=1', icon: ShoppingBag, desc: 'List a new boutique item' },

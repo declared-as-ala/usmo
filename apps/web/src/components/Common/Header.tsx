@@ -142,40 +142,40 @@ export const Header: React.FC = () => {
           scrolled ? 'shadow-[0_8px_30px_rgba(13,99,255,0.16)]' : 'shadow-[0_8px_30px_rgba(13,99,255,0.08)]'
         }`}
       >
-        <div className="relative w-full px-4 sm:px-8 lg:px-12">
+        <div className="relative w-full px-3 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Logo lockup — crest medallion + two-line wordmark visible on all devices */}
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 shrink-0 cursor-pointer group"
+              className="flex items-center gap-2 sm:gap-3.5 md:gap-4 shrink-0 cursor-pointer group min-w-0"
               aria-label="US Monastir — Home"
             >
-              <span className="relative flex h-[44px] w-[44px] sm:h-[48px] sm:w-[48px] md:h-[52px] md:w-[52px] items-center justify-center shrink-0">
+              <span className="relative flex h-[40px] w-[40px] xs:h-[44px] xs:w-[44px] sm:h-[48px] sm:w-[48px] md:h-[52px] md:w-[52px] items-center justify-center shrink-0">
                 {/* soft blue aura, revealed on hover */}
                 <span className="absolute -inset-1.5 rounded-full bg-[radial-gradient(circle,rgba(13,99,255,0.28),transparent_65%)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 {/* medallion ring framing the crest */}
                 <span className="absolute inset-0 rounded-full ring-1 ring-white/12 group-hover:ring-usm-teal-accent/60 shadow-[0_0_0_3px_rgba(255,255,255,0.03)] transition-all duration-500" />
                 <Logo
-                  size={42}
+                  size={38}
                   variant="color"
                   className="relative rounded-full transition-transform duration-500 group-hover:scale-[1.04]"
                 />
               </span>
               <span className="hidden sm:block w-px self-stretch my-2 bg-gradient-to-b from-transparent via-usm-teal-accent/40 to-transparent shrink-0" />
               <div className="flex flex-col leading-none select-none text-left rtl:text-right min-w-0">
-                <span className="font-display text-[12px] xs:text-[13px] sm:text-[14px] md:text-[15px] font-black tracking-[0.14em] sm:tracking-[0.20em] text-white uppercase whitespace-nowrap">
+                <span className="font-display text-[12px] xs:text-[13px] sm:text-[14px] md:text-[15px] font-black tracking-[0.10em] xs:tracking-[0.14em] sm:tracking-[0.20em] text-white uppercase whitespace-nowrap">
                   US&nbsp;Monastir
                 </span>
-                <span className="mt-[4px] mb-[3px] sm:mt-[6px] sm:mb-[5px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
+                <span className="mt-[3px] mb-[2.5px] sm:mt-[6px] sm:mb-[5px] h-px w-full bg-gradient-to-r rtl:bg-gradient-to-l from-usm-teal-accent/70 via-usm-teal-accent/25 to-transparent" />
                 <span className="flex items-baseline gap-1.5 sm:gap-2 whitespace-nowrap">
                   <span
-                    className={`text-[7px] xs:text-[7.5px] sm:text-[8px] uppercase font-bold text-usm-teal-accent tracking-[0.08em] sm:tracking-[0.18em] truncate max-w-[130px] xs:max-w-[160px] sm:max-w-none ${
+                    className={`text-[7px] xs:text-[7.5px] sm:text-[8px] uppercase font-bold text-usm-teal-accent tracking-[0.05em] xs:tracking-[0.08em] sm:tracking-[0.18em] truncate max-w-[110px] xs:max-w-[150px] sm:max-w-none ${
                       language === 'ar' ? 'font-arabic text-[9px]' : ''
                     }`}
                   >
                     {language === 'ar' ? 'الاتحاد الرياضي المنستيري' : 'Union Sportive Monastirienne'}
                   </span>
-                  <span className="font-serif italic text-[10px] sm:text-xs text-white/50 shrink-0">1923</span>
+                  <span className="font-serif italic text-[9px] sm:text-xs text-white/50 shrink-0">1923</span>
                 </span>
               </div>
             </button>
@@ -269,9 +269,9 @@ export const Header: React.FC = () => {
               })}
             </nav>
 
-            {/* Main Partners — loaded from DB */}
+            {/* Main Partners — loaded from DB (desktop/tablet only) */}
             {mainSponsors.length > 0 && (
-              <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10 shrink-0">
+              <div className="hidden md:flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10 shrink-0">
                 {mainSponsors.map((sponsor, i) => {
                   const logoUrl = sponsor.logo || sponsor.lightLogo;
                   return (
@@ -315,7 +315,7 @@ export const Header: React.FC = () => {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-4">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto sm:ml-4">
               {/* Utility cluster — search, cart & notifications */}
               <div className="flex items-center h-9 rounded-full border border-white/12 bg-white/[0.03] overflow-hidden">
                 {/* Search */}
@@ -602,6 +602,43 @@ export const Header: React.FC = () => {
                 )}
               </button>
             </div>
+
+            {/* Mobile Official Partners */}
+            {mainSponsors.length > 0 && (
+              <div className="px-4 py-3 border-t border-white/10 bg-[#050e1f]/50">
+                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase block mb-2">
+                  {tr(language, 'Official Partners', 'Partenaires Officiels', 'الشركاء الرسميون')}
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {mainSponsors.map((sponsor, i) => {
+                    const logoUrl = sponsor.logo || sponsor.lightLogo;
+                    return (
+                      <a
+                        key={sponsor._id || i}
+                        href={sponsor.websiteUrl || sponsor.link || '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center h-8 px-2.5 py-1 bg-white rounded-lg shadow-sm"
+                        title={sponsor.name}
+                      >
+                        {logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoUrl}
+                            alt={sponsor.name}
+                            className="h-5 max-w-[80px] object-contain"
+                          />
+                        ) : (
+                          <span className="text-[11px] font-black tracking-wide text-slate-800">
+                            {sponsor.name}
+                          </span>
+                        )}
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Mobile Auth Actions */}
             <div className="p-4 border-t border-white/10 bg-[#050e1f]/80">
