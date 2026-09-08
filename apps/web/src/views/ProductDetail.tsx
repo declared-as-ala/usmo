@@ -28,16 +28,11 @@ interface ProductDetailProps {
   productId: string; // this parameter is the product slug
 }
 
-type Tab = 'description' | 'details' | 'sizing' | 'delivery' | 'care' | 'availability' | 'guarantee';
+type Tab = 'sizing' | 'delivery';
 
 const TABS: { key: Tab; en: string; fr: string; ar: string }[] = [
-  { key: 'description', en: 'Description', fr: 'Description', ar: 'الوصف' },
-  { key: 'details', en: 'Details & Material', fr: 'Détails & Matière', ar: 'التفاصيل والخامة' },
   { key: 'sizing', en: 'Size Guide', fr: 'Guide des Tailles', ar: 'دليل المقاسات' },
   { key: 'delivery', en: 'Delivery & Pickup', fr: 'Livraison & Retrait', ar: 'التوصيل والاستلام' },
-  { key: 'care', en: 'Care Instructions', fr: "Instructions d'Entretien", ar: 'تعليمات العناية' },
-  { key: 'availability', en: 'Availability', fr: 'Disponibilité', ar: 'التوفر' },
-  { key: 'guarantee', en: 'Official Guarantee', fr: 'Garantie Officielle', ar: 'الضمان الرسمي' },
 ];
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
@@ -55,7 +50,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [activeTab, setActiveTab] = useState<Tab>('description');
+  const [activeTab, setActiveTab] = useState<Tab>('sizing');
 
   // Jersey customization states
   const [customName, setCustomName] = useState('');
@@ -684,24 +679,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
           </div>
 
           <div className="p-6 md:p-8 text-xs text-slate-600 leading-relaxed max-w-3xl">
-            {activeTab === 'description' && (
-              <p>{tr(language, product.description, product.descriptionFr, product.descriptionAr)}</p>
-            )}
-
-            {activeTab === 'details' && (
-              <ul className="list-disc pl-5 rtl:pr-5 rtl:pl-0 space-y-1.5 text-slate-500">
-                <li>{tr(language, 'Breathable, high-quality technical fabric', 'Tissu technique respirant et haut de gamme', 'مادة عالية الجودة قابلة للتهوية')}</li>
-                <li>{tr(language, 'Finely embroidered USM crest', 'Écusson USM finement brodé', 'شعار النادي مطرز بدقة')}</li>
-                <li>{tr(language, 'Comfortable athletic fit', 'Coupe athlétique et confortable', 'تصميم مريح للرياضيين')}</li>
-                <li>{product.material ? `Composition: ${product.material}` : 'Matière: 100% Polyester'}</li>
-              </ul>
-            )}
-
             {activeTab === 'sizing' && (
               product.sizeGuide?.trim() ? (
-                <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
-                  {product.sizeGuide}
-                </div>
+                /<[a-z][\s\S]*>/i.test(product.sizeGuide) ? (
+                  <div
+                    className="text-slate-700 font-sans text-sm leading-relaxed [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_th]:border-b [&_th]:border-slate-200 [&_th]:py-2.5 [&_th]:px-3 [&_th]:text-left [&_th]:text-xs [&_th]:font-bold [&_th]:text-slate-900 [&_td]:py-2.5 [&_td]:px-3 [&_td]:border-b [&_td]:border-slate-100 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_p]:mb-2.5 [&_strong]:text-slate-900"
+                    dangerouslySetInnerHTML={{ __html: product.sizeGuide }}
+                  />
+                ) : (
+                  <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
+                    {product.sizeGuide}
+                  </div>
+                )
               ) : (
                 <table className="w-full text-left rtl:text-right border-collapse">
                   <thead>
@@ -711,11 +700,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                       <th className="pb-2">{tr(language, 'Length (cm)', 'Longueur (cm)', 'الطول')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-slate-450">
-                    <tr><td className="py-2">S</td><td className="py-2">48</td><td className="py-2">68</td></tr>
-                    <tr><td className="py-2">M</td><td className="py-2">52</td><td className="py-2">70</td></tr>
-                    <tr><td className="py-2">L</td><td className="py-2">56</td><td className="py-2">72</td></tr>
-                    <tr><td className="py-2">XL</td><td className="py-2">60</td><td className="py-2">74</td></tr>
+                  <tbody className="divide-y divide-slate-100 text-slate-600">
+                    <tr><td className="py-2 font-bold">S</td><td className="py-2">48</td><td className="py-2">68</td></tr>
+                    <tr><td className="py-2 font-bold">M</td><td className="py-2">52</td><td className="py-2">70</td></tr>
+                    <tr><td className="py-2 font-bold">L</td><td className="py-2">56</td><td className="py-2">72</td></tr>
+                    <tr><td className="py-2 font-bold">XL</td><td className="py-2">60</td><td className="py-2">74</td></tr>
                   </tbody>
                 </table>
               )
@@ -723,9 +712,16 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
             {activeTab === 'delivery' && (
               product.deliveryInfo?.trim() ? (
-                <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
-                  {product.deliveryInfo}
-                </div>
+                /<[a-z][\s\S]*>/i.test(product.deliveryInfo) ? (
+                  <div
+                    className="text-slate-700 font-sans text-sm leading-relaxed [&_table]:w-full [&_table]:border-collapse [&_table]:my-3 [&_th]:border-b [&_th]:border-slate-200 [&_th]:py-2.5 [&_th]:px-3 [&_th]:text-left [&_th]:text-xs [&_th]:font-bold [&_th]:text-slate-900 [&_td]:py-2.5 [&_td]:px-3 [&_td]:border-b [&_td]:border-slate-100 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_p]:mb-2.5 [&_strong]:text-slate-900"
+                    dangerouslySetInnerHTML={{ __html: product.deliveryInfo }}
+                  />
+                ) : (
+                  <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
+                    {product.deliveryInfo}
+                  </div>
+                )
               ) : (
                 <div className="space-y-2">
                   <p>
@@ -746,24 +742,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   </p>
                 </div>
               )
-            )}
-
-            {activeTab === 'care' && (
-              <p>{product.careInstructions || 'Lavage en machine à froid 30°C. Ne pas utiliser d’adoucissant ni de sèche-linge.'}</p>
-            )}
-
-            {activeTab === 'availability' && (
-              <p>
-                {soldOut
-                  ? 'Actuellement en rupture de stock. Contactez le service client pour une alerte réassort.'
-                  : `Actuellement disponible — ${totalStock} unités restantes en stock.`}
-              </p>
-            )}
-
-            {activeTab === 'guarantee' && (
-              <p>
-                Garantie officielle de l&apos;Union Sportive Monastirienne. Retour et échange sous 7 jours en cas de défaut.
-              </p>
             )}
           </div>
         </div>

@@ -69,6 +69,8 @@ export default function AdminBoutique() {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categoryForm, setCategoryForm] = useState({ name: '', slug: '', coverImage: '', active: true });
+  const [previewSizeGuide, setPreviewSizeGuide] = useState(false);
+  const [previewDeliveryInfo, setPreviewDeliveryInfo] = useState(false);
   const [boutiqueBanner, setBoutiqueBanner] = useState(DEFAULT_BOUTIQUE_BANNER);
   const [bannerSaveState, setBannerSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [bannerSaveMessage, setBannerSaveMessage] = useState('');
@@ -120,11 +122,15 @@ export default function AdminBoutique() {
   const openAddForm = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setPreviewSizeGuide(false);
+    setPreviewDeliveryInfo(false);
     setShowForm(true);
   };
 
   const openEditForm = (p: any) => {
     setEditingId(p._id);
+    setPreviewSizeGuide(false);
+    setPreviewDeliveryInfo(false);
     const variantsStock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
     setForm({
       name: p.name,
@@ -1051,35 +1057,114 @@ export default function AdminBoutique() {
               </div>
 
               {/* Guide des Tailles & Livraison */}
-              <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-3">
-                <label className="text-[11px] font-black uppercase text-slate-800 tracking-wider block">
-                  Guide des Tailles & Livraison (Onglets fiche produit)
-                </label>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                    Guide des Tailles (Personnalisé)
+              <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-black uppercase text-slate-800 tracking-wider block">
+                    Guide des Tailles & Livraison (HTML supporté)
                   </label>
-                  <textarea
-                    rows={2}
-                    value={form.sizeGuide}
-                    onChange={(e) => setForm(f => ({ ...f, sizeGuide: e.target.value }))}
-                    placeholder="Laissez vide pour afficher le guide standard des tailles (S / M / L / XL)."
-                    className="w-full bg-white border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800 placeholder:text-slate-400"
-                  />
+                  <span className="text-[10px] font-bold text-usm-blue-primary bg-usm-blue-primary/10 border border-usm-blue-primary/20 px-2 py-0.5 rounded-full">
+                    HTML Actif
+                  </span>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                    Livraison & Retrait (Personnalisé)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={form.deliveryInfo}
-                    onChange={(e) => setForm(f => ({ ...f, deliveryInfo: e.target.value }))}
-                    placeholder="Laissez vide pour afficher les informations de livraison express standard (24-48h)."
-                    className="w-full bg-white border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800 placeholder:text-slate-400"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[10px] font-bold text-slate-700 uppercase">
+                      Guide des Tailles (HTML / Texte)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sampleTable = `<table class="w-full text-left border-collapse">\n  <thead>\n    <tr class="border-b text-xs font-bold text-slate-500 uppercase">\n      <th class="py-2">Taille</th>\n      <th class="py-2">Poitrine (cm)</th>\n      <th class="py-2">Longueur (cm)</th>\n    </tr>\n  </thead>\n  <tbody class="divide-y text-slate-700">\n    <tr><td class="py-2 font-bold">S</td><td>48</td><td>68</td></tr>\n    <tr><td class="py-2 font-bold">M</td><td>52</td><td>70</td></tr>\n    <tr><td class="py-2 font-bold">L</td><td>56</td><td>72</td></tr>\n    <tr><td class="py-2 font-bold">XL</td><td>60</td><td>74</td></tr>\n  </tbody>\n</table>`;
+                          setForm(f => ({ ...f, sizeGuide: sampleTable }));
+                        }}
+                        className="text-[10px] font-bold text-usm-blue-primary hover:underline cursor-pointer"
+                      >
+                        + Insérer Modèle Tableau
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewSizeGuide(!previewSizeGuide)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                          previewSizeGuide ? 'bg-usm-blue-primary text-white border-usm-blue-primary' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {previewSizeGuide ? 'Éditer Code' : 'Aperçu Rendu'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {previewSizeGuide ? (
+                    <div className="w-full min-h-[120px] bg-white border border-slate-200 rounded-lg p-3 text-xs overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_th]:border-b [&_th]:border-slate-200 [&_th]:py-2 [&_th]:text-left [&_th]:font-bold [&_td]:py-2 [&_td]:border-b [&_td]:border-slate-100">
+                      {form.sizeGuide ? (
+                        <div dangerouslySetInnerHTML={{ __html: form.sizeGuide }} />
+                      ) : (
+                        <p className="text-slate-400 italic">Aucun contenu personnalisé (le guide standard par défaut sera affiché).</p>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      rows={5}
+                      value={form.sizeGuide}
+                      onChange={(e) => setForm(f => ({ ...f, sizeGuide: e.target.value }))}
+                      placeholder="Code HTML ou texte. Ex: <table>, <tr>, <td>, <p>, <b>... Laissez vide pour afficher le guide standard."
+                      className="w-full bg-white border border-slate-200 text-xs font-mono rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-y text-slate-800 placeholder:text-slate-400 placeholder:font-sans"
+                    />
+                  )}
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Supporte les balises HTML complètes (table, tr, td, ul, li, p, strong, etc.).
+                  </p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[10px] font-bold text-slate-700 uppercase">
+                      Livraison & Retrait (HTML / Texte)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const sampleDelivery = `<p class="mb-2">La livraison à domicile est disponible dans toute la Tunisie sous <strong>24 à 48h</strong> par transporteur express.</p>\n<p class="font-bold text-usm-blue-primary">Aucun paiement en ligne — réglez en espèces à la livraison auprès du transporteur.</p>`;
+                          setForm(f => ({ ...f, deliveryInfo: sampleDelivery }));
+                        }}
+                        className="text-[10px] font-bold text-usm-blue-primary hover:underline cursor-pointer"
+                      >
+                        + Insérer Modèle Livraison
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewDeliveryInfo(!previewDeliveryInfo)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                          previewDeliveryInfo ? 'bg-usm-blue-primary text-white border-usm-blue-primary' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        {previewDeliveryInfo ? 'Éditer Code' : 'Aperçu Rendu'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {previewDeliveryInfo ? (
+                    <div className="w-full min-h-[120px] bg-white border border-slate-200 rounded-lg p-3 text-xs overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_th]:border-b [&_th]:border-slate-200 [&_th]:py-2 [&_th]:text-left [&_th]:font-bold [&_td]:py-2 [&_td]:border-b [&_td]:border-slate-100 [&_p]:mb-2">
+                      {form.deliveryInfo ? (
+                        <div dangerouslySetInnerHTML={{ __html: form.deliveryInfo }} />
+                      ) : (
+                        <p className="text-slate-400 italic">Aucun contenu personnalisé (les informations de livraison standard par défaut seront affichées).</p>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      rows={5}
+                      value={form.deliveryInfo}
+                      onChange={(e) => setForm(f => ({ ...f, deliveryInfo: e.target.value }))}
+                      placeholder="Code HTML ou texte. Ex: <p>, <strong>, <ul>, <li>... Laissez vide pour afficher les informations de livraison standard."
+                      className="w-full bg-white border border-slate-200 text-xs font-mono rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-y text-slate-800 placeholder:text-slate-400 placeholder:font-sans"
+                    />
+                  )}
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Supporte les balises HTML complètes (p, strong, ul, li, div, etc.).
+                  </p>
                 </div>
               </div>
 
