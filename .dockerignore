@@ -40,3 +40,5 @@ AGENTS.md
 
 docker-compose*.yml
 Dockerfile*
+deploy/certbot/
+scratch/
