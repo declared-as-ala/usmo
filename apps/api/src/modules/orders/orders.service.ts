@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order } from './order.schema';
@@ -20,6 +20,7 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<Product>,
@@ -30,6 +31,41 @@ export class OrdersService {
   ) {}
 
   async create(dto: any): Promise<Order> {
+    // 0. Strictly refetch every product from MongoDB to validate availability
+    if (!dto.items || !Array.isArray(dto.items) || dto.items.length === 0) {
+      throw new BadRequestException('Le panier est vide.');
+    }
+
+    for (const item of dto.items) {
+      const product = await this.productModel.findById(item.productId).exec();
+      if (!product || product.status !== 'published') {
+        throw new ConflictException({
+          code: 'PRODUCT_UNAVAILABLE',
+          message: `Le produit "${product?.name || item.productId}" n'est plus disponible.`,
+        });
+      }
+
+      if (product.stockStatus === 'OUT_OF_STOCK') {
+        throw new ConflictException({
+          code: 'PRODUCT_OUT_OF_STOCK',
+          message: 'Ce produit est actuellement épuisé.',
+        });
+      }
+
+      if (product.trackStock) {
+        const variant = product.variants?.find((v) => v.size === item.size);
+        const availableStock = variant
+          ? variant.stock
+          : (product.stockQuantity ?? product.lowStockThreshold);
+        if (availableStock < (item.quantity || 1)) {
+          throw new ConflictException({
+            code: 'PRODUCT_OUT_OF_STOCK',
+            message: `Stock insuffisant pour "${product.name}" (${item.size}): demandé ${item.quantity}, disponible ${availableStock}.`,
+          });
+        }
+      }
+    }
+
     // 1. Calculate pricing and validate stock using CartService
     const calc = await this.cartService.calculateCart({
       items: dto.items,
@@ -50,14 +86,34 @@ export class OrdersService {
       const product = await this.productModel.findById(item.productId).exec();
       if (!product) continue;
 
-      if (product.variants && product.variants.length > 0) {
-        const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-        if (variantIdx !== -1) {
-          product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
-          product.markModified('variants');
+      if (product.trackStock) {
+        if (product.variants && product.variants.length > 0) {
+          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
+          if (variantIdx !== -1) {
+            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
+            product.markModified('variants');
+          }
+          const totalRemaining = product.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+          product.stockQuantity = totalRemaining;
+          if (totalRemaining <= 0) {
+            product.stockStatus = 'OUT_OF_STOCK';
+          }
+        } else if (product.stockQuantity !== undefined) {
+          product.stockQuantity = Math.max(0, product.stockQuantity - item.quantity);
+          if (product.stockQuantity <= 0) {
+            product.stockStatus = 'OUT_OF_STOCK';
+          }
         }
       } else {
-        product.lowStockThreshold = Math.max(0, product.lowStockThreshold - item.quantity);
+        if (product.variants && product.variants.length > 0) {
+          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
+          if (variantIdx !== -1) {
+            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
+            product.markModified('variants');
+          }
+        } else {
+          product.lowStockThreshold = Math.max(0, product.lowStockThreshold - item.quantity);
+        }
       }
       await product.save();
     }

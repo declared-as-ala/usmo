@@ -147,13 +147,21 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   }));
   const isJersey = product.category?.toLowerCase() === 'jerseys';
   const isBackView = POSE_LABELS[activeImage]?.toLowerCase() === 'back';
+  // Jersey customization option (hidden as requested)
+  const showJerseyPersonalization = false;
   
   // Calculate stock dynamically from variants
   const totalStock = product.variants 
     ? product.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0)
     : (product.stock || 0);
 
-  const soldOut = totalStock === 0 || product.status === 'archived';
+  const isOutOfStock = 
+    product.stockStatus === 'OUT_OF_STOCK' || 
+    (product.trackStock && (product.stockQuantity ?? 0) <= 0) || 
+    product.status === 'archived' ||
+    totalStock === 0;
+
+  const soldOut = isOutOfStock;
   const lowStock = !soldOut && totalStock > 0 && totalStock <= 5;
   const liked = wishlist.includes(product._id);
   const productName = tr(language, product.name, product.nameFr, product.nameAr);
@@ -358,17 +366,21 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               })()}
 
               {soldOut && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
-                  <span className="bg-usm-blue-soft border border-usm-border text-usm-blue-dark text-xs font-black uppercase px-6 py-2 rounded-full tracking-widest">
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-10">
+                  <span className="bg-[#071A30] text-white text-xs font-black uppercase px-6 py-2.5 rounded-full tracking-widest shadow-lg">
                     {tr(language, 'Sold Out', 'Épuisé', 'نفدت الكمية')}
                   </span>
                 </div>
               )}
-              {discountPct !== null && discountPct > 0 && (
+              {soldOut ? (
+                <span className="absolute top-4 left-4 bg-[#071A30] text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full shadow-md z-10">
+                  Épuisé
+                </span>
+              ) : discountPct !== null && discountPct > 0 ? (
                 <span className="absolute top-4 left-4 bg-emerald-500 text-usm-blue-dark text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-sm">
                   -{discountPct}%
                 </span>
-              )}
+              ) : null}
             </div>
 
             {/* Thumbnail row */}
@@ -405,21 +417,32 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               <p className="text-[10px] text-slate-500 font-mono mt-1.5">REF: {product.sku}</p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-mono font-black text-usm-blue-primary">{formatMoney(product.price)}</span>
-              {product.oldPrice && (
-                <span className="text-sm text-slate-500 line-through font-mono">{formatMoney(product.oldPrice)}</span>
-              )}
-              {soldOut ? (
-                <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
-                  <Ban size={13} /> {tr(language, 'Out of stock', 'Rupture de stock', 'غير متوفر')}
-                </span>
-              ) : (
-                <span className="text-xs font-bold text-emerald-400">
+            {soldOut ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold text-slate-500 uppercase tracking-wider">
+                    Indisponible actuellement
+                  </span>
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#071A30] text-white">
+                    Épuisé
+                  </span>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-bold text-slate-600 flex items-center gap-2">
+                  <Ban size={15} className="text-slate-500 shrink-0" />
+                  <span>Ce produit est actuellement en rupture de stock et indisponible à la réservation.</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="text-2xl font-mono font-black text-usm-blue-primary">{formatMoney(product.price)}</span>
+                {product.oldPrice && (
+                  <span className="text-sm text-slate-500 line-through font-mono">{formatMoney(product.oldPrice)}</span>
+                )}
+                <span className="text-xs font-bold text-emerald-600">
                   {tr(language, 'In Stock', 'En Stock', 'متوفر')}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
 
             {lowStock && (
               <p className="text-xs font-bold text-amber-400 animate-pulse">
@@ -482,8 +505,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               </div>
             )}
 
-            {/* Jersey Personalization Toggle + Panel */}
-            {isJersey && (
+            {/* Jersey Personalization Toggle + Panel (Hidden) */}
+            {showJerseyPersonalization && isJersey && (
               <div className="border-t border-usm-border pt-4 space-y-3">
                 <button
                   onClick={() => {
@@ -675,42 +698,54 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             )}
 
             {activeTab === 'sizing' && (
-              <table className="w-full text-left rtl:text-right border-collapse">
-                <thead>
-                  <tr className="border-b border-usm-border text-[10px] text-slate-500 font-bold uppercase">
-                    <th className="pb-2">{tr(language, 'Size', 'Taille', 'المقاس')}</th>
-                    <th className="pb-2">{tr(language, 'Chest (cm)', 'Poitrine (cm)', 'عرض الصدر')}</th>
-                    <th className="pb-2">{tr(language, 'Length (cm)', 'Longueur (cm)', 'الطول')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-slate-450">
-                  <tr><td className="py-2">S</td><td className="py-2">48</td><td className="py-2">68</td></tr>
-                  <tr><td className="py-2">M</td><td className="py-2">52</td><td className="py-2">70</td></tr>
-                  <tr><td className="py-2">L</td><td className="py-2">56</td><td className="py-2">72</td></tr>
-                  <tr><td className="py-2">XL</td><td className="py-2">60</td><td className="py-2">74</td></tr>
-                </tbody>
-              </table>
+              product.sizeGuide?.trim() ? (
+                <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
+                  {product.sizeGuide}
+                </div>
+              ) : (
+                <table className="w-full text-left rtl:text-right border-collapse">
+                  <thead>
+                    <tr className="border-b border-usm-border text-[10px] text-slate-500 font-bold uppercase">
+                      <th className="pb-2">{tr(language, 'Size', 'Taille', 'المقاس')}</th>
+                      <th className="pb-2">{tr(language, 'Chest (cm)', 'Poitrine (cm)', 'عرض الصدر')}</th>
+                      <th className="pb-2">{tr(language, 'Length (cm)', 'Longueur (cm)', 'الطول')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-slate-450">
+                    <tr><td className="py-2">S</td><td className="py-2">48</td><td className="py-2">68</td></tr>
+                    <tr><td className="py-2">M</td><td className="py-2">52</td><td className="py-2">70</td></tr>
+                    <tr><td className="py-2">L</td><td className="py-2">56</td><td className="py-2">72</td></tr>
+                    <tr><td className="py-2">XL</td><td className="py-2">60</td><td className="py-2">74</td></tr>
+                  </tbody>
+                </table>
+              )
             )}
 
             {activeTab === 'delivery' && (
-              <div className="space-y-2">
-                <p>
-                  {tr(
-                    language,
-                    'Home delivery is available across all of Tunisia within 24–48h via express courier.',
-                    'La livraison à domicile est disponible dans toute la Tunisie sous 24 à 48h par transporteur express.',
-                    'التوصيل السريع إلى المنزل متاح في جميع أنحاء تونس خلال 24 إلى 48 ساعة عبر ناقل سريع.'
-                  )}
-                </p>
-                <p className="font-bold text-usm-blue-primary">
-                  {tr(
-                    language,
-                    'No online payment — pay cash on delivery directly to the courier.',
-                    'Aucun paiement en ligne — réglez en espèces à la livraison auprès du transporteur.',
-                    'بدون أي دفع إلكتروني — الدفع نقداً عند استلام الطلب من الناقل.'
-                  )}
-                </p>
-              </div>
+              product.deliveryInfo?.trim() ? (
+                <div className="whitespace-pre-line text-slate-700 font-sans text-sm leading-relaxed">
+                  {product.deliveryInfo}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p>
+                    {tr(
+                      language,
+                      'Home delivery is available across all of Tunisia within 24–48h via express courier.',
+                      'La livraison à domicile est disponible dans toute la Tunisie sous 24 à 48h par transporteur express.',
+                      'التوصيل السريع إلى المنزل متاح في جميع أنحاء تونس خلال 24 إلى 48 ساعة عبر ناقل سريع.'
+                    )}
+                  </p>
+                  <p className="font-bold text-usm-blue-primary">
+                    {tr(
+                      language,
+                      'No online payment — pay cash on delivery directly to the courier.',
+                      'Aucun paiement en ligne — réglez en espèces à la livraison auprès du transporteur.',
+                      'بدون أي دفع إلكتروني — الدفع نقداً عند استلام الطلب من الناقل.'
+                    )}
+                  </p>
+                </div>
+              )
             )}
 
             {activeTab === 'care' && (

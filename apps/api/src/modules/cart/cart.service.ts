@@ -53,11 +53,36 @@ export class CartService {
         continue;
       }
 
+      if (product.stockStatus === 'OUT_OF_STOCK') {
+        errors.push(`Ce produit est actuellement épuisé: "${product.name}"`);
+        calculatedItems.push({
+          productId: product._id.toString(),
+          name: product.name,
+          nameFr: product.nameFr || product.name,
+          nameAr: product.nameAr || product.name,
+          coverImage: product.coverImage,
+          size: item.size,
+          quantity: item.quantity,
+          price: product.price,
+          subtotal: 0,
+          inStock: false,
+          availableStock: 0,
+          isOutOfStock: true,
+          customName: item.customName || undefined,
+          customNumber: item.customNumber || undefined,
+        });
+        continue;
+      }
+
       // Check variant size and stock
       const variant = product.variants?.find((v) => v.size === item.size);
-      const stock = variant ? variant.stock : product.lowStockThreshold; // fallback to product stock threshold if no variants
+      const stock = variant
+        ? variant.stock
+        : product.trackStock && product.stockQuantity !== undefined
+        ? product.stockQuantity
+        : product.lowStockThreshold;
       
-      const isAvailable = stock >= item.quantity;
+      const isAvailable = product.trackStock || variant ? stock >= item.quantity : true;
       if (!isAvailable) {
         errors.push(
           `Stock insuffisant pour "${product.name}" (${item.size}): demandé ${item.quantity}, disponible ${stock}`

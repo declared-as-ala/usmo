@@ -22,7 +22,12 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
   const { addToCart, wishlist, toggleWishlist } = useApp();
   const id = product._id || product.id;
   const stock = stockFor(product);
-  const soldOut = stock <= 0 || product.status === 'archived';
+  const isOutOfStock = 
+    product.stockStatus === 'OUT_OF_STOCK' || 
+    (product.trackStock && (product.stockQuantity ?? 0) <= 0) || 
+    product.status === 'archived' ||
+    stock <= 0;
+  const soldOut = isOutOfStock;
   const liked = wishlist.includes(id);
   const discount = product.oldPrice && product.oldPrice > product.price
     ? Math.round((1 - product.price / product.oldPrice) * 100)
@@ -33,7 +38,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
 
   const add = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (soldOut) return;
+    if (isOutOfStock) return;
     addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, (sizes[0] as string) || 'Unique');
   };
 
@@ -43,19 +48,24 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.035, 0.18) }}
-      onClick={() => router.push(`/product/${product.slug}`)}
-      className="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white shadow-[0_18px_50px_-38px_rgba(2,8,20,.55)] transition duration-300 hover:-translate-y-1 hover:border-[#0D63FF] hover:shadow-[0_26px_60px_-34px_rgba(2,8,20,.5)]"
+      onClick={isOutOfStock ? undefined : () => router.push(`/product/${product.slug}`)}
+      aria-disabled={isOutOfStock ? 'true' : undefined}
+      className={`group overflow-hidden rounded-[1.5rem] border border-[#DDE8F8] bg-white shadow-[0_18px_50px_-38px_rgba(2,8,20,.55)] transition duration-300 ${
+        isOutOfStock
+          ? 'cursor-default'
+          : 'cursor-pointer hover:-translate-y-1 hover:border-[#0D63FF] hover:shadow-[0_26px_60px_-34px_rgba(2,8,20,.5)]'
+      }`}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#F5F7FA]">
+      <div className={`relative aspect-[4/5] overflow-hidden bg-[#F5F7FA] ${isOutOfStock ? 'opacity-65 [filter:grayscale(0.15)_blur(0.4px)]' : ''}`}>
         {coverImage ? (
           <>
             <img
               src={coverImage}
               alt={product.nameFr || product.name}
-              className={`w-full h-full object-contain p-4 transition-opacity duration-500 ${hoverImage ? 'group-hover:opacity-0' : 'group-hover:scale-[1.035] duration-500'}`}
+              className={`w-full h-full object-contain p-4 transition-opacity duration-500 ${hoverImage && !isOutOfStock ? 'group-hover:opacity-0' : !isOutOfStock ? 'group-hover:scale-[1.035] duration-500' : ''}`}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
-            {hoverImage && (
+            {hoverImage && !isOutOfStock && (
               <img
                 src={hoverImage}
                 alt=""
@@ -68,37 +78,51 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
           <div className="grid h-full place-items-center text-[#8290a4]"><ShoppingBag size={34} /></div>
         )}
         <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-          <div className="flex flex-wrap gap-1.5">
-            {hasBadge(product, 'new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
-            {hasBadge(product, 'limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
-            {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
-          </div>
-          <button aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'} onClick={(event) => { event.stopPropagation(); toggleWishlist(id); }} className="grid size-11 shrink-0 place-items-center rounded-full border border-white/70 bg-white/90 text-[#020814] shadow-sm backdrop-blur transition hover:bg-white hover:text-[#0D63FF]">
-            <Heart size={17} fill={liked ? 'currentColor' : 'none'} className={liked ? 'text-red-500' : ''} />
-          </button>
+          {isOutOfStock ? (
+            <span className="rounded-full bg-[#071A30] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+              Épuisé
+            </span>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {hasBadge(product, 'new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
+              {hasBadge(product, 'limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
+              {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
+            </div>
+          )}
+          {!isOutOfStock && (
+            <button aria-label={liked ? 'Retirer des favoris' : 'Ajouter aux favoris'} onClick={(event) => { event.stopPropagation(); toggleWishlist(id); }} className="grid size-11 shrink-0 place-items-center rounded-full border border-white/70 bg-white/90 text-[#020814] shadow-sm backdrop-blur transition hover:bg-white hover:text-[#0D63FF]">
+              <Heart size={17} fill={liked ? 'currentColor' : 'none'} className={liked ? 'text-red-500' : ''} />
+            </button>
+          )}
         </div>
-        {soldOut && <div className="absolute inset-0 grid place-items-center bg-white/55 backdrop-blur-[2px]"><span className="rounded-full border border-white/25 bg-white/80 px-4 py-2 text-[10px] font-black uppercase tracking-[.15em] text-usm-blue-dark">Épuisé</span></div>}
       </div>
       <div className="p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-mono text-base font-black text-[#020814] sm:text-lg">{formatTND(product.price)}</p>
-          {product.oldPrice > product.price && <p className="font-mono text-[10px] text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}
+        <div className="flex items-center justify-between gap-2 min-h-[28px]">
+          {isOutOfStock ? (
+            <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Indisponible actuellement</p>
+          ) : (
+            <>
+              <p className="text-lg sm:text-xl font-black text-[#020814] tracking-tight">{formatTND(product.price)}</p>
+              {product.oldPrice > product.price && <p className="text-xs font-bold text-[#8793a5] line-through">{formatTND(product.oldPrice)}</p>}
+            </>
+          )}
         </div>
         <p className="mt-2 text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
         <h3 className="mt-1 min-h-11 line-clamp-2 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
-        {sizes.length > 0 && <div className="mt-3 flex items-center gap-1.5">{sizes.map(size => <span key={String(size)} className="grid min-w-7 place-items-center rounded-md border border-[#dce3ed] px-1.5 py-1 text-[9px] font-bold text-[#53627a]">{String(size)}</span>)}</div>}
-        <div className="mt-4 border-t border-[#e6eaf0] pt-4">
-          <button
-            type="button"
-            disabled={soldOut}
-            onClick={add}
-            aria-label={`Ajouter ${product.nameFr || product.name} au panier`}
-            className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
-          >
-            <ShoppingBag size={15} className="shrink-0 sm:size-4" />
-            <span className="min-w-0">{soldOut ? 'Épuisé' : 'Ajouter au panier'}</span>
-          </button>
-        </div>
+        {!isOutOfStock && (
+          <div className="mt-4 border-t border-[#e6eaf0] pt-4">
+            <button
+              type="button"
+              disabled={soldOut}
+              onClick={add}
+              aria-label={`Ajouter ${product.nameFr || product.name} au panier`}
+              className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
+            >
+              <ShoppingBag size={15} className="shrink-0 sm:size-4" />
+              <span className="min-w-0">Ajouter au panier</span>
+            </button>
+          </div>
+        )}
       </div>
     </motion.article>
   );
@@ -124,6 +148,10 @@ export const OfficialCatalog: React.FC = () => {
   const [badge, setBadge] = useState('');
   const [mobileFilters, setMobileFilters] = useState(false);
 
+  const isProductOutOfStock = (p: any) => {
+    return p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && (p.stockQuantity ?? 0) <= 0) || stockFor(p) <= 0;
+  };
+
   useEffect(() => {
     api.getHomepageSettings()
       .then(settings => setBanner(settings?.boutiqueBanner || null))
@@ -141,11 +169,21 @@ export const OfficialCatalog: React.FC = () => {
 
   const filtered = useMemo(() => products.filter(product => {
     const searchable = `${product.name || ''} ${product.nameFr || ''} ${product.description || ''}`.toLowerCase();
+    const out = isProductOutOfStock(product);
     return (category === 'all' || product.category === category)
       && (!search.trim() || searchable.includes(search.trim().toLowerCase()))
-      && (!inStock || stockFor(product) > 0)
+      && (!inStock || !out)
       && (!badge || hasBadge(product, badge));
-  }).sort((a, b) => sort === 'price_asc' ? a.price - b.price : sort === 'price_desc' ? b.price - a.price : sort === 'popularity_desc' ? (b.views || 0) - (a.views || 0) : sort === 'date_desc' ? new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime() : 0), [products, category, search, inStock, badge, sort]);
+  }).sort((a, b) => {
+    const aOut = isProductOutOfStock(a) ? 1 : 0;
+    const bOut = isProductOutOfStock(b) ? 1 : 0;
+    if (aOut !== bOut) return aOut - bOut;
+    if (sort === 'price_asc') return a.price - b.price;
+    if (sort === 'price_desc') return b.price - a.price;
+    if (sort === 'popularity_desc') return (b.views || 0) - (a.views || 0);
+    if (sort === 'date_desc') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    return (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+  }), [products, category, search, inStock, badge, sort]);
 
   const desktopBannerImage = banner?.desktopImageUrl || banner?.imageUrl || '';
   const hasAdminImage = Boolean(banner?.isActive && desktopBannerImage);

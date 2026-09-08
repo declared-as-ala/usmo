@@ -44,7 +44,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
     ? product.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) 
     : (product.stock || 0);
 
-  const soldOut = totalStock === 0 || product.status === 'archived';
+  const isOutOfStock = 
+    product.stockStatus === 'OUT_OF_STOCK' || 
+    (product.trackStock && (product.stockQuantity ?? 0) <= 0) || 
+    product.status === 'archived' ||
+    totalStock === 0;
+
+  const soldOut = isOutOfStock;
   const lowStock = !soldOut && totalStock > 0 && totalStock <= 5;
 
   const rawPrice = product.price || 0;
@@ -70,7 +76,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
       )
     : [];
 
-  const goToProduct = () => router.push(`/product/${product.slug}`);
+  const goToProduct = () => {
+    if (isOutOfStock) return;
+    router.push(`/product/${product.slug}`);
+  };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,28 +97,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
   const badges = product.badges || [];
   const visibleBadges = [...badges];
   if (lowStock && !visibleBadges.includes('lowStock')) visibleBadges.push('lowStock');
-  if (soldOut && !visibleBadges.includes('soldOut')) visibleBadges.push('soldOut');
   
   const activeBadges = visibleBadges.slice(0, 2);
 
   return (
     <motion.div
       onClick={goToProduct}
-      whileHover={{ y: -6 }}
+      whileHover={isOutOfStock ? {} : { y: -6 }}
       transition={{ duration: 0.3 }}
-      className={`group relative flex flex-col h-full bg-white border border-usm-border hover:border-usm-blue-primary/30 rounded-2xl shadow-lg cursor-pointer overflow-hidden ${className}`}
+      aria-disabled={isOutOfStock ? 'true' : undefined}
+      className={`group relative flex flex-col h-full bg-white border border-usm-border rounded-2xl shadow-lg overflow-hidden ${
+        isOutOfStock ? 'cursor-default' : 'hover:border-usm-blue-primary/30 cursor-pointer'
+      } ${className}`}
     >
       {/* Product Image Panel */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-white shrink-0">
+      <div className={`relative aspect-[4/5] overflow-hidden bg-white shrink-0 ${isOutOfStock ? 'opacity-65 [filter:grayscale(0.15)_blur(0.4px)]' : ''}`}>
         <img
           src={product.coverImage || product.image}
           alt={product.name}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${
-            secondaryImage ? 'group-hover:opacity-0' : ''
-          }`}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+            isOutOfStock ? '' : 'group-hover:scale-105'
+          } ${secondaryImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
           loading="lazy"
         />
-        {secondaryImage && (
+        {secondaryImage && !isOutOfStock && (
           <img
             src={secondaryImage}
             alt=""
@@ -119,14 +130,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
         )}
 
         {/* Rank Badge */}
-        {showRank && product.rank && (
+        {showRank && product.rank && !isOutOfStock && (
           <span className="absolute top-3.5 left-3.5 h-7 w-7 rounded-full bg-usm-blue-primary text-white text-xs font-black flex items-center justify-center shadow-md z-10">
             #{product.rank}
           </span>
         )}
 
         {/* Badges Overlay */}
-        {activeBadges.length > 0 && (
+        {isOutOfStock ? (
+          <div className="absolute top-3.5 left-3.5 z-10">
+            <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded bg-[#071A30] text-white shadow-sm">
+              Épuisé
+            </span>
+          </div>
+        ) : activeBadges.length > 0 ? (
           <div
             className={`absolute top-3.5 flex flex-col gap-1 z-10 ${
               showRank && product.rank ? 'left-12' : 'left-3.5'
@@ -145,31 +162,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
               </span>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {/* Wishlist Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(id);
-          }}
-          className="absolute top-3.5 right-3.5 h-8 w-8 rounded-full bg-usm-blue-soft hover:bg-usm-blue-soft backdrop-blur-md flex items-center justify-center border border-usm-border transition-colors z-10 cursor-pointer"
-          title={tr(language, 'Add to wishlist', 'Ajouter aux favoris', 'إضافة إلى المفضلة')}
-        >
-          <Heart
-            size={13}
-            className={`transition-all duration-300 ${liked ? 'text-red-500 scale-110' : 'text-slate-700'}`}
-            fill={liked ? 'currentColor' : 'none'}
-          />
-        </button>
-
-        {/* Out Of Stock Overlay */}
-        {soldOut && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
-            <span className="bg-usm-blue-soft border border-usm-border text-usm-blue-dark text-[9px] font-black uppercase px-3 py-1.5 rounded-full tracking-widest">
-              {tr(language, 'Sold Out', 'Épuisé', 'نفدت الكمية')}
-            </span>
-          </div>
+        {/* Wishlist Button - Hidden when out of stock */}
+        {!isOutOfStock && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(id);
+            }}
+            className="absolute top-3.5 right-3.5 h-8 w-8 rounded-full bg-usm-blue-soft hover:bg-usm-blue-soft backdrop-blur-md flex items-center justify-center border border-usm-border transition-colors z-10 cursor-pointer"
+            title={tr(language, 'Add to wishlist', 'Ajouter aux favoris', 'إضافة إلى المفضلة')}
+          >
+            <Heart
+              size={13}
+              className={`transition-all duration-300 ${liked ? 'text-red-500 scale-110' : 'text-slate-700'}`}
+              fill={liked ? 'currentColor' : 'none'}
+            />
+          </button>
         )}
 
         {/* Quick Add Overlay */}
@@ -187,21 +197,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
       {/* Product Information */}
       <div className="p-4 flex flex-col gap-2 flex-grow">
         {/* Pricing Layout — placed directly under the image */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-usm-blue-primary">
-            {formatMoney(rawPrice)}
-          </span>
-          {rawOldPrice && (
-            <span className="text-[10px] text-slate-500 line-through font-mono">
-              {formatMoney(rawOldPrice)}
+        {isOutOfStock ? (
+          <div className="flex items-center gap-2 min-h-[24px]">
+            <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
+              Indisponible actuellement
             </span>
-          )}
-          {discountPct !== null && discountPct > 0 && (
-            <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
-              -{discountPct}%
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 min-h-[24px]">
+            <span className="text-sm sm:text-base font-black text-usm-blue-primary tracking-tight">
+              {formatMoney(rawPrice)}
             </span>
-          )}
-        </div>
+            {rawOldPrice && (
+              <span className="text-xs font-semibold text-slate-400 line-through">
+                {formatMoney(rawOldPrice)}
+              </span>
+            )}
+            {discountPct !== null && discountPct > 0 && (
+              <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded">
+                -{discountPct}%
+              </span>
+            )}
+          </div>
+        )}
 
         <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold">
           {product.category}

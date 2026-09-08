@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
-import { Plus, X, Trash2, Pencil, Image as ImageIcon, AlertCircle, Layers, Megaphone, Save, Shirt, RotateCw, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { Plus, X, Trash2, Pencil, Image as ImageIcon, AlertCircle, Layers, Megaphone, Save, Shirt, RotateCw, ChevronUp, ChevronDown, Check, Boxes } from 'lucide-react';
 import { api } from '../../lib/api-client';
 import { MediaUploader } from '../../components/Admin/MediaUploader';
 import { MediaLibrary } from '../../components/Admin/MediaLibrary';
@@ -41,6 +41,11 @@ const emptyForm = {
   description: '',
   printColor: '#1A53E0',
   printStrokeColor: '#FFFFFF',
+  stockStatus: 'IN_STOCK' as 'IN_STOCK' | 'OUT_OF_STOCK',
+  trackStock: false,
+  stockQuantity: 20,
+  sizeGuide: '',
+  deliveryInfo: '',
 };
 
 export default function AdminBoutique() {
@@ -52,6 +57,9 @@ export default function AdminBoutique() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Stock filter tab: 'all' | 'in_stock' | 'out_of_stock'
+  const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock'>('all');
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -122,6 +130,16 @@ export default function AdminBoutique() {
     }
   }, [searchParams, router]);
 
+  useEffect(() => {
+    const editParam = searchParams.get('edit');
+    if (editParam && products.length > 0) {
+      const prod = products.find(p => p._id === editParam || p.id === editParam);
+      if (prod) {
+        openEditForm(prod);
+      }
+    }
+  }, [searchParams, products]);
+
   const saveBoutiqueBanner = async (event?: React.FormEvent) => {
     event?.preventDefault();
     setBannerSaveState('saving');
@@ -152,6 +170,7 @@ export default function AdminBoutique() {
 
   const openEditForm = (p: any) => {
     setEditingId(p._id);
+    const variantsStock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
     setForm({
       name: p.name,
       nameFr: p.nameFr || '',
@@ -164,13 +183,34 @@ export default function AdminBoutique() {
       sport: p.sport || 'football',
       season: p.season || '2025/26',
       sizes: p.variants ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL',
-      stock: p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0),
+      stock: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
       status: p.status || 'published',
       description: p.description || '',
       printColor: p.printColor || '#1A53E0',
       printStrokeColor: p.printStrokeColor || '#FFFFFF',
+      stockStatus: p.stockStatus || (p.trackStock && (p.stockQuantity ?? 0) <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
+      trackStock: Boolean(p.trackStock),
+      stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
+      sizeGuide: p.sizeGuide || '',
+      deliveryInfo: p.deliveryInfo || '',
     });
     setShowForm(true);
+  };
+
+  // Quick toggle stock status
+  const handleToggleStockStatus = async (productId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'OUT_OF_STOCK' ? 'IN_STOCK' : 'OUT_OF_STOCK';
+    try {
+      await api.patchProductStockStatus(productId, nextStatus);
+      setProducts(prev => prev.map(p => {
+        if (p._id === productId || p.id === productId) {
+          return { ...p, stockStatus: nextStatus };
+        }
+        return p;
+      }));
+    } catch (err: any) {
+      alert(err.message || 'Erreur lors du changement de statut du stock');
+    }
   };
 
   // Convert input price strings (e.g. "85.000" or "85") to millimes
@@ -192,6 +232,8 @@ export default function AdminBoutique() {
         .map((s) => s.trim())
         .filter(Boolean);
 
+      const effectiveQuantity = form.trackStock ? Number(form.stockQuantity) : form.stock;
+
       // Construct variants model with simple default values
       const variants = sizesArray.map((size, idx) => ({
         id: `${editingId || 'new'}-${size}-${idx}`,
@@ -199,7 +241,7 @@ export default function AdminBoutique() {
         size,
         color: 'Bleu',
         colorHex: '#0D63FF',
-        stock: Math.round(form.stock / sizesArray.length), // divide stock among sizes
+        stock: Math.round(effectiveQuantity / (sizesArray.length || 1)),
       }));
 
       const productPayload = {
@@ -221,6 +263,11 @@ export default function AdminBoutique() {
         descriptionFr: form.description,
         descriptionAr: form.description,
         lowStockThreshold: 5,
+        stockStatus: form.stockStatus,
+        trackStock: form.trackStock,
+        stockQuantity: form.trackStock ? Number(form.stockQuantity) : undefined,
+        sizeGuide: form.sizeGuide,
+        deliveryInfo: form.deliveryInfo,
         ...(form.category === 'jerseys' && {
           printColor: form.printColor,
           printStrokeColor: form.printStrokeColor,
@@ -501,6 +548,46 @@ export default function AdminBoutique() {
         </>
       )}
 
+      {/* Stock Filter Tabs */}
+      {(() => {
+        const inStockCount = products.filter(p => p.stockStatus !== 'OUT_OF_STOCK' && (!p.trackStock || (p.stockQuantity ?? 0) > 0)).length;
+        const outOfStockCount = products.filter(p => p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && (p.stockQuantity ?? 0) <= 0)).length;
+        return (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setStockFilter('all')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                stockFilter === 'all'
+                  ? 'bg-usm-blue-primary text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              Tous les produits ({products.length})
+            </button>
+            <button
+              onClick={() => setStockFilter('in_stock')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                stockFilter === 'in_stock'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-emerald-700 hover:bg-emerald-50'
+              }`}
+            >
+              En stock ({inStockCount})
+            </button>
+            <button
+              onClick={() => setStockFilter('out_of_stock')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                stockFilter === 'out_of_stock'
+                  ? 'bg-[#071A30] text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              Épuisés ({outOfStockCount})
+            </button>
+          </div>
+        );
+      })()}
+
       {/* Loading / Error / Products Table */}
       {loading ? (
         <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl">
@@ -526,16 +613,25 @@ export default function AdminBoutique() {
                   <th className="py-3 px-4">Catégorie</th>
                   <th className="py-3 px-4">Prix</th>
                   <th className="py-3 px-4">Stock</th>
+                  <th className="py-3 px-4">Disponibilité</th>
                   <th className="py-3 px-4">Statut</th>
                   <th className="py-3 px-4">Badges</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {products.map((p, idx) => {
+                {products
+                  .filter((p) => {
+                    const isOutOfStock = p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && (p.stockQuantity ?? 0) <= 0);
+                    if (stockFilter === 'in_stock') return !isOutOfStock;
+                    if (stockFilter === 'out_of_stock') return isOutOfStock;
+                    return true;
+                  })
+                  .map((p, idx) => {
                   const stockSum = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
                   const isPublished = p.status === 'published';
                   const isEditingName = inlineEditId === p._id;
+                  const isOutOfStock = p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && (p.stockQuantity ?? 0) <= 0);
                   return (
                     <tr key={p._id} className="hover:bg-slate-50 transition-colors text-slate-800">
                       {/* Reorder arrows */}
@@ -592,12 +688,36 @@ export default function AdminBoutique() {
                       <td className="py-2.5 px-4 text-slate-650 font-bold uppercase">{p.category}</td>
                       <td className="py-2.5 px-4 font-mono font-bold text-slate-900">{(p.price / 1000).toFixed(3)} DT</td>
                       <td className="py-2.5 px-4">
-                        <input
-                          type="number"
-                          value={stockSum}
-                          onChange={(e) => handleUpdateStock(p._id, Math.max(0, Number(e.target.value)))}
-                          className="w-20 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-xs font-mono outline-none focus:border-usm-blue-primary text-slate-800"
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            value={p.trackStock ? (p.stockQuantity ?? 0) : stockSum}
+                            onChange={(e) => handleUpdateStock(p._id, Math.max(0, Number(e.target.value)))}
+                            className="w-16 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-xs font-mono outline-none focus:border-usm-blue-primary text-slate-800"
+                          />
+                          {p.trackStock && (
+                            <span className="text-[9px] font-bold text-usm-blue-primary uppercase bg-blue-50 px-1 py-0.5 rounded">Auto</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-4">
+                        {isOutOfStock ? (
+                          <button
+                            onClick={() => handleToggleStockStatus(p._id, 'OUT_OF_STOCK')}
+                            title="Cliquer pour remettre en stock"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#071A30] text-white hover:bg-[#071A30]/85 cursor-pointer shadow-xs transition-all"
+                          >
+                            <span>● Épuisé</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStockStatus(p._id, 'IN_STOCK')}
+                            title="Cliquer pour marquer comme épuisé"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer shadow-xs transition-all"
+                          >
+                            <span>● En stock</span>
+                          </button>
+                        )}
                       </td>
                       <td className="py-2.5 px-4">
                         <button
@@ -853,6 +973,115 @@ export default function AdminBoutique() {
                   </div>
                 </div>
               )}
+
+              {/* Inventaire & Disponibilité */}
+              <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5">
+                    <Boxes size={14} className="text-usm-blue-primary" />
+                    Inventaire & Disponibilité
+                  </label>
+                  <span className="text-[10px] font-bold text-slate-500">Gestion Boutique</span>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                    Statut du stock (Affichage Boutique)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, stockStatus: 'IN_STOCK' }))}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                        form.stockStatus === 'IN_STOCK'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>● EN STOCK</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, stockStatus: 'OUT_OF_STOCK' }))}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 border ${
+                        form.stockStatus === 'OUT_OF_STOCK'
+                          ? 'bg-[#071A30] text-white border-[#071A30] shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>● ÉPUISÉ (Badge Navy)</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1.5">
+                    {form.stockStatus === 'OUT_OF_STOCK'
+                      ? 'Le produit reste visible dans la boutique sans prix, avec le badge ÉPUISÉ, sans clic ni ajout au panier.'
+                      : 'Le produit est normalement disponible à la vente.'}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200">
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.trackStock}
+                      onChange={(e) => setForm(f => ({ ...f, trackStock: e.target.checked }))}
+                      className="size-4 rounded border-slate-300 text-usm-blue-primary focus:ring-usm-blue-primary accent-usm-blue-primary"
+                    />
+                    <span>Activer le suivi automatique des quantités</span>
+                  </label>
+                  <p className="text-[10px] text-slate-500 mt-0.5 ml-6">
+                    Décrémente automatiquement le stock lors des commandes. Passe en rupture quand le stock atteint 0.
+                  </p>
+
+                  {form.trackStock && (
+                    <div className="mt-2.5 ml-6">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                        Quantité en stock restante
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.stockQuantity}
+                        onChange={(e) => setForm(f => ({ ...f, stockQuantity: Math.max(0, parseInt(e.target.value) || 0) }))}
+                        className="w-32 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-usm-blue-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Guide des Tailles & Livraison */}
+              <div className="border border-slate-200 rounded-xl p-3.5 bg-slate-50/70 space-y-3">
+                <label className="text-[11px] font-black uppercase text-slate-800 tracking-wider block">
+                  Guide des Tailles & Livraison (Onglets fiche produit)
+                </label>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                    Guide des Tailles (Personnalisé)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={form.sizeGuide}
+                    onChange={(e) => setForm(f => ({ ...f, sizeGuide: e.target.value }))}
+                    placeholder="Laissez vide pour afficher le guide standard des tailles (S / M / L / XL)."
+                    className="w-full bg-white border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                    Livraison & Retrait (Personnalisé)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={form.deliveryInfo}
+                    onChange={(e) => setForm(f => ({ ...f, deliveryInfo: e.target.value }))}
+                    placeholder="Laissez vide pour afficher les informations de livraison express standard (24-48h)."
+                    className="w-full bg-white border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
+              </div>
 
               <button
                 type="submit"

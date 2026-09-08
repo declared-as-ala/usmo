@@ -180,6 +180,11 @@ export const api = {
     body: JSON.stringify(data),
   }),
 
+  patchProductStockStatus: (id: string, stockStatus: 'IN_STOCK' | 'OUT_OF_STOCK') => fetchJson(`/products/${id}/stock-status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ stockStatus }),
+  }),
+
   deleteProduct: (id: string) => fetchJson(`/products/${id}`, {
     method: 'DELETE',
   }),

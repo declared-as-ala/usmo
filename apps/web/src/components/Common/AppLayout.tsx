@@ -253,107 +253,129 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   </button>
                 </div>
               ) : (
-                cart.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs bg-usm-blue-soft p-3 rounded-xl border border-usm-border">
-                    <img src={item.product.image} className="w-12 h-12 object-cover rounded-lg border border-usm-border shrink-0" alt="" />
-                    <div className="flex-1 min-w-0 mx-3">
-                      <p className="font-bold truncate text-[12px] text-usm-blue-dark">
-                        {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{item.size} • {item.product.price}</p>
-                      {(item.customName || item.customNumber) && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-[#0D63FF] text-[9px] font-black uppercase tracking-wider mt-1">
-                          Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
-                        </span>
-                      )}
+                cart.map((item, i) => {
+                  const isItemOut = (item.product as any).stockStatus === 'OUT_OF_STOCK';
+                  return (
+                    <div key={i} className={`flex items-center justify-between text-xs p-3 rounded-xl border ${isItemOut ? 'bg-red-50/50 border-red-200' : 'bg-usm-blue-soft border-usm-border'}`}>
+                      <img src={item.product.image} className="w-12 h-12 object-cover rounded-lg border border-usm-border shrink-0" alt="" />
+                      <div className="flex-1 min-w-0 mx-3">
+                        <p className="font-bold truncate text-[12px] text-usm-blue-dark">
+                          {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{item.size} • {item.product.price}</p>
+                        {isItemOut && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-black uppercase tracking-wider mt-1">
+                            Article Épuisé
+                          </span>
+                        )}
+                        {(item.customName || item.customNumber) && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-[#0D63FF] text-[9px] font-black uppercase tracking-wider mt-1">
+                            Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!isItemOut && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(
+                                  item.product.id,
+                                  item.size,
+                                  item.quantity - 1,
+                                  { customName: item.customName, customNumber: item.customNumber }
+                                )
+                              }
+                              className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
+                            >
+                              <Minus size={10} />
+                            </button>
+                            <span className="font-mono text-[11px] w-4 text-center text-usm-blue-dark">{item.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(
+                                  item.product.id,
+                                  item.size,
+                                  item.quantity + 1,
+                                  { customName: item.customName, customNumber: item.customNumber }
+                                )
+                              }
+                              className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
+                            >
+                              <Plus size={10} />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeFromCart(item.product.id, item.size, {
+                              customName: item.customName,
+                              customNumber: item.customNumber,
+                            })
+                          }
+                          className="p-1 text-red-400 hover:text-red-500 rounded cursor-pointer ml-1 rtl:mr-1"
+                          title="Supprimer du panier"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateCartQuantity(
-                            item.product.id,
-                            item.size,
-                            item.quantity - 1,
-                            { customName: item.customName, customNumber: item.customNumber }
-                          )
-                        }
-                        className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
-                      >
-                        <Minus size={10} />
-                      </button>
-                      <span className="font-mono text-[11px] w-4 text-center text-usm-blue-dark">{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateCartQuantity(
-                            item.product.id,
-                            item.size,
-                            item.quantity + 1,
-                            { customName: item.customName, customNumber: item.customNumber }
-                          )
-                        }
-                        className="p-1 bg-usm-blue-soft hover:bg-usm-blue-soft rounded text-usm-blue-dark cursor-pointer"
-                      >
-                        <Plus size={10} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeFromCart(item.product.id, item.size, {
-                            customName: item.customName,
-                            customNumber: item.customNumber,
-                          })
-                        }
-                        className="p-1 text-red-400 hover:text-red-500 rounded cursor-pointer ml-1 rtl:mr-1"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
             {/* Footer Summary & Checkout Redirect */}
-            {cart.length > 0 && (
-              <div className="border-t border-usm-border pt-4 mt-4 space-y-3 shrink-0">
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  {tr(
-                    language,
-                    'You are ready to reserve your official USM items.',
-                    'Vous êtes prêt à réserver vos articles officiels USM.',
-                    'أنت جاهز لحجز قطعك الرسمية من الاتحاد.'
+            {cart.length > 0 && (() => {
+              const hasOutOfStock = cart.some((item) => (item.product as any).stockStatus === 'OUT_OF_STOCK');
+              return (
+                <div className="border-t border-usm-border pt-4 mt-4 space-y-3 shrink-0">
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    {tr(
+                      language,
+                      'You are ready to reserve your official USM items.',
+                      'Vous êtes prêt à réserver vos articles officiels USM.',
+                      'أنت جاهز لحجز قطعك الرسمية من الاتحاد.'
+                    )}
+                  </p>
+                  <div className="flex justify-between items-center text-sm font-bold">
+                    <span className="text-slate-600">{tr(language, 'Total:', 'Total :', 'المجموع:')}</span>
+                    <span className="text-usm-blue-primary text-lg font-mono">
+                      {cart.reduce((sum, item) => {
+                        const priceNum = parseFloat(item.product.price.replace(/[^\d.]/g, '')) || 0;
+                        return sum + (priceNum * item.quantity);
+                      }, 0)} TND
+                    </span>
+                  </div>
+                  {hasOutOfStock && (
+                    <p className="text-[10px] text-red-600 font-bold text-center bg-red-50 py-1.5 px-2 rounded-lg border border-red-200">
+                      Un ou plusieurs articles sont épuisés. Veuillez les retirer pour continuer.
+                    </p>
                   )}
-                </p>
-                <div className="flex justify-between items-center text-sm font-bold">
-                  <span className="text-slate-600">{tr(language, 'Total:', 'Total :', 'المجموع:')}</span>
-                  <span className="text-usm-blue-primary text-lg font-mono">
-                    {cart.reduce((sum, item) => {
-                      const priceNum = parseFloat(item.product.price.replace(/[^\d.]/g, '')) || 0;
-                      return sum + (priceNum * item.quantity);
-                    }, 0)} TND
-                  </span>
+                  <button
+                    disabled={hasOutOfStock}
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      router.push('/checkout');
+                    }}
+                    className="w-full py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase rounded-xl text-center cursor-pointer transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span>{tr(language, 'Continue Order', 'Continuer la Commande', 'متابعة الطلب')}</span>
+                  </button>
+                  <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                    {tr(
+                      language,
+                      'No online payment required. The official store will confirm your order.',
+                      'Aucun paiement en ligne requis. La boutique officielle confirmera votre commande.',
+                      'بدون دفع إلكتروني — سيقوم المتجر الرسمي بتأكيد طلبك.'
+                    )}
+                  </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setIsCartOpen(false);
-                    router.push('/checkout');
-                  }}
-                  className="w-full py-3 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase rounded-xl text-center cursor-pointer transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <span>{tr(language, 'Continue Order', 'Continuer la Commande', 'متابعة الطلب')}</span>
-                </button>
-                <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                  {tr(
-                    language,
-                    'No online payment required. The official store will confirm your order.',
-                    'Aucun paiement en ligne requis. La boutique officielle confirmera votre commande.',
-                    'بدون دفع إلكتروني — سيقوم المتجر الرسمي بتأكيد طلبك.'
-                  )}
-                </p>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
 

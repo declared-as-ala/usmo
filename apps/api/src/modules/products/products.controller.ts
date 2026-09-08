@@ -18,6 +18,7 @@ export class ProductsController {
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('badge') badge?: string,
+    @Query('availability') availability?: 'all' | 'in_stock' | 'out_of_stock',
     @Query('sort') sort?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string
@@ -31,6 +32,7 @@ export class ProductsController {
       maxPrice: maxPrice ? parseInt(maxPrice) : undefined,
       badge,
       status: 'published',
+      availability,
       sort,
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 100,
@@ -50,12 +52,14 @@ export class ProductsController {
   @Get('all')
   async getAll(
     @Query('status') status?: string,
+    @Query('availability') availability?: 'all' | 'in_stock' | 'out_of_stock',
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string
   ) {
     return this.productsService.findAll({
       status: status || 'all',
+      availability,
       search,
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 100,
@@ -88,6 +92,16 @@ export class ProductsController {
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: Partial<Product>) {
     return this.productsService.update(id, body);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Patch(':id/stock-status')
+  async patchStockStatus(
+    @Param('id') id: string,
+    @Body('stockStatus') stockStatus: 'IN_STOCK' | 'OUT_OF_STOCK',
+  ) {
+    return this.productsService.patchStockStatus(id, stockStatus);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

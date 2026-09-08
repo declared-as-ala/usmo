@@ -104,6 +104,18 @@ export class Product extends Document {
   @Prop({ type: String, required: true, default: 'published', index: true })
   status: 'draft' | 'published' | 'archived';
 
+  @Prop({ type: Boolean, default: true, index: true })
+  isPublished: boolean;
+
+  @Prop({ type: String, enum: ['IN_STOCK', 'OUT_OF_STOCK'], default: 'IN_STOCK', index: true })
+  stockStatus: 'IN_STOCK' | 'OUT_OF_STOCK';
+
+  @Prop({ type: Number })
+  stockQuantity?: number;
+
+  @Prop({ type: Boolean, default: false })
+  trackStock: boolean;
+
   @Prop({ type: Boolean, default: false, index: true })
   isFeatured?: boolean;
 
@@ -127,6 +139,12 @@ export class Product extends Document {
 
   @Prop({ type: String })
   printStrokeColor?: string; // Jersey name/number outline color (e.g. #FFFFFF)
+
+  @Prop({ type: String })
+  sizeGuide?: string; // Custom size guide content editable from admin
+
+  @Prop({ type: String })
+  deliveryInfo?: string; // Custom delivery & pickup information editable from admin
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
