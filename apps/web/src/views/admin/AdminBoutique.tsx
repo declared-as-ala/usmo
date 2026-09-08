@@ -123,6 +123,35 @@ export default function AdminBoutique() {
     setShowForm(true);
   };
 
+  const openEditForm = (p: any) => {
+    setEditingId(p._id);
+    const variantsStock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
+    setForm({
+      name: p.name,
+      nameFr: p.nameFr || '',
+      nameAr: p.nameAr || '',
+      price: (p.price / 1000).toFixed(3),
+      oldPrice: p.oldPrice ? (p.oldPrice / 1000).toFixed(3) : '',
+      coverImage: p.coverImage || '',
+      images: (p.images || []).filter((url: string) => url !== p.coverImage),
+      category: p.category || 'jerseys',
+      sport: p.sport || 'football',
+      season: p.season || '2025/26',
+      sizes: p.variants ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL',
+      stock: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
+      status: p.status || 'published',
+      description: p.description || '',
+      printColor: p.printColor || '#1A53E0',
+      printStrokeColor: p.printStrokeColor || '#FFFFFF',
+      stockStatus: p.stockStatus || (p.trackStock && (p.stockQuantity ?? 0) <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
+      trackStock: Boolean(p.trackStock),
+      stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
+      sizeGuide: p.sizeGuide || '',
+      deliveryInfo: p.deliveryInfo || '',
+    });
+    setShowForm(true);
+  };
+
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       router.replace('/admin/boutique');
@@ -166,35 +195,6 @@ export default function AdminBoutique() {
       setBannerSaveState('error');
       setBannerSaveMessage(err.message || 'Impossible d’enregistrer la bannière boutique. Vérifiez votre session administrateur.');
     }
-  };
-
-  const openEditForm = (p: any) => {
-    setEditingId(p._id);
-    const variantsStock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
-    setForm({
-      name: p.name,
-      nameFr: p.nameFr || '',
-      nameAr: p.nameAr || '',
-      price: (p.price / 1000).toFixed(3),
-      oldPrice: p.oldPrice ? (p.oldPrice / 1000).toFixed(3) : '',
-      coverImage: p.coverImage || '',
-      images: (p.images || []).filter((url: string) => url !== p.coverImage),
-      category: p.category || 'jerseys',
-      sport: p.sport || 'football',
-      season: p.season || '2025/26',
-      sizes: p.variants ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL',
-      stock: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
-      status: p.status || 'published',
-      description: p.description || '',
-      printColor: p.printColor || '#1A53E0',
-      printStrokeColor: p.printStrokeColor || '#FFFFFF',
-      stockStatus: p.stockStatus || (p.trackStock && (p.stockQuantity ?? 0) <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
-      trackStock: Boolean(p.trackStock),
-      stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
-      sizeGuide: p.sizeGuide || '',
-      deliveryInfo: p.deliveryInfo || '',
-    });
-    setShowForm(true);
   };
 
   // Quick toggle stock status

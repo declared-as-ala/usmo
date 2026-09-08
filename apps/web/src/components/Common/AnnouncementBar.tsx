@@ -10,8 +10,6 @@ interface AnnouncementBarProps {
   href?: string;
 }
 
-const DEFAULT_MESSAGE = '🔥 COMMANDES OUVERTES 🔥 STOCK LIMITÉ 🔥 COMMANDER MAINTENANT';
-
 export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
   href = '/boutique',
 }) => {

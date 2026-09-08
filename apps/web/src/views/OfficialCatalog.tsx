@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowRight, Check, Filter, Heart, MessageCircle,
+  ArrowRight, Filter, Heart, MessageCircle,
   PackageCheck, Search, ShieldCheck, ShoppingBag, SlidersHorizontal,
   Truck, X,
 } from 'lucide-react';
