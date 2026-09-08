@@ -12,7 +12,7 @@ const BADGE_STYLES: Record<string, string> = {
   bestseller: 'bg-white text-usm-blue-dark border border-usm-border',
   limited: 'bg-usm-blue-primary text-white font-black',
   lowStock: 'bg-amber-500 text-usm-blue-dark',
-  soldOut: 'bg-slate-600 text-white',
+  soldOut: 'bg-red-600 text-white font-bold',
   official: 'bg-white text-usm-blue-dark border border-usm-blue-primary/30',
 };
 
@@ -21,7 +21,7 @@ const BADGE_LABELS: Record<string, { en: string; fr: string; ar: string }> = {
   bestseller: { en: 'Best Seller', fr: 'Meilleure Vente', ar: 'الأكثر مبيعاً' },
   limited: { en: 'Limited Edition', fr: 'Édition Limitée', ar: 'إصدار محدود' },
   lowStock: { en: 'Low Stock', fr: 'Stock Limité', ar: 'كمية محدودة' },
-  soldOut: { en: 'Sold Out', fr: 'Épuisé', ar: 'نفدت الكمية' },
+  soldOut: { en: 'Coming Soon', fr: 'Bientôt disponible', ar: 'قريباً' },
   official: { en: 'Official', fr: 'Officiel', ar: 'رسمي' },
 };
 
@@ -139,8 +139,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
         {/* Badges Overlay */}
         {isOutOfStock ? (
           <div className="absolute top-3.5 left-3.5 z-10">
-            <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded bg-[#071A30] text-white shadow-sm">
-              Épuisé
+            <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded bg-red-600 text-white shadow-sm">
+              Bientôt disponible
             </span>
           </div>
         ) : activeBadges.length > 0 ? (
@@ -199,8 +199,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
         {/* Pricing Layout — placed directly under the image */}
         {isOutOfStock ? (
           <div className="flex items-center gap-2 min-h-[24px]">
-            <span className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">
-              Indisponible actuellement
+            <span className="text-xs sm:text-sm font-bold text-red-600 uppercase tracking-wider">
+              Bientôt disponible
             </span>
           </div>
         ) : (

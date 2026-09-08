@@ -367,14 +367,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
               {soldOut && (
                 <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-10">
-                  <span className="bg-[#071A30] text-white text-xs font-black uppercase px-6 py-2.5 rounded-full tracking-widest shadow-lg">
-                    {tr(language, 'Sold Out', 'Épuisé', 'نفدت الكمية')}
+                  <span className="bg-red-600 text-white text-xs font-black uppercase px-6 py-2.5 rounded-full tracking-widest shadow-lg">
+                    {tr(language, 'Coming Soon', 'Bientôt disponible', 'قريباً')}
                   </span>
                 </div>
               )}
               {soldOut ? (
-                <span className="absolute top-4 left-4 bg-[#071A30] text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full shadow-md z-10">
-                  Épuisé
+                <span className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1.5 rounded-full shadow-md z-10">
+                  Bientôt disponible
                 </span>
               ) : discountPct !== null && discountPct > 0 ? (
                 <span className="absolute top-4 left-4 bg-emerald-500 text-usm-blue-dark text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-sm">
@@ -420,16 +420,16 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             {soldOut ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-base font-bold text-slate-500 uppercase tracking-wider">
-                    Indisponible actuellement
+                  <span className="text-base font-bold text-red-600 uppercase tracking-wider">
+                    Bientôt disponible
                   </span>
-                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#071A30] text-white">
-                    Épuisé
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-red-600 text-white">
+                    Bientôt disponible
                   </span>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-xs font-bold text-slate-600 flex items-center gap-2">
-                  <Ban size={15} className="text-slate-500 shrink-0" />
-                  <span>Ce produit est actuellement en rupture de stock et indisponible à la réservation.</span>
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-bold text-red-700 flex items-center gap-2">
+                  <Ban size={15} className="text-red-500 shrink-0" />
+                  <span>Ce produit sera bientôt disponible à la commande.</span>
                 </div>
               </div>
             ) : (

@@ -79,8 +79,8 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
         )}
         <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
           {isOutOfStock ? (
-            <span className="rounded-full bg-[#071A30] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
-              Épuisé
+            <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+              Bientôt disponible
             </span>
           ) : (
             <div className="flex flex-wrap gap-1.5">
@@ -99,7 +99,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
       <div className="p-4 sm:p-5">
         <div className="flex items-center justify-between gap-2 min-h-[28px]">
           {isOutOfStock ? (
-            <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">Indisponible actuellement</p>
+            <p className="text-xs sm:text-sm font-bold text-red-600 uppercase tracking-wider">Bientôt disponible</p>
           ) : (
             <>
               <p className="text-lg sm:text-xl font-black text-[#020814] tracking-tight">{formatTND(product.price)}</p>

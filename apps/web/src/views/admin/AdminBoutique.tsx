@@ -578,11 +578,11 @@ export default function AdminBoutique() {
               onClick={() => setStockFilter('out_of_stock')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 stockFilter === 'out_of_stock'
-                  ? 'bg-[#071A30] text-white shadow-xs'
+                  ? 'bg-red-600 text-white shadow-xs'
                   : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
-              Épuisés ({outOfStockCount})
+              Bientôt disponible ({outOfStockCount})
             </button>
           </div>
         );
@@ -705,14 +705,14 @@ export default function AdminBoutique() {
                           <button
                             onClick={() => handleToggleStockStatus(p._id, 'OUT_OF_STOCK')}
                             title="Cliquer pour remettre en stock"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#071A30] text-white hover:bg-[#071A30]/85 cursor-pointer shadow-xs transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-600 text-white hover:bg-red-700 cursor-pointer shadow-xs transition-all"
                           >
-                            <span>● Épuisé</span>
+                            <span>● Bientôt disponible</span>
                           </button>
                         ) : (
                           <button
                             onClick={() => handleToggleStockStatus(p._id, 'IN_STOCK')}
-                            title="Cliquer pour marquer comme épuisé"
+                            title="Cliquer pour marquer comme bientôt disponible"
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer shadow-xs transition-all"
                           >
                             <span>● En stock</span>
@@ -1005,16 +1005,16 @@ export default function AdminBoutique() {
                       onClick={() => setForm(f => ({ ...f, stockStatus: 'OUT_OF_STOCK' }))}
                       className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 border ${
                         form.stockStatus === 'OUT_OF_STOCK'
-                          ? 'bg-[#071A30] text-white border-[#071A30] shadow-sm'
+                          ? 'bg-red-600 text-white border-red-600 shadow-sm'
                           : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                       }`}
                     >
-                      <span>● ÉPUISÉ (Badge Navy)</span>
+                      <span>● BIENTÔT DISPONIBLE (Badge Rouge)</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1.5">
                     {form.stockStatus === 'OUT_OF_STOCK'
-                      ? 'Le produit reste visible dans la boutique sans prix, avec le badge ÉPUISÉ, sans clic ni ajout au panier.'
+                      ? 'Le produit reste visible dans la boutique sans prix, avec le badge rouge BIENTÔT DISPONIBLE, sans clic ni ajout au panier.'
                       : 'Le produit est normalement disponible à la vente.'}
                   </p>
                 </div>
