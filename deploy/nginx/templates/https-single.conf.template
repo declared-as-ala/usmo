@@ -19,13 +19,26 @@ server {
     }
 
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://${APP_DOMAIN}$request_uri;
     }
 }
 
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
+    server_name www.${APP_DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${APP_DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${APP_DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    return 301 https://${APP_DOMAIN}$request_uri;
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
     http2 on;
     server_name ${APP_DOMAIN};
 
