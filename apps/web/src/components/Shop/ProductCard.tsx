@@ -111,7 +111,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
       } ${className}`}
     >
       {/* Product Image Panel */}
-      <div className={`relative aspect-[4/5] overflow-hidden bg-white shrink-0 ${isOutOfStock ? 'opacity-65 [filter:grayscale(0.15)_blur(0.4px)]' : ''}`}>
+      <div className={`relative aspect-[4/5] overflow-hidden bg-slate-100 shrink-0 ${isOutOfStock ? 'opacity-65 [filter:grayscale(0.15)_blur(0.4px)]' : ''}`}>
         <img
           src={product.coverImage || product.image}
           alt={product.name}
