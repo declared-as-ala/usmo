@@ -34,7 +34,8 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
     : 0;
   const sizes = Array.from(new Set((product.variants || []).filter((item: any) => item.stock > 0).map((item: any) => item.size))).slice(0, 4);
   const coverImage = product.coverImage || product.image;
-  const hoverImage = (product.images || []).find((url: string) => url && url !== coverImage);
+  // Hover image: prefer explicit hoverImage field, fallback to first gallery image
+  const hoverImage = product.hoverImage || (product.images || []).find((url: string) => url && url !== coverImage);
 
   const add = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -62,7 +63,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
             <img
               src={coverImage}
               alt={product.nameFr || product.name}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${hoverImage && !isOutOfStock ? 'group-hover:opacity-0' : !isOutOfStock ? 'group-hover:scale-[1.035] duration-500' : ''}`}
+              className={`w-full h-full object-cover transition-all duration-[400ms] ease-out ${hoverImage && !isOutOfStock ? 'group-hover:opacity-0 group-hover:scale-[1.02]' : !isOutOfStock ? 'group-hover:scale-[1.02]' : ''}`}
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
             {hoverImage && !isOutOfStock && (
@@ -70,7 +71,7 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
                 src={hoverImage}
                 alt=""
                 aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                className="absolute inset-0 w-full h-full object-cover opacity-0 scale-[1.02] transition-all duration-[400ms] ease-out group-hover:opacity-100 group-hover:scale-100"
               />
             )}
           </>

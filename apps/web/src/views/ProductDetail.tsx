@@ -125,11 +125,26 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     return (millimes / 1000).toFixed(3) + ' DT';
   };
 
-  // Gallery uses images[] for pose views (Front, Back, Lateral).
+  // Gallery: include hoverImage if set and not already in images[], then all images[].
   // coverImage is only the catalog thumbnail and not shown on the detail page gallery.
-  const gallery = (product.images && product.images.length > 0)
-    ? product.images
-    : [product.coverImage]; // fallback if no images uploaded yet
+  const buildGallery = (): string[] => {
+    const imgs: string[] = [];
+    // Add hover image first if it exists and isn't already the coverImage
+    if (product.hoverImage && product.hoverImage !== product.coverImage) {
+      imgs.push(product.hoverImage);
+    }
+    // Add all gallery images (skip duplicates of coverImage and hoverImage)
+    if (product.images && product.images.length > 0) {
+      for (const img of product.images) {
+        if (img !== product.coverImage && img !== product.hoverImage && !imgs.includes(img)) {
+          imgs.push(img);
+        }
+      }
+    }
+    // Fallback: if no images at all, use coverImage
+    return imgs.length > 0 ? imgs : [product.coverImage];
+  };
+  const gallery = buildGallery();
 
   // Pose views: assign labels based on position in gallery
   const POSE_LABELS = ['Front', 'Back', 'Lateral'];

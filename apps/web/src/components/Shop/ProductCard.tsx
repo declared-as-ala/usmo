@@ -37,7 +37,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
 
   const id = product._id || product.id;
   const liked = wishlist.includes(id);
-  const secondaryImage = product.images?.[0];
+  // Hover image: prefer explicit hoverImage, fallback to first gallery image
+  const hoverImage = product.hoverImage || product.images?.[0] || '';
 
   // Calculate stock details dynamically from variants
   const totalStock = product.variants 
@@ -112,19 +113,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
     >
       {/* Product Image Panel */}
       <div className={`relative aspect-[4/5] overflow-hidden bg-slate-100 shrink-0 ${isOutOfStock ? 'opacity-65 [filter:grayscale(0.15)_blur(0.4px)]' : ''}`}>
+        {/* Primary image */}
         <img
           src={product.coverImage || product.image}
           alt={product.name}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
-            isOutOfStock ? '' : 'group-hover:scale-105'
-          } ${secondaryImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-[400ms] ease-out ${
+            isOutOfStock ? '' : 'group-hover:scale-[1.02]'
+          } ${hoverImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
           loading="lazy"
         />
-        {secondaryImage && !isOutOfStock && (
+        {/* Hover image — smooth crossfade */}
+        {hoverImage && !isOutOfStock && (
           <img
-            src={secondaryImage}
+            src={hoverImage}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 transition-all duration-700 group-hover:opacity-100 group-hover:scale-100"
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover opacity-0 scale-[1.02] transition-all duration-[400ms] ease-out group-hover:opacity-100 group-hover:scale-100"
             loading="lazy"
           />
         )}

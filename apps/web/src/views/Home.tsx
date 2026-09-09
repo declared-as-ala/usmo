@@ -376,6 +376,9 @@ export const Home: React.FC = () => {
                   : 0;
                 const hasBadge = (badge: string) => p.badges?.some((item: string) => item.toLowerCase() === badge.toLowerCase());
 
+                // Hover image: prefer explicit hoverImage, fallback to first gallery image
+                const productHoverImage = p.hoverImage || p.images?.[0] || '';
+
                 const isOutOfStock =
                   p.stockStatus === 'OUT_OF_STOCK' ||
                   (p.trackStock && (p.stockQuantity ?? 0) <= 0) ||
@@ -405,15 +408,28 @@ export const Home: React.FC = () => {
                           </>
                         )}
                       </div>
+                      {/* Primary image */}
                       <img
                         src={cover}
                         alt={title}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-[400ms] ease-out ${
+                          isOutOfStock ? '' : 'group-hover:scale-[1.02]'
+                        } ${productHoverImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.src = '/logo.webp';
                         }}
                       />
+                      {/* Hover image */}
+                      {productHoverImage && !isOutOfStock && (
+                        <img
+                          src={productHoverImage}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 scale-[1.02] transition-all duration-[400ms] ease-out group-hover:opacity-100 group-hover:scale-100"
+                          loading="lazy"
+                        />
+                      )}
                     </div>
                     <div className="p-4 flex flex-col justify-between flex-grow space-y-2 border-t border-slate-100">
                       <div>

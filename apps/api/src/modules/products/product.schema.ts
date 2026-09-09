@@ -59,6 +59,9 @@ export class Product extends Document {
   @Prop({ type: String, required: true })
   coverImage: string;
 
+  @Prop({ type: String, default: '' })
+  hoverImage?: string;
+
   @Prop({ type: [String], default: [] })
   images: string[];
 

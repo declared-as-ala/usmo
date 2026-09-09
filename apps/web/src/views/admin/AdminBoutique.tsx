@@ -31,6 +31,7 @@ const emptyForm = {
   price: '',
   oldPrice: '',
   coverImage: '',
+  hoverImage: '',
   images: [] as string[],
   category: 'jerseys',
   sport: 'football',
@@ -75,8 +76,9 @@ export default function AdminBoutique() {
   const [bannerSaveState, setBannerSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [bannerSaveMessage, setBannerSaveMessage] = useState('');
   const [coverUploading, setCoverUploading] = useState(false);
+  const [hoverUploading, setHoverUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
-  const isImageUploading = coverUploading || galleryUploading;
+  const isImageUploading = coverUploading || hoverUploading || galleryUploading;
 
   // Inline name editing
   const [inlineEditId, setInlineEditId] = useState<string | null>(null);
@@ -139,7 +141,8 @@ export default function AdminBoutique() {
       price: (p.price / 1000).toFixed(3),
       oldPrice: p.oldPrice ? (p.oldPrice / 1000).toFixed(3) : '',
       coverImage: p.coverImage || '',
-      images: (p.images || []).filter((url: string) => url !== p.coverImage),
+      hoverImage: p.hoverImage || '',
+      images: (p.images || []).filter((url: string) => url !== p.coverImage && url !== p.hoverImage),
       category: p.category || 'jerseys',
       sport: p.sport || 'football',
       season: p.season || '2025/26',
@@ -259,6 +262,7 @@ export default function AdminBoutique() {
         price: priceMillimes,
         oldPrice: oldPriceMillimes,
         coverImage: form.coverImage,
+        hoverImage: form.hoverImage || '',
         images: form.images,
         category: form.category,
         sport: form.sport,
@@ -829,6 +833,16 @@ export default function AdminBoutique() {
                 </label>
                 <MediaUploader compact folder={`products/${editingId || 'new'}/main`} currentUrl={form.coverImage} onUpload={(file) => setForm((current) => ({ ...current, coverImage: file.url }))} onRemove={() => setForm((current) => ({ ...current, coverImage: '' }))} onUploadingChange={setCoverUploading} />
                 <button type="button" onClick={() => setMediaPickerTarget('product')} className="mt-2 min-h-11 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 hover:border-usm-blue-primary">Choisir une image existante</button>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">
+                  Image au survol <span className="font-normal text-slate-400">(optionnel — affichée au survol de la carte)</span>
+                </label>
+                <MediaUploader compact folder={`products/${editingId || 'new'}/hover`} currentUrl={form.hoverImage} onUpload={(file) => setForm((current) => ({ ...current, hoverImage: file.url }))} onRemove={() => setForm((current) => ({ ...current, hoverImage: '' }))} onUploadingChange={setHoverUploading} />
+                {form.hoverImage && (
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, hoverImage: '' }))} className="mt-2 text-[10px] text-red-500 hover:text-red-600 font-semibold cursor-pointer">Supprimer l'image au survol</button>
+                )}
               </div>
 
               {/* Jersey-specific labeled pose uploaders */}
