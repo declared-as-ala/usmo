@@ -143,7 +143,7 @@ export const SquadRoster: React.FC<SquadRosterProps> = ({ sport }) => {
   return (
     <div className="min-h-screen bg-usm-blue-soft/30 text-usm-blue-dark pb-20">
       {/* Hero Banner Section */}
-      <section className="relative overflow-hidden bg-[#071328] text-white pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-[#071328] text-white pt-36 pb-16 px-4 sm:px-6 lg:px-8">
         <div
           className="absolute inset-0 opacity-20 bg-cover bg-center pointer-events-none"
           style={{ backgroundImage: `url(${bannerUrl})` }}
