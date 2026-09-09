@@ -87,6 +87,10 @@ jobs:
             sudo mkdir -p "$DEPLOY_DIR"
             sudo chown -R "$USER":"$USER" "$DEPLOY_DIR"
 
+            # Configure git to use GitHub token for authentication
+            git config --global credential.helper store
+            echo "https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com" > ~/.git-credentials
+
             if [ ! -d "$DEPLOY_DIR/.git" ]; then
               git clone --branch main https://github.com/declared-as-ala/usmo.git "$DEPLOY_DIR"
             fi
@@ -100,6 +104,9 @@ jobs:
             git fetch --prune origin main
             git checkout -B main origin/main
             git reset --hard origin/main
+
+            # Clean up credentials after use
+            rm -f ~/.git-credentials
 
             DEPLOY_SKIP_GIT_PULL=1 \
             DEPLOY_BRANCH=main \

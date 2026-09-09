@@ -106,8 +106,8 @@ services:
       MINIO_PUBLIC_URL: /usm-media
       # ── OVH SMTP Configuration ──────────────────────────────────────────────
       SMTP_HOST: ${SMTP_HOST:-smtp.mail.ovh.net}
-      SMTP_PORT: ${SMTP_PORT:-465}
-      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
       SMTP_USER: ${SMTP_USER:-noreply@usmonastir.tn}
       SMTP_PASS: ${SMTP_PASS:-Mediausm&2026}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Union Sportive Monastirienne}
