@@ -839,7 +839,7 @@ export default function AdminBoutique() {
                     <p className="text-[10px] font-black text-usm-blue-primary uppercase tracking-wide">Vues du maillot</p>
                   </div>
                   <p className="text-[10px] text-slate-500 -mt-2">
-                    Importez les 3 vues : <strong>Face</strong>, <strong>Dos</strong>, <strong>Latéral</strong>.
+                    Importez les vues du maillot : <strong>Face</strong>, <strong>Dos</strong>, <strong>Latéral</strong> et photos supplémentaires.
                     Le nom et numéro du fan seront superposés sur la vue Dos.
                     L'image principale (ci-dessus) sert de miniature catalogue.
                   </p>
@@ -847,7 +847,7 @@ export default function AdminBoutique() {
                   {/* Front View (images[0]) */}
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                      <Shirt size={11} />Vue Face {form.images[0] ? '✓' : '*'}
+                      <Shirt size={11} />Vue Face {form.images[0] ? '✓' : ''}
                     </label>
                     {form.images[0] ? (
                       <div className="relative inline-block">
@@ -862,7 +862,7 @@ export default function AdminBoutique() {
                   {/* Back View (images[1]) */}
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                      <Shirt size={11} />Vue Dos {form.images[1] ? '✓' : '(requis pour la personnalisation)'}
+                      <Shirt size={11} />Vue Dos {form.images[1] ? '✓' : ''}
                     </label>
                     {form.images[1] ? (
                       <div className="relative inline-block">
@@ -877,7 +877,7 @@ export default function AdminBoutique() {
                   {/* Lateral View (images[2]) */}
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                      <Shirt size={11} />Vue Latérale {form.images[2] ? '✓' : '(optionnel)'}
+                      <Shirt size={11} />Vue Latérale {form.images[2] ? '✓' : ''}
                     </label>
                     {form.images[2] ? (
                       <div className="relative inline-block">
@@ -889,13 +889,45 @@ export default function AdminBoutique() {
                     )}
                   </div>
 
+                  {/* Additional Photos */}
+                  <div className="border-t border-blue-100 pt-4">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-2">
+                      Photos supplémentaires <span className="font-normal text-slate-400">(galerie produit)</span>
+                    </label>
+                    {form.images.length > 3 && (
+                      <div className="mb-3 grid grid-cols-4 gap-2">
+                        {form.images.slice(3).map((url, idx) => (
+                          <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200">
+                            <img src={url} alt="" className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx + 3) }))}
+                              className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-red-600 cursor-pointer"
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <MediaUploader
+                      key={form.images.length}
+                      compact
+                      multiple
+                      folder={`products/${editingId || 'new'}/gallery`}
+                      onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images, file.url] }))}
+                      onMultipleUpload={(files) => setForm((current) => ({ ...current, images: [...current.images, ...files.map(f => f.url)] }))}
+                      onUploadingChange={setGalleryUploading}
+                    />
+                  </div>
+
                   {/* Preview summary */}
                   {form.images.length > 0 && (
-                    <div className="flex gap-3 pt-2 border-t border-blue-100">
+                    <div className="flex gap-3 pt-2 border-t border-blue-100 flex-wrap">
                       {form.images.filter(Boolean).map((url, idx) => (
                         <div key={url + idx} className="text-center">
                           <img src={url} alt="" className="h-14 w-14 rounded-lg object-cover border border-slate-200" />
-                          <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">{['Face', 'Dos', 'Latéral'][idx] || `+${idx}`}</p>
+                          <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase">{['Face', 'Dos', 'Latéral'][idx] || `+${idx - 2}`}</p>
                         </div>
                       ))}
                     </div>
