@@ -77,6 +77,7 @@ type ActiveScreen =
   | 'palmares'
   | 'legendes'
   | 'telechargements'
+  | 'actualites'
   | 'contact';
 
 export interface CartItem {
