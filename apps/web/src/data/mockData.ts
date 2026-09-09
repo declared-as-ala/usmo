@@ -716,7 +716,7 @@ export const clubLegends: Legend[] = [
 
 export const clubTrophies: Trophy[] = [
   { id: 't1', title: 'Basketball Africa League (BAL)', titleAr: 'الدوري الإفريقي لكرة السلة', count: 1, years: '2022', icon: '🏆', image: 'https://images.unsplash.com/photo-1505666287802-931dc83948e9?auto=format&fit=crop&w=400&q=80' },
-  { id: 't2', title: 'Tunisian Pro A Basketball League', titleAr: 'البطولة الوطنية المحترفة لكرة السلة', count: 9, years: '1998, 2000, 2005, 2019, 2020, 2021, 2022, 2023, 2024', icon: '🏆', image: 'https://images.unsplash.com/photo-1505666287802-931dc83948e9?auto=format&fit=crop&w=400&q=80' },
+  { id: 't2', title: 'Tunisian Pro A Basketball League', titleAr: 'البطولة الوطنية المحترفة لكرة السلة', count: 10, years: '1998, 2000, 2005, 2019, 2020, 2021, 2022, 2023, 2024, 2025', icon: '🏆', image: 'https://images.unsplash.com/photo-1505666287802-931dc83948e9?auto=format&fit=crop&w=400&q=80' },
   { id: 't3', title: 'Tunisian Football Cup', titleAr: 'كأس تونس لكرة القدم', count: 1, years: '2020', icon: '🏆', image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?auto=format&fit=crop&w=400&q=80' },
   { id: 't4', title: 'Tunisian Football Super Cup', titleAr: 'كأس السوبر التونسي', count: 1, years: '2020', icon: '🏆', image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?auto=format&fit=crop&w=400&q=80' }
 ];
