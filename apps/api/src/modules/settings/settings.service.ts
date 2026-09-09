@@ -95,6 +95,14 @@ export class SettingsService {
       { $setOnInsert: { key: 'club' } },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     ).lean();
+    // One-time migration: update stale address if still old value
+    if (settings && typeof settings.address === 'string' && settings.address.includes('Ibn El Jazzar')) {
+      await this.clubSettingsModel.updateOne(
+        { key: 'club', address: /Ibn El Jazzar/i },
+        { $set: { address: "Avenue de l'indépendance, Monastir 5000, Tunisia" } },
+      );
+      settings.address = "Avenue de l'indépendance, Monastir 5000, Tunisia";
+    }
     return settings;
   }
 
