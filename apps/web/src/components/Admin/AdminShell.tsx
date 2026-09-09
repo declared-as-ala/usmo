@@ -167,11 +167,12 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
   const isOrderManagerAllowed =
     pathname.startsWith('/admin/orders') || pathname.startsWith('/admin/discount-codes');
 
-  // 2. Super Admin only routes (Administrators, Audit logs, Sports configuration)
+  // 2. Super Admin only routes (Administrators, Audit logs, Sports configuration, Site launch)
   const isSuperAdminOnlyRoute =
     pathname.startsWith('/admin/administrateurs') ||
     pathname.startsWith('/admin/audit-logs') ||
-    pathname.startsWith('/admin/settings/sports');
+    pathname.startsWith('/admin/settings/sports') ||
+    pathname.startsWith('/admin/settings/site-launch');
 
   let accessDenied = false;
   let accessDeniedMessage = '';

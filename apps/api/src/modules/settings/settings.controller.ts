@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, HttpCode, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -14,6 +14,33 @@ export class SettingsController {
   @Get('settings/homepage') getHomepage() { return this.settings.getHomepage(); }
   @Get('settings/club') getClubSettings() { return this.settings.getClubSettings(); }
   @Get('fan-photos') getFanPhotos() { return this.settings.listFanPhotos(); }
+
+  @Get('settings/site-launch')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
+  getSiteLaunch() {
+    return this.settings.getSiteLaunchStatus();
+  }
+
+  @Get('site-launch')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate')
+  getSiteLaunchAlias() {
+    return this.settings.getSiteLaunchStatus();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin', 'Super Admin')
+  @Get('admin/settings/site-launch')
+  getAdminSiteLaunch() {
+    return this.settings.getSiteLaunchStatus();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Super Admin', 'SUPER_ADMIN')
+  @Patch('admin/settings/site-launch')
+  updateSiteLaunch(@Body() body: any, @Req() req: any) {
+    const actor = req.user?.email || req.user?.name || 'Super Admin';
+    return this.settings.updateSiteLaunch(body, actor);
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard) @Roles('Admin', 'Super Admin', 'Boutique Manager')
   @Patch('admin/settings/homepage') updateHomepage(@Body() body: Partial<HomepageSettings>) { return this.settings.updateHomepage(body); }

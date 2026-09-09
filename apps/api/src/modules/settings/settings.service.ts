@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { FanPhoto } from './fan-photo.schema';
 import { HomepageSettings } from './homepage-settings.schema';
 import { ClubSettings } from './club-settings.schema';
+import { SiteLaunchSettings } from './site-launch.schema';
 
 const DEFAULT_SECTIONS = {
   hero: true, today: true, news: true, heritage: true, standings: true,
@@ -16,6 +17,7 @@ export class SettingsService {
     @InjectModel(HomepageSettings.name) private readonly settingsModel: Model<HomepageSettings>,
     @InjectModel(FanPhoto.name) private readonly fanPhotoModel: Model<FanPhoto>,
     @InjectModel(ClubSettings.name) private readonly clubSettingsModel: Model<ClubSettings>,
+    @InjectModel(SiteLaunchSettings.name) private readonly siteLaunchModel: Model<SiteLaunchSettings>,
   ) {}
 
   async getHomepage() {
@@ -109,4 +111,60 @@ export class SettingsService {
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
   }
+
+  // ── Site Launch Settings (19:23 Countdown & Lock Gate) ──
+  async getSiteLaunchStatus() {
+    let settings = await this.siteLaunchModel.findOne({ key: 'site-launch' }).lean();
+    if (!settings) {
+      settings = await this.siteLaunchModel.findOneAndUpdate(
+        { key: 'site-launch' },
+        {
+          $setOnInsert: {
+            key: 'site-launch',
+            enabled: true,
+            launchAt: new Date('2026-09-09T18:23:00.000Z'),
+            timezone: 'Africa/Tunis',
+            unlocked: false,
+            updatedBy: 'System',
+          },
+        },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      ).lean();
+    }
+
+    const now = new Date();
+    const targetTime = new Date(settings.launchAt).getTime();
+    const isPastLaunch = now.getTime() >= targetTime;
+    const isUnlocked = !settings.enabled || settings.unlocked || isPastLaunch;
+
+    return {
+      enabled: settings.enabled,
+      launchAt: new Date(settings.launchAt).toISOString(),
+      serverTime: now.toISOString(),
+      timezone: settings.timezone || 'Africa/Tunis',
+      isUnlocked,
+      unlocked: settings.unlocked,
+      updatedBy: settings.updatedBy || 'System',
+      updatedAt: (settings as any).updatedAt ? new Date((settings as any).updatedAt).toISOString() : now.toISOString(),
+    };
+  }
+
+  async updateSiteLaunch(
+    input: { enabled?: boolean; launchAt?: string | Date; timezone?: string; unlocked?: boolean },
+    updatedBy = 'Super Admin',
+  ) {
+    const update: Record<string, unknown> = { updatedBy };
+    if (typeof input.enabled === 'boolean') update.enabled = input.enabled;
+    if (input.launchAt) update.launchAt = new Date(input.launchAt);
+    if (typeof input.timezone === 'string') update.timezone = input.timezone.trim();
+    if (typeof input.unlocked === 'boolean') update.unlocked = input.unlocked;
+
+    await this.siteLaunchModel.findOneAndUpdate(
+      { key: 'site-launch' },
+      { $set: update, $setOnInsert: { key: 'site-launch' } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+    return this.getSiteLaunchStatus();
+  }
 }
+

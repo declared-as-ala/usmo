@@ -376,19 +376,34 @@ export const Home: React.FC = () => {
                   : 0;
                 const hasBadge = (badge: string) => p.badges?.some((item: string) => item.toLowerCase() === badge.toLowerCase());
 
+                const isOutOfStock =
+                  p.stockStatus === 'OUT_OF_STOCK' ||
+                  (p.trackStock && (p.stockQuantity ?? 0) <= 0) ||
+                  p.status === 'archived';
+
                 return (
                   <div
                     key={p._id || p.id || p.name}
                     onClick={() => router.push(productSlug ? `/product/${productSlug}` : '/boutique')}
-                    className="group bg-white border border-[#DDE8F8] hover:border-usm-blue-primary/50 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                    className={`group bg-white border border-[#DDE8F8] hover:border-usm-blue-primary/50 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between cursor-pointer ${
+                      isOutOfStock ? 'opacity-85' : ''
+                    }`}
                   >
                     <div className="relative aspect-square overflow-hidden bg-slate-50 p-4 flex items-center justify-center">
                       <div className="absolute inset-x-3 top-3 flex flex-wrap gap-1.5 z-10">
-                        {hasBadge('new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
-                        {hasBadge('limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
-                        {hasBadge('bestseller') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Top</span>}
-                        {hasBadge('official') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Officiel</span>}
-                        {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
+                        {isOutOfStock ? (
+                          <span className="rounded-full bg-red-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-xs">
+                            Bientôt disponible
+                          </span>
+                        ) : (
+                          <>
+                            {hasBadge('new') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Nouveau</span>}
+                            {hasBadge('limited') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Limité</span>}
+                            {hasBadge('bestseller') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Top</span>}
+                            {hasBadge('official') && <span className="rounded-full bg-[#0D63FF] px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white">Officiel</span>}
+                            {discount > 0 && <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-usm-blue-dark">−{discount}%</span>}
+                          </>
+                        )}
                       </div>
                       <img
                         src={cover}
@@ -407,9 +422,15 @@ export const Home: React.FC = () => {
                         </h4>
                       </div>
                       <div className="flex items-center justify-between pt-1">
-                        <span className="font-display font-black text-sm sm:text-base text-usm-blue-primary">
-                          {formattedPrice}
-                        </span>
+                        {isOutOfStock ? (
+                          <span className="font-bold text-xs sm:text-sm text-red-600 uppercase tracking-wider">
+                            Bientôt disponible
+                          </span>
+                        ) : (
+                          <span className="font-display font-black text-sm sm:text-base text-usm-blue-primary">
+                            {formattedPrice}
+                          </span>
+                        )}
                         <span className="text-[10px] font-bold text-slate-400 group-hover:text-usm-blue-primary transition-colors">
                           Détails →
                         </span>

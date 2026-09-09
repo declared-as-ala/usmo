@@ -4,6 +4,7 @@ import { AuthModule } from '../auth/auth.module';
 import { FanPhoto, FanPhotoSchema } from './fan-photo.schema';
 import { HomepageSettings, HomepageSettingsSchema } from './homepage-settings.schema';
 import { ClubSettings, ClubSettingsSchema } from './club-settings.schema';
+import { SiteLaunchSettings, SiteLaunchSettingsSchema } from './site-launch.schema';
 import { SettingsController } from './settings.controller';
 import { SettingsService } from './settings.service';
 
@@ -12,6 +13,7 @@ import { SettingsService } from './settings.service';
     { name: HomepageSettings.name, schema: HomepageSettingsSchema },
     { name: FanPhoto.name, schema: FanPhotoSchema },
     { name: ClubSettings.name, schema: ClubSettingsSchema },
+    { name: SiteLaunchSettings.name, schema: SiteLaunchSettingsSchema },
   ]), AuthModule],
   controllers: [SettingsController],
   providers: [SettingsService],

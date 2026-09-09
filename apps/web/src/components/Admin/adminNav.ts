@@ -26,6 +26,7 @@ import {
   Mail,
   ClipboardList,
   Percent,
+  Rocket,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -85,6 +86,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'System',
     items: [
+      { label: 'Lancement Site (19:23)', href: '/admin/settings/site-launch', icon: Rocket, superAdminOnly: true },
       { label: 'Administrateurs', href: '/admin/administrateurs', icon: ShieldCheck, superAdminOnly: true, permission: 'admins.view' },
       { label: 'Configuration Sports', href: '/admin/settings/sports', icon: Radio, superAdminOnly: true },
       { label: 'Notifications', href: '/admin/notifications', icon: Bell },

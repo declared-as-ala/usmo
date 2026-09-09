@@ -91,6 +91,13 @@ export const api = {
     method: 'PATCH', body: JSON.stringify(data),
   }),
 
+  // ── Site Launch & Countdown (19:23 Africa/Tunis) ───────────────────────────
+  getSiteLaunchStatus: () => fetchJson('/settings/site-launch', { cache: 'no-store' }),
+  updateSiteLaunchSettings: (data: Record<string, unknown>) => fetchJson('/admin/settings/site-launch', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
   // ── News / Actualities (Public) ────────────────────────────────────────────
   getNews: (params: Record<string, string | number | undefined> = {}) => {
     const query = Object.entries(params)
