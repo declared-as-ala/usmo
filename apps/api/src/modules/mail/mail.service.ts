@@ -10,11 +10,11 @@ export class MailService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    const host = process.env.SMTP_HOST || 'smtp.mail.ovh.net';
-    const port = parseInt(process.env.SMTP_PORT || '465', 10);
-    const secure = process.env.SMTP_SECURE !== 'false'; // default true for SSL port 465
-    const user = process.env.SMTP_USER || 'noreply@usmonastir.tn';
-    const pass = process.env.SMTP_PASS || 'Mediausm&2026';
+    const host = 'smtp.mail.ovh.net';
+    const port = 587;
+    const secure = false; // STARTTLS on port 587
+    const user = 'noreply@usmonastir.tn';
+    const pass = 'Mediausm&2026';
 
     this.transporter = nodemailer.createTransport({
       host,
@@ -25,7 +25,7 @@ export class MailService {
         pass,
       },
       tls: {
-        rejectUnauthorized: false, // Prevents self-signed SSL handshake blocks on OVH mail servers
+        rejectUnauthorized: false,
       },
     });
 
@@ -35,7 +35,7 @@ export class MailService {
   private async verifyConnection() {
     try {
       await this.transporter.verify();
-      this.logger.log(`[SMTP] Successfully connected to OVH Mail Server (smtp.mail.ovh.net:465)`);
+      this.logger.log(`[SMTP] Successfully connected to OVH Mail Server (smtp.mail.ovh.net:587)`);
     } catch (err: any) {
       this.logger.warn(`[SMTP] Connection check notice: ${err.message}`);
     }
