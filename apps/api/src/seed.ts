@@ -203,9 +203,9 @@ async function bootstrap() {
       name: 'Megastore Ben Jannet (Stade)',
       nameFr: 'Mégastore Ben Jannet (Stade)',
       nameAr: 'ميغاستور بن جنات (الملعب)',
-      address: 'Mustapha Ben Jannet Stadium Complex, Avenue Ibn El Jazzar, Monastir 5000',
-      addressFr: 'Complexe du Stade Mustapha Ben Jannet, Avenue Ibn El Jazzar, Monastir 5000',
-      addressAr: 'مركب ملعب مصطفى بن جنات، شارع ابن الجزار، المنستير 5000',
+      address: "Mustapha Ben Jannet Stadium Complex, Avenue de l'indépendance, Monastir 5000",
+      addressFr: "Complexe du Stade Mustapha Ben Jannet, Avenue de l'indépendance, Monastir 5000",
+      addressAr: 'مركب ملعب مصطفى بن جنات، شارع الاستقلال، المنستير 5000',
       active: true,
     },
     {

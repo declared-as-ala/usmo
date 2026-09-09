@@ -418,15 +418,6 @@ export const Header: React.FC = () => {
                         </a>
 
                         <div className="space-y-1.5 mb-3">
-                          {userRole === 'admin' && (
-                            <Link
-                              href="/admin"
-                              onClick={() => setProfileOpen(false)}
-                              className="w-full block py-2 px-3 border border-usm-danger/40 text-usm-danger text-[11px] font-bold uppercase tracking-wider text-left rtl:text-right rounded-xl hover:bg-usm-danger/10 transition-all cursor-pointer"
-                            >
-                              {tr(language, 'Admin Panel', 'Panneau Admin', 'لوحة التحكم')}
-                            </Link>
-                          )}
                           <a
                             href="/compte"
                             onClick={(e) => {

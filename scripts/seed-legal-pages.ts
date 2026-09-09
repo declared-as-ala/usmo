@@ -15,7 +15,7 @@ const legalData = [
     key: 'privacy',
     title: 'Politique de Confidentialité',
     content: `1. Engagement et Responsable du Traitement
-L’Union Sportive Monastirienne (USM), association sportive fondée en 1923 dont le siège est situé à l'Avenue Ibn El Jazzar, 5000 Monastir (Tunisie), accorde la plus haute importance à la protection et à la confidentialité des données personnelles de ses supporters, adhérents, visiteurs et partenaires.
+L’Union Sportive Monastirienne (USM), association sportive fondée en 1923 dont le siège est situé à l'Avenue de l'ind�pendance, 5000 Monastir (Tunisie), accorde la plus haute importance à la protection et à la confidentialité des données personnelles de ses supporters, adhérents, visiteurs et partenaires.
 
 Le présent document détaille nos engagements conformément à la loi organique tunisienne n° 2004-63 du 27 juillet 2004 portant sur la protection des données à caractère personnel ainsi qu'aux meilleurs standards internationaux (RGPD).
 
@@ -49,7 +49,7 @@ Conformément à la réglementation applicable, vous disposez des droits d'accè
 
 Pour exercer vos droits ou pour toute question relative à vos données personnelles, vous pouvez contacter notre secrétariat général :
 • Par e-mail : contact@usmonastir.org.tn
-• Par courrier : Union Sportive Monastirienne — Secrétariat Général, Avenue Ibn El Jazzar, 5000 Monastir, Tunisie.`,
+• Par courrier : Union Sportive Monastirienne — Secrétariat Général, Avenue de l'ind�pendance, 5000 Monastir, Tunisie.`,
   },
   {
     key: 'terms',

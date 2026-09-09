@@ -145,7 +145,7 @@ export function LegalPage({ pageKey, fallbackTitle }: { pageKey: LegalPageKey; f
                     <Mail size={13} /> contact@usmonastir.org.tn
                   </a>
                   <span className="inline-flex items-center gap-1.5 text-slate-600">
-                    <MapPin size={13} /> Avenue Ibn El Jazzar, 5000 Monastir, Tunisie
+                    <MapPin size={13} /> Avenue de l'indépendance, 5000 Monastir, Tunisie
                   </span>
                 </div>
               </div>

@@ -1250,7 +1250,7 @@ export const defaultClubSettings: ClubSettings = {
   logoUrl: '/logo.webp',
   contactEmail: 'contact@usmonastir.tn',
   contactPhone: '+216 73 462 600',
-  address: 'Avenue Ibn El Jazzar, Monastir 5000, Tunisia',
+  address: "Avenue de l'indépendance, Monastir 5000, Tunisia",
   facebook: 'https://facebook.com/usmonastir',
   instagram: 'https://instagram.com/usmonastir',
   youtube: 'https://youtube.com/@usmonastir',

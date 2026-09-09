@@ -18,7 +18,7 @@ export class ClubSettings extends Document {
   @Prop({ type: String, default: '+216 73 462 600' })
   contactPhone: string;
 
-  @Prop({ type: String, default: 'Avenue Ibn El Jazzar, Monastir 5000, Tunisia' })
+  @Prop({ type: String, default: "Avenue de l'indépendance, Monastir 5000, Tunisia" })
   address: string;
 
   @Prop({ type: String, default: '' })
