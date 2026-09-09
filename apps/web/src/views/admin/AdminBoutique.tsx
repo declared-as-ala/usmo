@@ -925,8 +925,10 @@ export default function AdminBoutique() {
                   <MediaUploader
                     key={form.images.length}
                     compact
+                    multiple
                     folder={`products/${editingId || 'new'}/gallery`}
                     onUpload={(file) => setForm((current) => ({ ...current, images: [...current.images, file.url] }))}
+                    onMultipleUpload={(files) => setForm((current) => ({ ...current, images: [...current.images, ...files.map(f => f.url)] }))}
                     onUploadingChange={setGalleryUploading}
                   />
                 </div>
