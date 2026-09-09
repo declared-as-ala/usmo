@@ -389,7 +389,7 @@ export const Home: React.FC = () => {
                       isOutOfStock ? 'opacity-85' : ''
                     }`}
                   >
-                    <div className="relative aspect-square overflow-hidden bg-slate-50 p-4 flex items-center justify-center">
+                    <div className="relative aspect-square overflow-hidden bg-slate-50">
                       <div className="absolute inset-x-3 top-3 flex flex-wrap gap-1.5 z-10">
                         {isOutOfStock ? (
                           <span className="rounded-full bg-red-600 px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-xs">
@@ -408,7 +408,7 @@ export const Home: React.FC = () => {
                       <img
                         src={cover}
                         alt={title}
-                        className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-500"
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.src = '/logo.webp';
