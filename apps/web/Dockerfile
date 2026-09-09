@@ -13,6 +13,8 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN npm ci
 COPY apps/web apps/web
 COPY packages/shared packages/shared
+# Remove any stale .next cache to prevent Server Action ID mismatches
+RUN rm -rf apps/web/.next
 
 # NEXT_PUBLIC_* vars are inlined into the client bundle at build time, so this
 # one must be a build ARG (not just a runtime env var like SITE_URL/INTERNAL_API_URL).
@@ -24,6 +26,8 @@ ARG API_DOMAIN=
 ARG MINIO_BUCKET=usm-media
 ENV API_DOMAIN=$API_DOMAIN
 ENV MINIO_BUCKET=$MINIO_BUCKET
+# Disable Next.js telemetry to speed up build
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build --workspace=web
 
 # ── Runtime: only the standalone server + static assets (next.config.ts sets
@@ -33,6 +37,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --chown=node:node --from=build /app/apps/web/.next/standalone ./
 COPY --chown=node:node --from=build /app/apps/web/.next/static apps/web/.next/static
