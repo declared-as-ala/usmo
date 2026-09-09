@@ -261,7 +261,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   transition={{ duration: 0.25 }}
                   src={gallery[activeImage]}
                   alt={productName}
-                  className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                 />
               </AnimatePresence>
 
