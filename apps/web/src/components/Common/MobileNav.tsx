@@ -18,6 +18,7 @@ import {
   User,
   LogIn,
   LogOut,
+  Newspaper,
 } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
@@ -33,6 +34,7 @@ export const MobileNav: React.FC = () => {
   const primaryTabs: { screen: typeof activeScreen; label: string; icon: React.ReactNode }[] = [
     { screen: 'home', label: t('nav.home'), icon: <Home size={19} strokeWidth={2} /> },
     { screen: 'matches', label: t('nav.matches'), icon: <Trophy size={19} strokeWidth={2} /> },
+    { screen: 'actualites', label: 'Actualités', icon: <Newspaper size={19} strokeWidth={2} /> },
     { screen: 'boutique', label: t('nav.boutique'), icon: <ShoppingBag size={19} strokeWidth={2} /> },
   ];
 
