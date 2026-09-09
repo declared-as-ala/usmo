@@ -250,7 +250,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             )}
 
             {/* Main image with customization overlay */}
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100 shadow-lg group">
+            <div className="relative rounded-2xl overflow-hidden bg-slate-100 shadow-lg group">
               {/* Product image */}
               <AnimatePresence mode="wait">
                 <motion.img
@@ -261,7 +261,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   transition={{ duration: 0.25 }}
                   src={gallery[activeImage]}
                   alt={productName}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="w-full h-auto max-h-[80vh] object-contain transition-transform duration-700 group-hover:scale-105"
                 />
               </AnimatePresence>
 
