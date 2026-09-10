@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../context/AppContext';
 import { ProductCard } from '../components/Shop/ProductCard';
@@ -52,6 +52,18 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('sizing');
   const [sizeError, setSizeError] = useState('');
+  const touchStartX = useRef<number>(0);
+
+  // Swipe to change image on mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) < 40) return; // ignore small swipes
+    if (dx < 0 && activeImage < gallery.length - 1) setActiveImage(activeImage + 1);
+    if (dx > 0 && activeImage > 0) setActiveImage(activeImage - 1);
+  };
 
   // Jersey customization states
   const [customName, setCustomName] = useState('');
@@ -271,7 +283,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             )}
 
             {/* Main image with customization overlay */}
-            <div className="relative rounded-2xl overflow-hidden bg-slate-100 shadow-lg group">
+            <div
+              className="relative rounded-2xl overflow-hidden bg-slate-100 shadow-lg group"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* Product image */}
               <AnimatePresence mode="wait">
                 <motion.img
@@ -399,24 +415,45 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               ) : null}
             </div>
 
-            {/* Thumbnail row */}
+            {/* Thumbnail row — horizontal scroll on mobile, grid on desktop */}
             {gallery.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
-                {gallery.map((img: string, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveImage(idx)}
-                    className={`relative aspect-square rounded-xl overflow-hidden bg-white border-2 cursor-pointer transition-all ${
-                      activeImage === idx ? 'border-usm-blue-primary' : 'border-usm-border hover:border-usm-border'
-                    }`}
-                  >
-                    <img src={img} className="w-full h-full object-contain p-2" alt="" />
-                    <span className="absolute bottom-1 inset-x-0 text-center text-[8px] font-bold text-slate-500 uppercase">
-                      {poses[idx]?.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <>
+                {/* Mobile: horizontal carousel with snap */}
+                <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory no-scrollbar lg:hidden -mx-1 px-1 pb-1">
+                  {gallery.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImage(idx)}
+                      className={`relative flex-none w-[72px] h-[72px] snap-center rounded-xl overflow-hidden bg-white border-2 cursor-pointer transition-all ${
+                        activeImage === idx ? 'border-usm-blue-primary shadow-md' : 'border-usm-border'
+                      }`}
+                    >
+                      <img src={img} className="w-full h-full object-contain p-1" alt="" />
+                      <span className="absolute bottom-0 inset-x-0 text-center text-[7px] font-bold text-slate-500 bg-white/80 backdrop-blur-sm py-0.5">
+                        {poses[idx]?.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Desktop: 4-column grid */}
+                <div className="hidden lg:grid grid-cols-4 gap-3">
+                  {gallery.map((img: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImage(idx)}
+                      className={`relative aspect-square rounded-xl overflow-hidden bg-white border-2 cursor-pointer transition-all ${
+                        activeImage === idx ? 'border-usm-blue-primary' : 'border-usm-border hover:border-usm-border'
+                      }`}
+                    >
+                      <img src={img} className="w-full h-full object-contain p-2" alt="" />
+                      <span className="absolute bottom-1 inset-x-0 text-center text-[8px] font-bold text-slate-500 uppercase">
+                        {poses[idx]?.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
 
           </div>
