@@ -137,18 +137,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     return (millimes / 1000).toFixed(3) + ' DT';
   };
 
-  // Gallery: include hoverImage if set and not already in images[], then all images[].
-  // coverImage is only the catalog thumbnail and not shown on the detail page gallery.
+  // Gallery: only images[]. coverImage is the catalog thumbnail and not shown on the detail page gallery.
+  // hoverImage is NOT included — it's only used on the product card hover.
   const buildGallery = (): string[] => {
     const imgs: string[] = [];
-    // Add hover image first if it exists and isn't already the coverImage
-    if (product.hoverImage && product.hoverImage !== product.coverImage) {
-      imgs.push(product.hoverImage);
-    }
-    // Add all gallery images (skip duplicates of coverImage and hoverImage)
+    // Add all gallery images (skip coverImage)
     if (product.images && product.images.length > 0) {
       for (const img of product.images) {
-        if (img !== product.coverImage && img !== product.hoverImage && !imgs.includes(img)) {
+        if (img !== product.coverImage && !imgs.includes(img)) {
           imgs.push(img);
         }
       }
