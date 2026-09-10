@@ -52,6 +52,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('sizing');
   const [sizeError, setSizeError] = useState('');
+  const sizeSelectorRef = useRef<HTMLDivElement>(null);
+  const [sizeHighlight, setSizeHighlight] = useState(false);
   const touchStartX = useRef<number>(0);
 
   // Swipe to change image on mobile
@@ -195,6 +197,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     const hasSizes = uniqueSizes.length > 0 && !(uniqueSizes.length === 1 && uniqueSizes[0] === 'One Size');
     if (hasSizes && !selectedSize) {
       setSizeError(tr(language, 'Please select a size.', 'Veuillez sélectionner une taille.', 'يرجى اختيار مقاس.'));
+      // Scroll to size selector on mobile so the error is visible
+      sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Brief red highlight to draw attention
+      setSizeHighlight(true);
+      setTimeout(() => setSizeHighlight(false), 2000);
       return;
     }
     setSizeError('');
@@ -536,7 +543,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
 
             {/* Sizes Selection */}
             {uniqueSizes.length > 0 && uniqueSizes[0] !== 'One Size' && (
-              <div className="space-y-2 border-t border-usm-border pt-4">
+              <div
+                ref={sizeSelectorRef}
+                className={`space-y-2 border-t border-usm-border pt-4 rounded-xl transition-all duration-300 ${
+                  sizeHighlight ? 'bg-red-50 border-red-300 p-2 -m-2' : ''
+                }`}
+              >
                 <label className="text-[10px] font-bold text-slate-500 uppercase block">
                   {tr(language, 'Select Size', 'Choisir la Taille', 'اختر المقاس')}
                 </label>
@@ -569,7 +581,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   })}
                 </div>
                 {sizeError && (
-                  <p className="text-xs text-red-500 font-semibold mt-1">{sizeError}</p>
+                  <p className="text-xs text-red-600 font-bold mt-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{sizeError}</p>
                 )}
               </div>
             )}
