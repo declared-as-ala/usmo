@@ -23,6 +23,9 @@ export class ProductVariant extends Document {
 
   @Prop({ type: Number })
   price?: number; // custom variant overrides if applicable (in millimes)
+
+  @Prop({ type: Boolean, default: true })
+  isActive: boolean; // whether this variant is available for sale
 }
 
 export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant);

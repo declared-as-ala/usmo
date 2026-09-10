@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, HttpCode, Req } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { Product } from './product.schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -115,5 +115,23 @@ export class ProductsController {
   @HttpCode(204)
   async incrementViews(@Param('id') id: string) {
     return this.productsService.incrementViews(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Patch(':id/quick-stock')
+  async quickStockEdit(
+    @Param('id') id: string,
+    @Body() body: { updates: { variantId: string; stock: number }[] },
+    @Req() req: any,
+  ) {
+    return this.productsService.quickStockEdit(id, body.updates, req.user?.sub);
+  }
+
+  @Post('validate-stock')
+  async validateStock(
+    @Body() body: { items: { productId: string; size: string; quantity: number }[] },
+  ) {
+    return this.productsService.validateStock(body.items);
   }
 }

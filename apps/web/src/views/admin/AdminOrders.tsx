@@ -17,6 +17,7 @@ import {
   Users,
   AlertCircle,
   Truck,
+  Download,
 } from 'lucide-react';
 
 export type OrderStatus =
@@ -160,6 +161,10 @@ export default function AdminOrders() {
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [nowTimestamp] = useState(() => Date.now());
 
+  // Export state
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
   // Drawer states
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'view' | 'edit' | 'new'>('edit');
@@ -228,6 +233,14 @@ export default function AdminOrders() {
       setCatalogProducts(res?.products || []);
     } catch (err) {}
   }, []);
+
+  // Close export menu on outside click
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const handleClick = () => setShowExportMenu(false);
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [showExportMenu]);
 
   // Load Orders
   const loadOrders = useCallback(async () => {
@@ -383,6 +396,35 @@ export default function AdminOrders() {
     setCurrentOrder(null);
   };
 
+  // Export handlers
+  const handleExport = async (format: 'excel' | 'pdf') => {
+    setExporting(true);
+    setShowExportMenu(false);
+    try {
+      if (format === 'excel') {
+        const blob = await api.exportOrdersExcel();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `commandes_usm_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        const blob = await api.exportOrdersPdf();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `commandes_usm_${new Date().toISOString().slice(0, 10)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erreur lors de l\'export');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Update item in drawer items table
   const handleUpdateItem = (
     index: number,
@@ -534,6 +576,35 @@ export default function AdminOrders() {
           >
             <Truck size={16} />
           </button>
+
+          {/* Export dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={exporting}
+              className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 hover:text-[#0D63FF] hover:border-[#0D63FF]/40 rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-2 text-xs font-bold disabled:opacity-50"
+            >
+              <Download size={14} className={exporting ? 'animate-bounce' : ''} />
+              <span>{exporting ? 'Export...' : 'Exporter'}</span>
+            </button>
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 min-w-[160px]">
+                <button
+                  onClick={() => handleExport('excel')}
+                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="text-emerald-600">📊</span> Excel (.xlsx)
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="text-red-600">📄</span> PDF
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => openDrawer(null, 'new')}
             className="px-5 py-2.5 bg-[#0D63FF] hover:bg-blue-700 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer"

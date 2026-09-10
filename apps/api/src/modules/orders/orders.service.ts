@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order } from './order.schema';
 import { Product } from '../products/product.schema';
+import { InventoryMovement } from '../products/inventory-movement.schema';
 import { CartService } from '../cart/cart.service';
 import { BadgesService } from '../loyalty/badges.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -24,18 +25,142 @@ export class OrdersService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<Product>,
+    @InjectModel(InventoryMovement.name) private inventoryModel: Model<InventoryMovement>,
     private readonly cartService: CartService,
     private readonly badgesService: BadgesService,
     private readonly notificationsService: NotificationsService,
     private readonly mailService: MailService,
   ) {}
 
+  // ── Atomic variant stock decrement ───────────────────────────────────────
+  private async atomicDecrementVariant(
+    productId: string,
+    variantId: string,
+    size: string,
+    quantity: number,
+    orderId: string,
+  ): Promise<void> {
+    // Find the product and the variant index
+    const product = await this.productModel.findById(productId).exec();
+    if (!product) throw new ConflictException({ code: 'PRODUCT_NOT_FOUND', message: 'Produit introuvable.' });
+
+    const variantIdx = product.variants?.findIndex((v) => (v as any)._id?.toString() === variantId || v.size === size) ?? -1;
+    if (variantIdx === -1) {
+      throw new ConflictException({ code: 'VARIANT_NOT_FOUND', message: `Variante introuvable pour la taille ${size}.` });
+    }
+
+    const variant = product.variants[variantIdx];
+    const previousStock = variant.stock;
+
+    if (previousStock < quantity) {
+      throw new ConflictException({
+        code: 'INSUFFICIENT_STOCK',
+        message: `Stock insuffisant pour la taille ${size}: demandé ${quantity}, disponible ${previousStock}.`,
+      });
+    }
+
+    // Atomic decrement with concurrency guard
+    const filter: any = { _id: productId };
+    filter[`variants.${variantIdx}.stock`] = { $gte: quantity };
+
+    const update: any = {
+      $inc: { [`variants.${variantIdx}.stock`]: -quantity },
+    };
+
+    const result = await this.productModel.updateOne(filter, update).exec();
+
+    if (result.modifiedCount === 0) {
+      // Re-check to give a precise error
+      const fresh = await this.productModel.findById(productId).exec();
+      const freshVariant = fresh?.variants?.[variantIdx];
+      throw new ConflictException({
+        code: 'INSUFFICIENT_STOCK',
+        message: `Stock insuffisant pour la taille ${size}: demandé ${quantity}, disponible ${freshVariant?.stock ?? 0}.`,
+      });
+    }
+
+    // Recalculate product-level stock and status
+    await this.recalculateProductStock(productId);
+
+    // Audit log
+    const newStock = previousStock - quantity;
+    await new this.inventoryModel({
+      productId,
+      variantId,
+      size,
+      previousStock,
+      quantityChange: -quantity,
+      newStock,
+      reason: 'ORDER_CREATED',
+      orderId,
+    }).save();
+  }
+
+  // ── Atomic variant stock restore ─────────────────────────────────────────
+  private async atomicRestoreVariant(
+    productId: string,
+    variantId: string,
+    size: string,
+    quantity: number,
+    orderId: string,
+    reason: string,
+  ): Promise<void> {
+    const product = await this.productModel.findById(productId).exec();
+    if (!product) return;
+
+    const variantIdx = product.variants?.findIndex((v) => (v as any)._id?.toString() === variantId || v.size === size) ?? -1;
+    if (variantIdx === -1) return;
+
+    const previousStock = product.variants[variantIdx].stock;
+
+    const filter: any = { _id: productId };
+    filter[`variants.${variantIdx}.stock`] = { $gte: 0 };
+
+    const update: any = {
+      $inc: { [`variants.${variantIdx}.stock`]: quantity },
+    };
+
+    await this.productModel.updateOne(filter, update).exec();
+    await this.recalculateProductStock(productId);
+
+    const newStock = previousStock + quantity;
+    await new this.inventoryModel({
+      productId,
+      variantId,
+      size,
+      previousStock,
+      quantityChange: quantity,
+      newStock,
+      reason,
+      orderId,
+    }).save();
+  }
+
+  // ── Recalculate product-level stockQuantity and stockStatus ──────────────
+  private async recalculateProductStock(productId: string): Promise<void> {
+    const product = await this.productModel.findById(productId).exec();
+    if (!product) return;
+
+    const totalRemaining = (product.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+    const hasActiveVariantWithStock = (product.variants || []).some((v) => v.isActive !== false && v.stock > 0);
+
+    await this.productModel.updateOne(
+      { _id: productId },
+      {
+        $set: {
+          stockQuantity: totalRemaining,
+          stockStatus: hasActiveVariantWithStock ? 'IN_STOCK' : 'OUT_OF_STOCK',
+        },
+      },
+    ).exec();
+  }
+
   async create(dto: any): Promise<Order> {
-    // 0. Strictly refetch every product from MongoDB to validate availability
     if (!dto.items || !Array.isArray(dto.items) || dto.items.length === 0) {
       throw new BadRequestException('Le panier est vide.');
     }
 
+    // Validate each item
     for (const item of dto.items) {
       const product = await this.productModel.findById(item.productId).exec();
       if (!product || product.status !== 'published') {
@@ -45,28 +170,33 @@ export class OrdersService {
         });
       }
 
-      if (product.stockStatus === 'OUT_OF_STOCK') {
-        throw new ConflictException({
-          code: 'PRODUCT_OUT_OF_STOCK',
-          message: 'Ce produit est actuellement épuisé.',
+      if (!item.size || item.size.trim() === '') {
+        throw new BadRequestException({
+          code: 'SIZE_REQUIRED',
+          message: 'Veuillez sélectionner une taille.',
         });
       }
 
-      if (product.trackStock) {
-        const variant = product.variants?.find((v) => v.size === item.size);
-        const availableStock = variant
-          ? variant.stock
-          : (product.stockQuantity ?? product.lowStockThreshold);
-        if (availableStock < (item.quantity || 1)) {
-          throw new ConflictException({
-            code: 'PRODUCT_OUT_OF_STOCK',
-            message: `Stock insuffisant pour "${product.name}" (${item.size}): demandé ${item.quantity}, disponible ${availableStock}.`,
-          });
-        }
+      // Find matching variant
+      const variant = product.variants?.find((v) => v.size === item.size && v.isActive !== false);
+      if (!variant) {
+        throw new ConflictException({
+          code: 'VARIANT_UNAVAILABLE',
+          message: `La taille "${item.size}" n'est pas disponible pour "${product.name}".`,
+        });
+      }
+
+      if (variant.stock < (item.quantity || 1)) {
+        throw new ConflictException({
+          code: 'INSUFFICIENT_STOCK',
+          message: variant.stock === 0
+            ? `La taille ${item.size} est épuisée pour "${product.name}".`
+            : `Il ne reste que ${variant.stock} article(s) en taille ${item.size} pour "${product.name}".`,
+        });
       }
     }
 
-    // 1. Calculate pricing and validate stock using CartService
+    // Calculate pricing
     const calc = await this.cartService.calculateCart({
       items: dto.items,
       deliveryZoneId: dto.deliveryZoneId,
@@ -81,48 +211,11 @@ export class OrdersService {
       });
     }
 
-    // 2. Reserve stock in database
-    for (const item of calc.items) {
-      const product = await this.productModel.findById(item.productId).exec();
-      if (!product) continue;
-
-      if (product.trackStock) {
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
-            product.markModified('variants');
-          }
-          const totalRemaining = product.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
-          product.stockQuantity = totalRemaining;
-          if (totalRemaining <= 0) {
-            product.stockStatus = 'OUT_OF_STOCK';
-          }
-        } else if (product.stockQuantity !== undefined) {
-          product.stockQuantity = Math.max(0, product.stockQuantity - item.quantity);
-          if (product.stockQuantity <= 0) {
-            product.stockStatus = 'OUT_OF_STOCK';
-          }
-        }
-      } else {
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
-            product.markModified('variants');
-          }
-        } else {
-          product.lowStockThreshold = Math.max(0, product.lowStockThreshold - item.quantity);
-        }
-      }
-      await product.save();
-    }
-
-    // 3. Generate unique order reference number
+    // Generate order number
     const rand = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `ORD-${Date.now().toString().slice(-4)}-${rand}`;
 
-    // 4. Create and save order
+    // Create order (stock not yet decremented)
     const createdOrder = new this.orderModel({
       orderNumber,
       userId: dto.userId,
@@ -138,8 +231,11 @@ export class OrdersService {
       pickupPointId: dto.pickupPointId,
       items: calc.items.map((item: any, idx: number) => {
         const fallback = dto.items?.[idx];
+        const product = calc.items[idx];
+        // Find the variant to get its _id
         return {
           productId: item.productId,
+          variantId: (product as any).variantId || fallback?.variantId || undefined,
           name: item.name,
           size: item.size,
           quantity: item.quantity,
@@ -168,6 +264,29 @@ export class OrdersService {
 
     const saved = await createdOrder.save();
 
+    // Atomically decrement stock for each item
+    for (const item of dto.items) {
+      const product = await this.productModel.findById(item.productId).exec();
+      if (!product) continue;
+
+      const variant = product.variants?.find((v) => v.size === item.size);
+      if (variant) {
+        await this.atomicDecrementVariant(
+          item.productId,
+          (variant as any)._id?.toString() || variant.id,
+          item.size,
+          item.quantity || 1,
+          saved._id.toString(),
+        );
+      }
+    }
+
+    // Mark inventory as reserved
+    await this.orderModel.updateOne(
+      { _id: saved._id },
+      { $set: { inventoryReservedAt: new Date() } },
+    ).exec();
+
     if (calc.couponApplied) {
       await this.cartService.incrementDiscountCodeUsage(calc.couponApplied);
     }
@@ -175,7 +294,8 @@ export class OrdersService {
     if (dto.userId) {
       await this.badgesService.unlock(dto.userId, 'first-order');
     }
-    // Send confirmation email if email provided
+
+    // Send confirmation email
     if (dto.customerEmail) {
       try {
         await this.mailService.sendOrderConfirmationEmail({
@@ -231,6 +351,14 @@ export class OrdersService {
         { 'customer.phone': { $regex: query.search, $options: 'i' } },
       ];
     }
+    if (query.from || query.to) {
+      filter.createdAt = {};
+      if (query.from) filter.createdAt.$gte = new Date(query.from);
+      if (query.to) filter.createdAt.$lte = new Date(query.to + 'T23:59:59.999Z');
+    }
+    if (query.deliveryMethod) {
+      filter.deliveryMethod = query.deliveryMethod;
+    }
 
     const total = await this.orderModel.countDocuments(filter).exec();
     const orders = await this.orderModel
@@ -241,6 +369,7 @@ export class OrdersService {
     return { orders, total };
   }
 
+  // ── Idempotent status update with stock management ──────────────────────
   async updateStatus(id: string, newStatus: string, notes?: string): Promise<Order> {
     const order = await this.orderModel.findById(id).exec();
     if (!order) {
@@ -252,41 +381,46 @@ export class OrdersService {
       return order;
     }
 
-    // Ledger Rule: Restore stock if cancelled
+    // Idempotent: restore stock only if not already released
     if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
-      for (const item of order.items) {
-        const product = await this.productModel.findById(item.productId).exec();
-        if (!product) continue;
-
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock += item.quantity;
-            product.markModified('variants');
+      if (!order.inventoryReleasedAt) {
+        for (const item of order.items) {
+          if (item.variantId) {
+            await this.atomicRestoreVariant(
+              item.productId,
+              item.variantId,
+              item.size,
+              item.quantity,
+              id,
+              'ORDER_CANCELLED',
+            );
           }
-        } else {
-          product.lowStockThreshold += item.quantity;
         }
-        await product.save();
+        await this.orderModel.updateOne(
+          { _id: id },
+          { $set: { inventoryReleasedAt: new Date() } },
+        ).exec();
       }
     }
-    
-    // Ledger Rule: Re-deduct stock if un-cancelled
-    if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
-      for (const item of order.items) {
-        const product = await this.productModel.findById(item.productId).exec();
-        if (!product) continue;
 
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock = Math.max(0, product.variants[variantIdx].stock - item.quantity);
-            product.markModified('variants');
+    // Idempotent: re-reserve stock only if not already reserved
+    if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
+      if (order.inventoryReleasedAt && !order.inventoryReservedAt) {
+        for (const item of order.items) {
+          if (item.variantId) {
+            await this.atomicDecrementVariant(
+              item.productId,
+              item.variantId,
+              item.size,
+              item.quantity,
+              id,
+            );
           }
-        } else {
-          product.lowStockThreshold = Math.max(0, product.lowStockThreshold - item.quantity);
         }
-        await product.save();
+        await this.orderModel.updateOne(
+          { _id: id },
+          { $set: { inventoryReservedAt: new Date(), inventoryReleasedAt: null } },
+        ).exec();
       }
     }
 
@@ -357,25 +491,49 @@ export class OrdersService {
       throw new NotFoundException(`Commande introuvable`);
     }
 
-    // Restore stock if pending or confirmed order is deleted without cancellation
-    if (order.status !== 'cancelled') {
+    // Restore stock if not cancelled and not already released
+    if (order.status !== 'cancelled' && !order.inventoryReleasedAt) {
       for (const item of order.items) {
-        const product = await this.productModel.findById(item.productId).exec();
-        if (!product) continue;
-
-        if (product.variants && product.variants.length > 0) {
-          const variantIdx = product.variants.findIndex((v) => v.size === item.size);
-          if (variantIdx !== -1) {
-            product.variants[variantIdx].stock += item.quantity;
-            product.markModified('variants');
-          }
-        } else {
-          product.lowStockThreshold += item.quantity;
+        if (item.variantId) {
+          await this.atomicRestoreVariant(
+            item.productId,
+            item.variantId,
+            item.size,
+            item.quantity,
+            id,
+            'ORDER_CANCELLED',
+          );
         }
-        await product.save();
       }
     }
 
     await this.orderModel.findByIdAndDelete(id).exec();
+  }
+
+  // ── Export helpers ───────────────────────────────────────────────────────
+  async findAllForExport(query: any): Promise<Order[]> {
+    const filter: any = {};
+    if (query.status) filter.status = query.status;
+    if (query.search) {
+      filter.$or = [
+        { orderNumber: { $regex: query.search, $options: 'i' } },
+        { 'customer.name': { $regex: query.search, $options: 'i' } },
+        { 'customer.phone': { $regex: query.search, $options: 'i' } },
+      ];
+    }
+    if (query.from || query.to) {
+      filter.createdAt = {};
+      if (query.from) filter.createdAt.$gte = new Date(query.from);
+      if (query.to) filter.createdAt.$lte = new Date(query.to + 'T23:59:59.999Z');
+    }
+    if (query.deliveryMethod) filter.deliveryMethod = query.deliveryMethod;
+
+    return this.orderModel.find(filter).sort({ createdAt: -1 }).lean().exec();
+  }
+
+  async getInventoryMovements(productId?: string): Promise<InventoryMovement[]> {
+    const filter: any = {};
+    if (productId) filter.productId = productId;
+    return this.inventoryModel.find(filter).sort({ createdAt: -1 }).limit(500).lean().exec();
   }
 }

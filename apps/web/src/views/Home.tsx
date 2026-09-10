@@ -263,14 +263,19 @@ export const Home: React.FC = () => {
         <div className="flex flex-col justify-between">
           <div>
             <h3 className="font-display font-extrabold text-2xl uppercase tracking-wider text-usm-blue-dark border-b-2 border-usm-blue-primary/40 pb-2 mb-6">
-              🏆 {t('home.historyTitle')}
+              🏆 PALMARÈS &amp; HÉRITAGE
             </h3>
             <p className="text-xs text-slate-500 leading-relaxed mb-6">
-              A historical legacy forged by elite players and supporters. US Monastir commands a legacy representing the central Tunisian coast in basketball and football.
+              Un héritage historique façonné par des joueurs d&apos;exception et des générations de supporters. L&apos;US Monastir perpétue une histoire qui représente fièrement la région du Sahel tunisien à travers le football et le basketball.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {clubTrophies.slice(0, 4).map((trophy) => (
+            {[
+              { id: 'bal', icon: '🏆', count: 1, title: 'Basketball Africa League (BAL)', titleAr: 'بطولة أفريقيا للسلة' },
+              { id: 'bball', icon: '🏆', count: 10, title: 'Championnats de Tunisie de Basketball', titleAr: 'بطولات تونس لكرة السلة' },
+              { id: 'cup', icon: '🏆', count: 1, title: 'Coupe de Tunisie de Football', titleAr: 'كأس تونس لكرة القدم' },
+              { id: 'supercup', icon: '🏆', count: 1, title: 'Supercoupe de Tunisie de Football', titleAr: 'كأس السوبر التونسي لكرة القدم' },
+            ].map((trophy) => (
               <div
                 key={trophy.id}
                 className="bg-usm-blue-soft/60 dark:bg-usm-blue-primary/10 border border-usm-border rounded-2xl p-4 flex items-center space-x-3 rtl:space-x-reverse shadow"
@@ -280,7 +285,7 @@ export const Home: React.FC = () => {
                 </div>
                 <div>
                   <span className="font-display font-black text-2xl text-usm-blue-dark block">{trophy.count}</span>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase block line-clamp-1">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block line-clamp-2 leading-tight">
                     {language === 'ar' ? trophy.titleAr : trophy.title}
                   </span>
                 </div>
@@ -288,10 +293,10 @@ export const Home: React.FC = () => {
             ))}
           </div>
           <button
-            onClick={() => setActiveScreen('histoire')}
+            onClick={() => router.push('/palmares')}
             className="mt-6 w-full py-3 bg-usm-blue-primary/30 border border-usm-blue-primary/30 hover:bg-usm-blue-primary/25 text-usm-blue-dark font-bold text-xs uppercase rounded-xl tracking-wider text-center cursor-pointer transition-colors"
           >
-            Explore Interactive Museum
+            Explorer le Musée Interactif
           </button>
         </div>
       </section>

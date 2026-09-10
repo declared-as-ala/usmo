@@ -89,6 +89,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     'orders.export',
     'orders.update_status',
     'discount_codes.view',
+    'products.view',
   ],
   'Gestionnaire des commandes': [
     'orders.view',
@@ -98,6 +99,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     'orders.export',
     'orders.update_status',
     'discount_codes.view',
+    'products.view',
   ],
   USER: [],
   User: [],

@@ -79,8 +79,8 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
     expect(roleHasPermission('ADMIN', 'settings.view')).toBe(true);
   });
 
-  // Case 7: GESTIONNAIRE_COMMANDES sees only Commandes and Codes promo
-  it('7. GESTIONNAIRE_COMMANDES sidebar allows only Commandes and Codes promo', () => {
+  // Case 7: GESTIONNAIRE_COMMANDES sees Commandes, Codes promo, and Boutique Catalog
+  it('7. GESTIONNAIRE_COMMANDES sidebar allows Commandes, Codes promo, and Boutique Catalog', () => {
     const isOrderManager = true;
     const orderManagerNav = isOrderManager
       ? [
@@ -89,16 +89,18 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
             items: [
               { label: 'Shop Orders', href: '/admin/orders' },
               { label: 'Discount Codes', href: '/admin/discount-codes' },
+              { label: 'Boutique Catalog', href: '/admin/boutique' },
             ],
           },
         ]
       : [];
 
     const visibleHrefs = orderManagerNav.flatMap((g) => g.items.map((i) => i.href));
-    expect(visibleHrefs).toEqual(['/admin/orders', '/admin/discount-codes']);
+    expect(visibleHrefs).toContain('/admin/orders');
+    expect(visibleHrefs).toContain('/admin/discount-codes');
+    expect(visibleHrefs).toContain('/admin/boutique');
     expect(visibleHrefs).not.toContain('/admin');
     expect(visibleHrefs).not.toContain('/admin/analytics');
-    expect(visibleHrefs).not.toContain('/admin/boutique');
     expect(visibleHrefs).not.toContain('/admin/players');
     expect(visibleHrefs).not.toContain('/admin/news');
   });
@@ -124,9 +126,9 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
     expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'discount_codes.delete')).toBe(false);
   });
 
-  // Case 11: GESTIONNAIRE_COMMANDES cannot access products, customers, analytics, settings, or administrators
+  // Case 11: GESTIONNAIRE_COMMANDES cannot access customers, analytics, settings, or administrators (but CAN view products)
   it('11. GESTIONNAIRE_COMMANDES is blocked from accessing other modules', () => {
-    expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'products.view')).toBe(false);
+    expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'products.view')).toBe(true); // now allowed
     expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'products.create')).toBe(false);
     expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'users.view')).toBe(false);
     expect(roleHasPermission('GESTIONNAIRE_COMMANDES', 'analytics.view')).toBe(false);

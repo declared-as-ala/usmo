@@ -47,6 +47,7 @@ const emptyForm = {
   stockQuantity: 20,
   sizeGuide: '',
   deliveryInfo: '',
+  variantStocks: {} as Record<string, number>, // per-size stock: { S: 50, M: 30, ... }
 };
 
 export default function AdminBoutique() {
@@ -157,6 +158,9 @@ export default function AdminBoutique() {
       stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
       sizeGuide: p.sizeGuide || '',
       deliveryInfo: p.deliveryInfo || '',
+      variantStocks: p.variants
+        ? Object.fromEntries(p.variants.map((v: any) => [v.size, v.stock || 0]))
+        : {},
     });
     setShowForm(true);
   };
@@ -243,14 +247,15 @@ export default function AdminBoutique() {
 
       const effectiveQuantity = form.trackStock ? Number(form.stockQuantity) : form.stock;
 
-      // Construct variants model with simple default values
+      // Construct variants model with per-size stock
       const variants = sizesArray.map((size, idx) => ({
         id: `${editingId || 'new'}-${size}-${idx}`,
         sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size}-${idx}`,
         size,
         color: 'Bleu',
         colorHex: '#0D63FF',
-        stock: Math.round(effectiveQuantity / (sizesArray.length || 1)),
+        stock: form.trackStock ? (form.variantStocks[size] || 0) : Math.round(effectiveQuantity / (sizesArray.length || 1)),
+        isActive: true,
       }));
 
       const productPayload = {
@@ -1033,7 +1038,7 @@ export default function AdminBoutique() {
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5">
                     <Boxes size={14} className="text-usm-blue-primary" />
-                    Inventaire & Disponibilité
+                    Stock par Taille
                   </label>
                   <span className="text-[10px] font-bold text-slate-500">Gestion Boutique</span>
                 </div>
@@ -1066,11 +1071,6 @@ export default function AdminBoutique() {
                       <span>● BIENTÔT DISPONIBLE (Badge Rouge)</span>
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-1.5">
-                    {form.stockStatus === 'OUT_OF_STOCK'
-                      ? 'Le produit reste visible dans la boutique sans prix, avec le badge rouge BIENTÔT DISPONIBLE, sans clic ni ajout au panier.'
-                      : 'Le produit est normalement disponible à la vente.'}
-                  </p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200">
@@ -1086,22 +1086,116 @@ export default function AdminBoutique() {
                   <p className="text-[10px] text-slate-500 mt-0.5 ml-6">
                     Décrémente automatiquement le stock lors des commandes. Passe en rupture quand le stock atteint 0.
                   </p>
-
-                  {form.trackStock && (
-                    <div className="mt-2.5 ml-6">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                        Quantité en stock restante
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.stockQuantity}
-                        onChange={(e) => setForm(f => ({ ...f, stockQuantity: Math.max(0, parseInt(e.target.value) || 0) }))}
-                        className="w-32 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-usm-blue-primary"
-                      />
-                    </div>
-                  )}
                 </div>
+
+                {/* Per-variant stock table */}
+                {form.trackStock && (() => {
+                  const sizesArray = form.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                  const totalStock = sizesArray.reduce((sum, sz) => sum + (form.variantStocks[sz] || 0), 0);
+                  return (
+                    <div className="pt-2 border-t border-slate-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">
+                          Stock par Taille
+                        </label>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          Total: {totalStock}
+                        </span>
+                      </div>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-[9px] font-bold text-slate-500 uppercase">
+                            <th className="py-1.5 text-left">Taille</th>
+                            <th className="py-1.5 text-right">Stock</th>
+                            <th className="py-1.5 text-right">Statut</th>
+                            <th className="py-1.5 w-8"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sizesArray.map(sz => {
+                            const stock = form.variantStocks[sz] || 0;
+                            const isLow = stock > 0 && stock <= 5;
+                            const isOut = stock === 0;
+                            return (
+                              <tr key={sz} className="border-b border-slate-100">
+                                <td className="py-1.5 font-bold text-slate-800">{sz}</td>
+                                <td className="py-1.5 text-right">
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={stock}
+                                    onChange={(e) => {
+                                      const val = Math.max(0, parseInt(e.target.value) || 0);
+                                      setForm(f => ({
+                                        ...f,
+                                        variantStocks: { ...f.variantStocks, [sz]: val },
+                                        stockQuantity: Object.entries({ ...f.variantStocks, [sz]: val }).reduce((s, [, v]) => s + v, 0),
+                                      }));
+                                    }}
+                                    className="w-20 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-slate-900 outline-none focus:border-usm-blue-primary text-right"
+                                  />
+                                </td>
+                                <td className="py-1.5 text-right">
+                                  {isOut ? (
+                                    <span className="text-[9px] font-bold text-red-500">ÉPUISÉ</span>
+                                  ) : isLow ? (
+                                    <span className="text-[9px] font-bold text-amber-500">Stock faible</span>
+                                  ) : (
+                                    <span className="text-[9px] font-bold text-emerald-600">En stock</span>
+                                  )}
+                                </td>
+                                <td className="py-1.5 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => setForm(f => {
+                                      const vs = { ...f.variantStocks };
+                                      delete vs[sz];
+                                      return { ...f, variantStocks: vs, stockQuantity: Object.values(vs).reduce((s, v) => s + v, 0) };
+                                    })}
+                                    className="text-red-400 hover:text-red-600 cursor-pointer"
+                                    title="Supprimer cette taille"
+                                  >
+                                    ×
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+
+                      {/* Add size presets */}
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <span className="text-[9px] text-slate-400 font-bold mr-1">Ajouter taille:</span>
+                        {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unique'].map(sz => {
+                          const alreadyHas = form.sizes.split(',').map(s => s.trim()).includes(sz);
+                          return (
+                            <button
+                              key={sz}
+                              type="button"
+                              disabled={alreadyHas}
+                              onClick={() => {
+                                const newSizes = form.sizes ? `${form.sizes}, ${sz}` : sz;
+                                setForm(f => ({
+                                  ...f,
+                                  sizes: newSizes,
+                                  variantStocks: { ...f.variantStocks, [sz]: 0 },
+                                }));
+                              }}
+                              className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                                alreadyHas
+                                  ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed'
+                                  : 'bg-white text-usm-blue-primary border-usm-blue-primary/30 hover:bg-usm-blue-primary/5 cursor-pointer'
+                              }`}
+                            >
+                              {sz}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Guide des Tailles & Livraison */}

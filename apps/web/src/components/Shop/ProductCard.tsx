@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart, ShoppingBag, Sparkles } from 'lucide-react';
+import { Heart, ShoppingBag, Sparkles, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { tr } from '../../utils/i18n';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BADGE_STYLES: Record<string, string> = {
   new: 'bg-usm-blue-primary text-white',
@@ -26,7 +26,7 @@ const BADGE_LABELS: Record<string, { en: string; fr: string; ar: string }> = {
 };
 
 interface ProductCardProps {
-  product: any; // accepts backend Product schema
+  product: any;
   showRank?: boolean;
   className?: string;
 }
@@ -34,10 +34,12 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = false, className = '' }) => {
   const { language, addToCart, wishlist, toggleWishlist } = useApp();
   const router = useRouter();
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const id = product._id || product.id;
   const liked = wishlist.includes(id);
-  // Hover image: prefer explicit hoverImage, fallback to first gallery image
   const hoverImage = product.hoverImage || product.images?.[0] || '';
 
   // Calculate stock details dynamically from variants
@@ -57,7 +59,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
   const rawPrice = product.price || 0;
   const rawOldPrice = product.oldPrice;
 
-  // Format money helper (three decimal TND format: e.g. 85.000 DT)
   const formatMoney = (millimes: number) => {
     return (millimes / 1000).toFixed(3) + ' DT';
   };
@@ -66,7 +67,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
     ? Math.round((1 - rawPrice / rawOldPrice) * 100)
     : null;
 
-  // Extract unique colors from variants
+  // Unique sizes from variants with stock info
+  const sizeOptions: { size: string; stock: number; isActive: boolean }[] = product.variants
+    ? Array.from(new Map<string, { size: string; stock: number; isActive: boolean }>(
+        product.variants
+          .filter((v: any) => v.size)
+          .map((v: any) => [v.size, { size: v.size, stock: v.stock || 0, isActive: v.isActive !== false }])
+      ).values())
+    : [];
+
+  // Count how many sizes — if only 1, no picker needed
+  const hasMultipleSizes = sizeOptions.length > 1;
+  const hasSizes = sizeOptions.length > 0;
+
   const uniqueColors = product.variants
     ? Array.from(
         new Map(
@@ -82,17 +95,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
     router.push(`/product/${product.slug}`);
   };
 
+  // Close popover on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowSizePicker(false);
+        setSelectedSize(null);
+      }
+    };
+    if (showSizePicker) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSizePicker]);
+
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (soldOut) return;
-    // select first variant size or fallback
-    const defaultSize = product.variants?.[0]?.size || 'One Size';
+
+    if (!hasSizes || !hasMultipleSizes) {
+      // Single size or no variants — add directly
+      const defaultSize = sizeOptions[0]?.size || 'One Size';
+      addToCart({
+        ...product,
+        id: id,
+        image: product.coverImage || product.image,
+        price: formatMoney(rawPrice),
+      }, defaultSize);
+      return;
+    }
+
+    // Multiple sizes — show picker
+    setShowSizePicker(true);
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+  };
+
+  const handleAddWithSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedSize) return;
+
     addToCart({
       ...product,
       id: id,
       image: product.coverImage || product.image,
-      price: formatMoney(rawPrice), // bridge to legacy cart expectations
-    }, defaultSize);
+      price: formatMoney(rawPrice),
+    }, selectedSize);
+
+    setShowSizePicker(false);
+    setSelectedSize(null);
   };
 
   const badges = product.badges || [];
@@ -122,7 +173,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
           } ${hoverImage && !isOutOfStock ? 'group-hover:opacity-0' : ''}`}
           loading="lazy"
         />
-        {/* Hover image — smooth crossfade */}
+        {/* Hover image */}
         {hoverImage && !isOutOfStock && (
           <img
             src={hoverImage}
@@ -168,7 +219,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
           </div>
         ) : null}
 
-        {/* Wishlist Button - Hidden when out of stock */}
+        {/* Wishlist Button */}
         {!isOutOfStock && (
           <button
             onClick={(e) => {
@@ -186,21 +237,111 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showRank = fa
           </button>
         )}
 
-        {/* Quick Add Overlay */}
+        {/* Quick Add / Size Picker Overlay */}
         {!soldOut && (
-          <button
-            onClick={handleQuickAdd}
-            className="absolute bottom-0 left-0 right-0 py-3 bg-usm-blue-primary/95 text-white text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 cursor-pointer z-10"
-          >
-            <ShoppingBag size={12} />
-            {tr(language, 'Quick Add', 'Ajout Rapide', 'إضافة سريعة')}
-          </button>
+          <>
+            {/* Simple quick add button (no size picker needed) */}
+            {!hasMultipleSizes && (
+              <button
+                onClick={handleQuickAdd}
+                className="absolute bottom-0 left-0 right-0 py-3 bg-usm-blue-primary/95 text-white text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 cursor-pointer z-10"
+              >
+                <ShoppingBag size={12} />
+                {tr(language, 'Quick Add', 'Ajout Rapide', 'إضافة سريعة')}
+              </button>
+            )}
+
+            {/* Size picker button */}
+            {hasMultipleSizes && (
+              <button
+                onClick={handleQuickAdd}
+                className="absolute bottom-0 left-0 right-0 py-3 bg-usm-blue-primary/95 text-white text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 cursor-pointer z-10"
+              >
+                <ShoppingBag size={12} />
+                {tr(language, 'Choose Size', 'Choisir la taille', 'اختر المقاس')}
+              </button>
+            )}
+          </>
         )}
+
+        {/* Size Picker Popover */}
+        <AnimatePresence>
+          {showSizePicker && (
+            <motion.div
+              ref={popoverRef}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-usm-border p-3 z-20"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-usm-blue-dark">
+                  {tr(language, 'Choose Size', 'Choisir la taille', 'اختر المقاس')}
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowSizePicker(false);
+                    setSelectedSize(null);
+                  }}
+                  className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {sizeOptions.map((opt: { size: string; stock: number; isActive: boolean }) => {
+                  const outOfStock = opt.stock <= 0 || !opt.isActive;
+                  const isSelected = selectedSize === opt.size;
+                  return (
+                    <button
+                      key={opt.size}
+                      disabled={outOfStock}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!outOfStock) handleSizeSelect(opt.size);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                        outOfStock
+                          ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed line-through'
+                          : isSelected
+                          ? 'bg-usm-blue-primary text-white border-usm-blue-primary'
+                          : 'bg-white text-usm-blue-dark border-usm-border hover:border-usm-blue-primary/50 cursor-pointer'
+                      }`}
+                    >
+                      {opt.size}
+                      {outOfStock && (
+                        <span className="ml-1 text-[8px] not-italic line-through-none">
+                          {tr(language, 'OOS', 'ÉPUISÉ', 'نفد')}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                disabled={!selectedSize}
+                onClick={handleAddWithSize}
+                className={`w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                  selectedSize
+                    ? 'bg-usm-blue-primary text-white hover:bg-usm-blue-primary/90 cursor-pointer'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <ShoppingBag size={11} className="inline mr-1" />
+                {tr(language, 'Add to Cart', 'Ajouter au panier', 'أضف إلى السلة')}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Product Information */}
       <div className="p-4 flex flex-col gap-2 flex-grow">
-        {/* Pricing Layout — placed directly under the image */}
         {isOutOfStock ? (
           <div className="flex items-center gap-2 min-h-[24px]">
             <span className="text-xs sm:text-sm font-bold text-red-600 uppercase tracking-wider">

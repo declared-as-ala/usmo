@@ -6,6 +6,9 @@ export class OrderItem extends Document {
   @Prop({ type: String, required: true })
   productId: string;
 
+  @Prop({ type: String })
+  variantId?: string;
+
   @Prop({ type: String, required: true })
   name: string;
 
@@ -54,6 +57,8 @@ export const StatusHistoryEntrySchema = SchemaFactory.createForClass(StatusHisto
 export class Order extends Document {
   @Prop({ type: String, required: true, unique: true, index: true })
   orderNumber: string; // e.g. ORD-8743
+
+  createdAt?: Date; // auto-added by timestamps: true
 
   @Prop({ type: String, index: true })
   userId?: string; // set when the order is placed by a logged-in fan; absent for guest checkout
@@ -134,6 +139,12 @@ export class Order extends Document {
 
   @Prop({ type: String })
   notes?: string;
+
+  @Prop({ type: Date })
+  inventoryReservedAt?: Date;
+
+  @Prop({ type: Date })
+  inventoryReleasedAt?: Date;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

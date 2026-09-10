@@ -184,6 +184,29 @@ export const Checkout: React.FC = () => {
     setSubmitting(true);
     setSubmitError(null);
     try {
+      // Validate stock before order creation
+      const stockValidation = cart.map((item) => ({
+        productId: item.product.id || (item.product as any)._id,
+        size: item.size,
+        quantity: item.quantity,
+      }));
+
+      try {
+        const validationRes = await api.validateStock(stockValidation);
+        if (!validationRes.valid) {
+          const outOfStockItems = validationRes.results
+            .filter((r: any) => !r.valid)
+            .map((r: any) => `${r.size} (${r.requested} demandé, ${r.available} disponible)`)
+            .join(', ');
+          setSubmitError(`Stock insuffisant: ${outOfStockItems}`);
+          setSubmitting(false);
+          return;
+        }
+      } catch (stockErr: any) {
+        // If validate endpoint doesn't exist or fails, continue without blocking
+        console.warn('Stock validation skipped:', stockErr.message);
+      }
+
       const itemsPayload = cart.map((item) => ({
         productId: item.product.id || (item.product as any)._id,
         size: item.size,

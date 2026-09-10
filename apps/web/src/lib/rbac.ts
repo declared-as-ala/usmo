@@ -23,7 +23,7 @@ export const ROLE_LABELS: Record<SystemRole, { fr: string; en: string; ar: strin
     fr: 'Gestionnaire des commandes',
     en: 'Order Manager',
     ar: 'مدير الطلبات',
-    description: 'Accès uniquement aux commandes et à la consultation des codes promo.',
+    description: 'Accès aux commandes, à la consultation des codes promo et à la consultation du catalogue produits.',
   },
 };
 
@@ -70,6 +70,7 @@ export const RBAC_PERMISSIONS: Record<SystemRole, readonly string[]> = {
     'orders.export',
     'orders.update_status',
     'discount_codes.view',
+    'products.view',
   ],
 };
 

@@ -429,6 +429,46 @@ export const api = {
     method: 'DELETE',
   }),
 
+  // Orders — Export
+  exportOrdersExcel: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const url = `${API_BASE_URL}/orders/export/excel${query ? `?${query}` : ''}`;
+    return fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'include',
+    }).then(r => r.blob());
+  },
+  exportOrdersPdf: (params: Record<string, string | undefined> = {}) => {
+    const query = Object.entries(params)
+      .filter(([_, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const url = `${API_BASE_URL}/orders/export/pdf${query ? `?${query}` : ''}`;
+    return fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'include',
+    }).then(r => r.blob());
+  },
+
+  // Products — Stock
+  quickStockEdit: (productId: string, updates: { variantId: string; stock: number }[]) =>
+    fetchJson(`/products/${productId}/quick-stock`, {
+      method: 'PATCH',
+      body: JSON.stringify({ updates }),
+    }),
+  validateStock: (items: { productId: string; size: string; quantity: number }[]) =>
+    fetchJson('/products/validate-stock', {
+      method: 'POST',
+      body: JSON.stringify({ items }),
+    }),
+  getInventoryMovements: (productId?: string) =>
+    fetchJson(`/orders/inventory/movements${productId ? `?productId=${productId}` : ''}`),
+
   // Cart admin — delivery zones & pickup points admin
   createDeliveryZone: (data: any) => fetchJson('/cart/delivery-zones', {
     method: 'POST',

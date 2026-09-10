@@ -46,11 +46,12 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const [error, setError] = useState<string | null>(null);
 
   // Selector States
-  const [selectedSize, setSelectedSize] = useState('One Size');
+  const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [activeTab, setActiveTab] = useState<Tab>('sizing');
+  const [sizeError, setSizeError] = useState('');
 
   // Jersey customization states
   const [customName, setCustomName] = useState('');
@@ -66,12 +67,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         const prod = await api.getProductBySlug(productId);
         setProduct(prod);
 
-        // Pre-select default variant properties
+        // Do NOT auto-select size — user must explicitly choose
         if (prod.variants && prod.variants.length > 0) {
-          setSelectedSize(prod.variants[0].size || 'One Size');
           setSelectedColor(prod.variants[0].colorHex || null);
-        } else if (prod.sizes && prod.sizes.length > 0) {
-          setSelectedSize(prod.sizes[0]);
         }
 
         // Fetch related products of the same category
@@ -181,6 +179,14 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     : null;
 
   const handleAddToCart = () => {
+    // Enforce size selection
+    const hasSizes = uniqueSizes.length > 0 && !(uniqueSizes.length === 1 && uniqueSizes[0] === 'One Size');
+    if (hasSizes && !selectedSize) {
+      setSizeError(tr(language, 'Please select a size.', 'Veuillez sélectionner une taille.', 'يرجى اختيار مقاس.'));
+      return;
+    }
+    setSizeError('');
+
     const hasCustomization = isJersey && (customName.trim() !== '' || customNumber.trim() !== '');
     const customization = hasCustomization
       ? {
@@ -196,11 +202,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         image: product.coverImage || product.image,
         price: formatMoney(product.price),
       },
-      selectedSize,
+      selectedSize || 'One Size',
       customization
     );
     if (quantity > 1) {
-      updateCartQuantity(product._id, selectedSize, quantity, customization);
+      updateCartQuantity(product._id, selectedSize || 'One Size', quantity, customization);
     }
   };
 
@@ -498,20 +504,36 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   {tr(language, 'Select Size', 'Choisir la Taille', 'اختر المقاس')}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {uniqueSizes.map((sz: any) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className={`px-4.5 py-2 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        selectedSize === sz
-                          ? 'bg-usm-blue-primary text-white border-usm-blue-primary'
-                          : 'bg-white text-slate-600 border-usm-border hover:border-usm-blue-primary/45'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
+                  {uniqueSizes.map((sz: any) => {
+                    const variant = product.variants?.find((v: any) => v.size === sz);
+                    const isAvailable = variant && (variant.stock || 0) > 0 && variant.isActive !== false;
+                    return (
+                      <button
+                        key={sz}
+                        disabled={!isAvailable}
+                        onClick={() => {
+                          setSelectedSize(sz);
+                          setSizeError('');
+                        }}
+                        className={`px-4.5 py-2 rounded-lg text-xs font-bold border transition-all ${
+                          !isAvailable
+                            ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed line-through'
+                            : selectedSize === sz
+                            ? 'bg-usm-blue-primary text-white border-usm-blue-primary cursor-pointer'
+                            : 'bg-white text-slate-600 border-usm-border hover:border-usm-blue-primary/45 cursor-pointer'
+                        }`}
+                      >
+                        {sz}
+                        {!isAvailable && (
+                          <span className="ml-1 text-[8px] not-italic">ÉPUISÉ</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
+                {sizeError && (
+                  <p className="text-xs text-red-500 font-semibold mt-1">{sizeError}</p>
+                )}
               </div>
             )}
 

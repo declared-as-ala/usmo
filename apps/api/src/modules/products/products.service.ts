@@ -2,11 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Product } from './product.schema';
+import { InventoryMovement } from './inventory-movement.schema';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectModel(Product.name) private readonly productModel: Model<Product>
+    @InjectModel(Product.name) private readonly productModel: Model<Product>,
+    @InjectModel(InventoryMovement.name) private readonly inventoryModel: Model<InventoryMovement>,
   ) {}
 
   async findAll(queryParams: {
@@ -212,5 +214,87 @@ export class ProductsService {
 
   async incrementViews(id: string): Promise<void> {
     await this.productModel.findByIdAndUpdate(id, { $inc: { views: 1 } }).exec();
+  }
+
+  // ── Quick stock edit (admin) ─────────────────────────────────────────────
+  async quickStockEdit(
+    productId: string,
+    updates: { variantId: string; stock: number }[],
+    adminId?: string,
+  ): Promise<Product> {
+    const product = await this.productModel.findById(productId).exec();
+    if (!product) throw new NotFoundException('Produit introuvable');
+
+    for (const u of updates) {
+      const idx = product.variants?.findIndex((v) => (v as any)._id?.toString() === u.variantId) ?? -1;
+      if (idx === -1) continue;
+
+      const variant = product.variants[idx];
+      const previousStock = variant.stock;
+
+      if (previousStock !== u.stock) {
+        // Atomic update
+        await this.productModel.updateOne(
+          { _id: productId, [`variants.${idx}.stock`]: previousStock },
+          { $set: { [`variants.${idx}.stock`]: u.stock } },
+        ).exec();
+
+        // Audit log
+        await new this.inventoryModel({
+          productId,
+          variantId: u.variantId,
+          size: variant.size,
+          previousStock,
+          quantityChange: u.stock - previousStock,
+          newStock: u.stock,
+          reason: 'ADMIN_ADJUSTMENT',
+          adminId,
+        }).save();
+      }
+    }
+
+    // Recalculate product-level stock
+    const fresh = await this.productModel.findById(productId).exec();
+    if (fresh) {
+      const totalRemaining = (fresh.variants || []).reduce((sum, v) => sum + (v.stock || 0), 0);
+      const hasActiveWithStock = (fresh.variants || []).some((v) => v.isActive !== false && v.stock > 0);
+      await this.productModel.updateOne(
+        { _id: productId },
+        { $set: { stockQuantity: totalRemaining, stockStatus: hasActiveWithStock ? 'IN_STOCK' : 'OUT_OF_STOCK' } },
+      ).exec();
+    }
+
+    return this.productModel.findById(productId).exec();
+  }
+
+  // ── Stock validation (for checkout) ──────────────────────────────────────
+  async validateStock(
+    items: { productId: string; size: string; quantity: number }[],
+  ): Promise<{ valid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    for (const item of items) {
+      const product = await this.productModel.findById(item.productId).exec();
+      if (!product || product.status !== 'published') {
+        errors.push(`Produit "${product?.name || item.productId}" non disponible.`);
+        continue;
+      }
+
+      const variant = product.variants?.find((v) => v.size === item.size && v.isActive !== false);
+      if (!variant) {
+        errors.push(`La taille "${item.size}" n'est pas disponible pour "${product.name}".`);
+        continue;
+      }
+
+      if (variant.stock < item.quantity) {
+        errors.push(
+          variant.stock === 0
+            ? `La taille ${item.size} est épuisée pour "${product.name}".`
+            : `Il ne reste que ${variant.stock} article(s) en taille ${item.size} pour "${product.name}".`
+        );
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
   }
 }
