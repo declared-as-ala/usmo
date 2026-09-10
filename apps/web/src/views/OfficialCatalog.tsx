@@ -32,16 +32,59 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
   const discount = product.oldPrice && product.oldPrice > product.price
     ? Math.round((1 - product.price / product.oldPrice) * 100)
     : 0;
-  const sizes = Array.from(new Set((product.variants || []).filter((item: any) => item.stock > 0).map((item: any) => item.size))).slice(0, 4);
   const coverImage = product.coverImage || product.image;
+
+  // Build size options from variants with stock info
+  const sizeOptions: { size: string; stock: number; isActive: boolean }[] = (product.variants || [])
+    .filter((v: any) => v.size)
+    .reduce((acc: { size: string; stock: number; isActive: boolean }[], v: any) => {
+      const existing = acc.find(o => o.size === v.size);
+      if (!existing) acc.push({ size: v.size, stock: v.stock || 0, isActive: v.isActive !== false });
+      return acc;
+    }, []);
+
+  const hasMultipleSizes = sizeOptions.length > 1;
+
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Close picker on outside click
+  useEffect(() => {
+    if (!showSizePicker) return;
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowSizePicker(false);
+        setSelectedSize(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSizePicker]);
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (soldOut) return;
+
+    if (!hasMultipleSizes) {
+      const defaultSize = sizeOptions[0]?.size || 'Unique';
+      addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, defaultSize);
+      return;
+    }
+
+    setShowSizePicker(true);
+  };
+
+  const handleAddWithSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedSize) return;
+    addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, selectedSize);
+    setShowSizePicker(false);
+    setSelectedSize(null);
+  };
+
   // Hover image: prefer explicit hoverImage field, fallback to first gallery image
   const hoverImage = product.hoverImage || (product.images || []).find((url: string) => url && url !== coverImage);
-
-  const add = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (isOutOfStock) return;
-    addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, (sizes[0] as string) || 'Unique');
-  };
 
   return (
     <motion.article
@@ -111,17 +154,98 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
         <p className="mt-2 text-[9px] font-black uppercase tracking-[.18em] text-[#7A8AA0]">{product.category || 'Boutique officielle'}</p>
         <h3 className="mt-1 min-h-11 line-clamp-2 font-display text-base font-black leading-snug text-[#020814] sm:text-lg">{product.nameFr || product.name}</h3>
         {!isOutOfStock && (
-          <div className="mt-4 border-t border-[#e6eaf0] pt-4">
-            <button
-              type="button"
-              disabled={soldOut}
-              onClick={add}
-              aria-label={`Ajouter ${product.nameFr || product.name} au panier`}
-              className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
-            >
-              <ShoppingBag size={15} className="shrink-0 sm:size-4" />
-              <span className="min-w-0">Ajouter au panier</span>
-            </button>
+          <div className="mt-4 border-t border-[#e6eaf0] pt-4 relative" ref={popoverRef}>
+            {hasMultipleSizes && (
+              <button
+                type="button"
+                onClick={handleQuickAdd}
+                className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
+              >
+                <ShoppingBag size={15} className="shrink-0 sm:size-4" />
+                <span className="min-w-0">Choisir la taille</span>
+              </button>
+            )}
+            {!hasMultipleSizes && (
+              <button
+                type="button"
+                disabled={soldOut}
+                onClick={handleQuickAdd}
+                aria-label={`Ajouter ${product.nameFr || product.name} au panier`}
+                className="mt-2.5 flex min-h-[52px] w-full items-center justify-center gap-1.5 rounded-2xl bg-[#0D63FF] px-2 py-1.5 text-center text-[10px] font-black uppercase leading-tight tracking-tight text-white shadow-[0_10px_24px_-14px_rgba(13,99,255,.7)] transition-all hover:bg-[#0052D9] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0D63FF] disabled:cursor-not-allowed disabled:bg-[#c7d2e0] disabled:text-white/80 disabled:shadow-none disabled:active:scale-100 sm:gap-2 sm:px-3 sm:text-[11px] sm:tracking-normal"
+              >
+                <ShoppingBag size={15} className="shrink-0 sm:size-4" />
+                <span className="min-w-0">Ajouter au panier</span>
+              </button>
+            )}
+
+            {/* Size Picker Popover */}
+            <AnimatePresence>
+              {showSizePicker && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#e6eaf0] rounded-2xl shadow-xl p-3 z-30"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#020814]">
+                      Choisir la taille
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowSizePicker(false);
+                        setSelectedSize(null);
+                      }}
+                      className="h-5 w-5 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer"
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {sizeOptions.map((opt) => {
+                      const outOfStock = opt.stock <= 0 || !opt.isActive;
+                      const isSelected = selectedSize === opt.size;
+                      return (
+                        <button
+                          key={opt.size}
+                          disabled={outOfStock}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!outOfStock) setSelectedSize(opt.size);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                            outOfStock
+                              ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed line-through'
+                              : isSelected
+                              ? 'bg-[#0D63FF] text-white border-[#0D63FF]'
+                              : 'bg-white text-[#020814] border-[#d4dbe5] hover:border-[#0D63FF]/50 cursor-pointer'
+                          }`}
+                        >
+                          {opt.size}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    disabled={!selectedSize}
+                    onClick={handleAddWithSize}
+                    className={`w-full py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
+                      selectedSize
+                        ? 'bg-[#0D63FF] text-white hover:bg-[#0052D9] cursor-pointer'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <ShoppingBag size={11} className="inline mr-1" />
+                    Ajouter au panier
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
