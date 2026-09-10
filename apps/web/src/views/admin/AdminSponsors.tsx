@@ -101,6 +101,12 @@ export default function AdminSponsors() {
   const [leads, setLeads] = useState<PartnerLead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 
+  // New lead form state
+  const [showLeadForm, setShowLeadForm] = useState(false);
+  const [leadForm, setLeadForm] = useState({ company: '', contactName: '', email: '', phone: '', objective: 'Partenaire majeur', message: '' });
+  const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadError, setLeadError] = useState('');
+
   const loadLeads = useCallback(async () => {
     setLeadsLoading(true);
     try {
@@ -120,6 +126,26 @@ export default function AdminSponsors() {
       await loadLeads();
     } catch (err: any) {
       setError(err.message || 'Failed to update lead');
+    }
+  };
+
+  const handleCreateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadForm.company.trim() || !leadForm.contactName.trim() || !leadForm.email.trim()) {
+      setLeadError('Veuillez remplir les champs obligatoires');
+      return;
+    }
+    setLeadSubmitting(true);
+    setLeadError('');
+    try {
+      await api.createPartnerLead(leadForm);
+      setLeadForm({ company: '', contactName: '', email: '', phone: '', objective: 'Partenaire majeur', message: '' });
+      setShowLeadForm(false);
+      await loadLeads();
+    } catch (err: any) {
+      setLeadError(err.message || "Erreur lors de la création");
+    } finally {
+      setLeadSubmitting(false);
     }
   };
 
@@ -292,7 +318,80 @@ export default function AdminSponsors() {
       </div>
 
       {activeTab === 'leads' ? (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="space-y-4">
+          {/* New Lead Form */}
+          {showLeadForm && (
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-slate-900">Nouvelle Demande Partenaire</h3>
+                <button onClick={() => setShowLeadForm(false)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
+                  <X size={16} />
+                </button>
+              </div>
+              {leadError && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">{leadError}</p>}
+              <form onSubmit={handleCreateLead} className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Entreprise *</span>
+                    <input required type="text" value={leadForm.company} onChange={e => setLeadForm(f => ({ ...f, company: e.target.value }))}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary" />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Nom et prénom *</span>
+                    <input required type="text" value={leadForm.contactName} onChange={e => setLeadForm(f => ({ ...f, contactName: e.target.value }))}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary" />
+                  </label>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">E-mail *</span>
+                    <input required type="email" value={leadForm.email} onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary" />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Téléphone</span>
+                    <input type="tel" value={leadForm.phone} onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary" />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Objectif</span>
+                  <select value={leadForm.objective} onChange={e => setLeadForm(f => ({ ...f, objective: e.target.value }))}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary">
+                    <option>Partenaire majeur</option>
+                    <option>Activation digitale</option>
+                    <option>Partenaire technique</option>
+                    <option>Académie & jeunesse</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Message</span>
+                  <textarea rows={3} value={leadForm.message} onChange={e => setLeadForm(f => ({ ...f, message: e.target.value }))}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:border-usm-blue-primary resize-none" />
+                </label>
+                <div className="flex items-center gap-2 pt-1">
+                  <button type="submit" disabled={leadSubmitting}
+                    className="px-5 py-2 bg-usm-blue-primary text-white text-[11px] font-black uppercase rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 transition-all">
+                    {leadSubmitting ? 'Création...' : 'Créer la demande'}
+                  </button>
+                  <button type="button" onClick={() => setShowLeadForm(false)}
+                    className="px-4 py-2 bg-slate-100 text-slate-600 text-[11px] font-bold uppercase rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Leads table */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">{leads.length} demande{leads.length !== 1 ? 's' : ''}</span>
+            <button onClick={() => setShowLeadForm(true)}
+              className="px-4 py-2 bg-usm-blue-primary text-white text-[10px] font-black uppercase rounded-lg cursor-pointer hover:bg-blue-700 transition-all flex items-center gap-1.5">
+              <Plus size={13} /> Nouvelle Demande
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left rtl:text-right text-xs">
               <thead>
@@ -333,6 +432,7 @@ export default function AdminSponsors() {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       ) : (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
