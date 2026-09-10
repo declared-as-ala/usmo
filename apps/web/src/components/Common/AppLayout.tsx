@@ -100,9 +100,16 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             href="https://ibrandtunisia.tn/"
             target="_blank"
             rel="noreferrer"
-            className="mt-8 text-xs font-semibold tracking-widest text-white/50 hover:text-white/75 transition-colors"
+            className="loader-ibrand-badge"
           >
-            Powered by iBrand Tunisia
+            <span className="loader-ibrand-line" />
+            <span className="loader-ibrand-inner">
+              <span className="loader-ibrand-spark">✦</span>
+              <span className="loader-ibrand-powered">Powered by</span>
+              <span className="loader-ibrand-name">iBrand Tunisia</span>
+              <span className="loader-ibrand-spark">✦</span>
+            </span>
+            <span className="loader-ibrand-line" />
           </a>
         </div>
       )}

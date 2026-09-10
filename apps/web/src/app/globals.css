@@ -426,6 +426,129 @@ body {
   }
 }
 
+/* ─── iBrand premium badge ─────────────────────────────── */
+.loader-ibrand-badge {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.loader-ibrand-line {
+  display: block;
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 179, 255, 0.5), transparent);
+  animation: ibrandLinePulse 2.8s ease-in-out infinite;
+}
+
+.loader-ibrand-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  border-radius: 100px;
+  border: 1px solid rgba(99, 179, 255, 0.18);
+  background: rgba(13, 99, 255, 0.08);
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.loader-ibrand-badge:hover .loader-ibrand-inner {
+  border-color: rgba(99, 179, 255, 0.45);
+  background: rgba(13, 99, 255, 0.18);
+  box-shadow: 0 0 22px rgba(13, 99, 255, 0.35), 0 0 6px rgba(99, 179, 255, 0.2);
+}
+
+/* shimmer sweep on hover */
+.loader-ibrand-inner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: skewX(-20deg);
+  transition: none;
+}
+
+.loader-ibrand-badge:hover .loader-ibrand-inner::after {
+  animation: ibrandShimmer 0.6s ease forwards;
+}
+
+.loader-ibrand-powered {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.3s;
+}
+
+.loader-ibrand-badge:hover .loader-ibrand-powered {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.loader-ibrand-name {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #63b3ff, #ffffff, #a8d4ff, #63b3ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: ibrandNameShimmer 3.5s linear infinite;
+  transition: filter 0.3s;
+}
+
+.loader-ibrand-badge:hover .loader-ibrand-name {
+  filter: drop-shadow(0 0 8px rgba(99, 179, 255, 0.7));
+}
+
+.loader-ibrand-spark {
+  font-size: 9px;
+  color: rgba(99, 179, 255, 0.6);
+  animation: ibrandSparkPulse 2s ease-in-out infinite;
+  transition: color 0.3s;
+}
+
+.loader-ibrand-spark:last-child {
+  animation-delay: 1s;
+}
+
+.loader-ibrand-badge:hover .loader-ibrand-spark {
+  color: rgba(99, 179, 255, 1);
+}
+
+@keyframes ibrandNameShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes ibrandLinePulse {
+  0%, 100% { opacity: 0.3; width: 60px; }
+  50%       { opacity: 0.8; width: 100px; }
+}
+
+@keyframes ibrandSparkPulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+@keyframes ibrandShimmer {
+  0%   { left: -100%; }
+  100% { left: 150%; }
+}
+
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
