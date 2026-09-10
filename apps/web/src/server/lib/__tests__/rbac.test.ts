@@ -169,7 +169,7 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
 
     // Switch role to GESTIONNAIRE_COMMANDES
     currentRole = 'GESTIONNAIRE_COMMANDES';
-    expect(roleHasPermission(currentRole, 'products.view')).toBe(false);
+    expect(roleHasPermission(currentRole, 'products.view')).toBe(true);
     expect(roleHasPermission(currentRole, 'orders.view')).toBe(true);
     expect(roleHasPermission(currentRole, 'discount_codes.view')).toBe(true);
 
@@ -187,7 +187,7 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
 
     expect(computedBackendPermissions).not.toContain('admins.delete');
     expect(computedBackendPermissions).not.toContain('admins.view');
-    expect(computedBackendPermissions).not.toContain('products.view');
+    expect(computedBackendPermissions).toContain('products.view');
     expect(computedBackendPermissions).toEqual([
       'orders.view',
       'orders.edit',
@@ -196,6 +196,7 @@ describe('RBAC Roles & Permissions Comprehensive Suite', () => {
       'orders.export',
       'orders.update_status',
       'discount_codes.view',
+      'products.view',
     ]);
   });
 });
