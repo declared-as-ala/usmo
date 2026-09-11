@@ -97,7 +97,7 @@ export default function AdminSponsors() {
   const [form, setForm] = useState(emptyForm);
   const [logoUploading, setLogoUploading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'sponsors' | 'leads'>('sponsors');
+  const [activeTab, setActiveTab] = useState<'sponsors' | 'leads'>(() => searchParams.get('tab') === 'leads' ? 'leads' : 'sponsors');
   const [leads, setLeads] = useState<PartnerLead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
 

@@ -80,6 +80,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
       { label: 'Discount Codes', href: '/admin/discount-codes', icon: Percent },
       { label: 'Sponsors & ROI', href: '/admin/sponsors', icon: Handshake },
+      { label: 'Demandes Partenariat', href: '/admin/sponsors?tab=leads', icon: Mail },
       { label: 'Campagnes Email', href: '/admin/campaigns', icon: Mail, permission: 'users.edit' },
     ],
   },

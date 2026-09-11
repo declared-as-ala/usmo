@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Activity,
   Plus,
+  Mail,
 } from 'lucide-react';
 
 const timeAgo = (iso: string): string => {
@@ -37,6 +38,7 @@ export default function AdminHome() {
 
   const [adminOrders, setAdminOrders] = useState<any[]>([]);
   const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
+  const [partnerLeads, setPartnerLeads] = useState<any[]>([]);
 
   useEffect(() => {
     api
@@ -49,6 +51,11 @@ export default function AdminHome() {
       .catch((err) => {
         console.error('[Dashboard] Error fetching admin orders:', err);
       });
+
+    api
+      .getAdminPartnerLeads()
+      .then((data: any) => setPartnerLeads(Array.isArray(data) ? data : []))
+      .catch(() => {});
   }, []);
 
   const effectiveOrders = adminOrders.length > 0 ? adminOrders : orders;
@@ -60,6 +67,7 @@ export default function AdminHome() {
   const outOfStockProducts = products.filter((p) => p.available === false || p.stock === 0);
   const activeSponsors = sponsors.length;
   const publishedArticles = newsList.filter((n) => n.published !== false).length;
+  const newPartnerLeads = partnerLeads.filter((l: any) => l.status === 'new');
 
   const ordersByStatus = [
     { label: 'Pending', count: pendingOrders.length, color: 'bg-amber-400' },
@@ -140,6 +148,7 @@ export default function AdminHome() {
         <StatCard label="Products in Catalog" value={products.length} icon={Package} accent="slate" />
         <StatCard label="Out of Stock" value={outOfStockProducts.length} icon={AlertTriangle} accent="red" />
         <StatCard label="Active Sponsors" value={activeSponsors} icon={Handshake} accent="blue" />
+        <StatCard label="New Partner Leads" value={newPartnerLeads.length} icon={Mail} accent="amber" />
         <StatCard label="Published Articles" value={publishedArticles} icon={Newspaper} accent="emerald" />
         <StatCard label="Live/Upcoming Matches" value={matches.filter((m) => m.status !== 'finished').length} icon={Radio} accent="blue" />
         <StatCard label="Fan Blue Points (session)" value={bluePoints} icon={Users} accent="emerald" />
@@ -225,6 +234,53 @@ export default function AdminHome() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Partner Demands */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Mail size={15} className="text-usm-blue-primary" />
+            <p className="text-xs font-bold text-slate-900">Demandes de Partenariat</p>
+            {newPartnerLeads.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-black">
+                {newPartnerLeads.length} nouvelle{newPartnerLeads.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => router.push('/admin/sponsors')}
+            className="text-[10px] font-bold text-usm-blue-primary hover:underline cursor-pointer"
+          >
+            Voir tout →
+          </button>
+        </div>
+        {partnerLeads.length > 0 ? (
+          <div className="divide-y divide-slate-100">
+            {partnerLeads.slice(0, 5).map((lead: any) => (
+              <div key={lead._id} className="py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-slate-900">{lead.company}</span>
+                  <span className="text-xs text-slate-500 ml-2">— {lead.contactName}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] text-slate-400">{timeAgo(lead.createdAt)}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                    lead.status === 'new' ? 'bg-amber-100 text-amber-700' :
+                    lead.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
+                    'bg-emerald-100 text-emerald-700'
+                  }`}>
+                    {lead.status === 'new' ? 'Nouveau' : lead.status === 'contacted' ? 'Contacté' : 'Clos'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 py-6 text-center">
+            Aucune demande de partenariat pour le moment.
+          </p>
+        )}
       </div>
 
       {/* Activity log */}
