@@ -87,8 +87,6 @@ export const AdminAnalyticsView: React.FC = () => {
 
   const totalViews = overview?.totalViews || 0;
   const uniqueVisitors = overview?.uniqueVisitors || 0;
-  const viewsToday = overview?.viewsToday || 0;
-  const viewsYesterday = overview?.viewsYesterday || 0;
   const visitorsToday = overview?.visitorsToday ?? overview?.uniqueVisitors ?? 0;
   const visitorsYesterday = overview?.visitorsYesterday ?? 0;
   const prevVisitors = overview?.prevVisitors ?? 0;
