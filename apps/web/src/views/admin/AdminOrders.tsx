@@ -21,13 +21,7 @@ import {
   Download,
   Calculator,
   User,
-  Phone,
-  MapPin,
-  Mail,
-  FileText,
-  Sparkles,
   Package,
-  Check,
 } from 'lucide-react';
 
 export type OrderStatus =
@@ -249,7 +243,9 @@ export default function AdminOrders() {
         initPrices[item._id] = ((item.price || 0) / 1000).toString();
       });
       setEditingPrice(initPrices);
-    } catch (err) {}
+    } catch {
+      // ignore
+    }
   }, []);
 
   const handleUpdateZonePrice = async (zoneId: string) => {
@@ -310,6 +306,11 @@ export default function AdminOrders() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [productDropdownOpen]);
 
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false);
+    setCurrentOrder(null);
+  }, []);
+
   // Handle ESC key to close drawer
   useEffect(() => {
     if (!drawerOpen) return;
@@ -320,7 +321,7 @@ export default function AdminOrders() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [drawerOpen]);
+  }, [drawerOpen, closeDrawer]);
 
   // Close export menu on outside click
   useEffect(() => {
@@ -502,11 +503,6 @@ export default function AdminOrders() {
       loadCatalog();
     }
     setDrawerOpen(true);
-  };
-
-  const closeDrawer = () => {
-    setDrawerOpen(false);
-    setCurrentOrder(null);
   };
 
   // Filtered catalog products for order items selection
