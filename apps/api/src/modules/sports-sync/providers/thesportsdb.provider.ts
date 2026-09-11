@@ -89,6 +89,39 @@ export class TheSportsDbProvider implements SportsDataProvider {
     });
   }
 
+  private extractLocalTime(ev: {
+    strTimeLocal?: string | null;
+    strTime?: string | null;
+    strTimestamp?: string | null;
+    dateEvent?: string | null;
+  }): string {
+    if (ev.strTimeLocal && ev.strTimeLocal.trim()) {
+      return ev.strTimeLocal.trim().slice(0, 5);
+    }
+    if (ev.strTimestamp) {
+      const raw = ev.strTimestamp.endsWith('Z') ? ev.strTimestamp : `${ev.strTimestamp}Z`;
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('fr-FR', {
+          timeZone: 'Africa/Tunis',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    }
+    if (ev.dateEvent && ev.strTime) {
+      const d = new Date(`${ev.dateEvent}T${ev.strTime}Z`);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('fr-FR', {
+          timeZone: 'Africa/Tunis',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    }
+    return ev.strTime ? ev.strTime.slice(0, 5) : '16:00';
+  }
+
   async getFixtures(teamExternalId: string): Promise<FixtureDto[]> {
     const teamId = teamExternalId || USM_TEAM_ID;
     const data = await this.request<{ events: any[] | null }>(`/eventsnext.php?id=${teamId}`);
@@ -97,6 +130,7 @@ export class TheSportsDbProvider implements SportsDataProvider {
     return events.map((ev): FixtureDto => {
       const homeIsUSM = ev.idHomeTeam === teamId || (ev.strHomeTeam && ev.strHomeTeam.toLowerCase().includes('monastir'));
       const awayIsUSM = ev.idAwayTeam === teamId || (ev.strAwayTeam && ev.strAwayTeam.toLowerCase().includes('monastir'));
+      const localTime = this.extractLocalTime(ev);
 
       return {
         externalId: String(ev.idEvent),
@@ -104,8 +138,8 @@ export class TheSportsDbProvider implements SportsDataProvider {
         competition: ev.strLeague || 'Ligue 1',
         season: ev.strSeason || '2024-2025',
         round: ev.intRound || null,
-        date: ev.dateEvent ? `${ev.dateEvent}T${ev.strTime || '16:00:00'}` : new Date().toISOString(),
-        time: ev.strTime ? ev.strTime.slice(0, 5) : '16:00',
+        date: ev.dateEvent ? `${ev.dateEvent}T${localTime}:00` : new Date().toISOString(),
+        time: localTime,
         venue: ev.strVenue || 'Stade Mustapha Ben Jannet',
         status: 'upcoming',
         homeTeam: {
@@ -136,6 +170,7 @@ export class TheSportsDbProvider implements SportsDataProvider {
     return results.slice(0, limit).map((ev): FixtureDto => {
       const homeIsUSM = ev.idHomeTeam === teamId || (ev.strHomeTeam && ev.strHomeTeam.toLowerCase().includes('monastir'));
       const awayIsUSM = ev.idAwayTeam === teamId || (ev.strAwayTeam && ev.strAwayTeam.toLowerCase().includes('monastir'));
+      const localTime = this.extractLocalTime(ev);
 
       return {
         externalId: String(ev.idEvent),
@@ -143,8 +178,8 @@ export class TheSportsDbProvider implements SportsDataProvider {
         competition: ev.strLeague || 'Ligue 1',
         season: ev.strSeason || '2024-2025',
         round: ev.intRound || null,
-        date: ev.dateEvent ? `${ev.dateEvent}T${ev.strTime || '16:00:00'}` : new Date().toISOString(),
-        time: ev.strTime ? ev.strTime.slice(0, 5) : '16:00',
+        date: ev.dateEvent ? `${ev.dateEvent}T${localTime}:00` : new Date().toISOString(),
+        time: localTime,
         venue: ev.strVenue || 'Stade Mustapha Ben Jannet',
         status: 'finished',
         homeTeam: {
@@ -171,14 +206,15 @@ export class TheSportsDbProvider implements SportsDataProvider {
     const data = await this.request<{ events: any[] | null }>(`/lookupevent.php?id=${matchExternalId}`);
     const ev = data?.events?.[0];
     if (!ev) return null;
+    const localTime = this.extractLocalTime(ev);
 
     return {
       externalId: String(ev.idEvent),
       sport: 'football',
       competition: ev.strLeague || 'Ligue 1',
       season: ev.strSeason || '2024-2025',
-      date: ev.dateEvent || new Date().toISOString(),
-      time: ev.strTime ? ev.strTime.slice(0, 5) : '16:00',
+      date: ev.dateEvent ? `${ev.dateEvent}T${localTime}:00` : new Date().toISOString(),
+      time: localTime,
       venue: ev.strVenue || 'Stade Mustapha Ben Jannet',
       status: ev.strStatus === 'Match Finished' ? 'finished' : 'upcoming',
       homeTeam: {

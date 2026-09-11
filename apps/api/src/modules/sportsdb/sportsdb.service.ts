@@ -170,6 +170,39 @@ export class SportsDbService {
     return mapped;
   }
 
+  private extractLocalTime(ev: {
+    strTimeLocal?: string | null;
+    strTime?: string | null;
+    strTimestamp?: string | null;
+    dateEvent?: string | null;
+  }): string {
+    if (ev.strTimeLocal && ev.strTimeLocal.trim()) {
+      return ev.strTimeLocal.trim().slice(0, 5);
+    }
+    if (ev.strTimestamp) {
+      const raw = ev.strTimestamp.endsWith('Z') ? ev.strTimestamp : `${ev.strTimestamp}Z`;
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('fr-FR', {
+          timeZone: 'Africa/Tunis',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    }
+    if (ev.dateEvent && ev.strTime) {
+      const d = new Date(`${ev.dateEvent}T${ev.strTime}Z`);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('fr-FR', {
+          timeZone: 'Africa/Tunis',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      }
+    }
+    return ev.strTime ? ev.strTime.slice(0, 5) : '16:00';
+  }
+
   async getRecentResults(limit = 5): Promise<ResultRow[]> {
     const json = await this.fetchCached<{ results: any[] | null }>(
       'results',
@@ -181,7 +214,7 @@ export class SportsDbService {
     return results.slice(0, limit).map((ev) => ({
       id: ev.idEvent,
       date: ev.dateEvent,
-      time: ev.strTime,
+      time: this.extractLocalTime(ev),
       competition: ev.strLeague,
       round: ev.intRound || null,
       homeTeam: ev.strHomeTeam,
@@ -209,7 +242,7 @@ export class SportsDbService {
     return {
       id: ev.idEvent,
       date: ev.dateEvent,
-      time: ev.strTime,
+      time: this.extractLocalTime(ev),
       competition: ev.strLeague,
       round: ev.intRound || null,
       homeTeam: ev.strHomeTeam,

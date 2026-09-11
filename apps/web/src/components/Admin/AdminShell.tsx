@@ -23,16 +23,54 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
   const [authError, setAuthError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const checkHasAdminAccess = (user: any): boolean => {
+    if (!user) return false;
+    const role = (user.role || '').toUpperCase().replace(/[\s_]+/g, '_');
+
+    // Explicit non-admin / supporter roles
+    if (
+      role === 'USER' ||
+      role === 'CUSTOMER' ||
+      role === 'FAN' ||
+      role === 'SUPPORTER' ||
+      role === 'CLIENT' ||
+      !role
+    ) {
+      if (Array.isArray(user.customPermissions) && user.customPermissions.length > 0) {
+        if (user.customPermissions.includes('*')) return true;
+        return user.customPermissions.some(
+          (p: string) => typeof p === 'string' && (p.includes('.') || p.includes('view') || p.includes('edit'))
+        );
+      }
+      return false;
+    }
+
+    // Known admin roles (SUPER_ADMIN, ADMIN, GESTIONNAIRE_COMMANDES, etc.)
+    return true;
+  };
+
   React.useEffect(() => {
     refreshMe()
       .then((data) => {
         if (data && (data._id || data.id || data.email)) {
-          setAuthState('authenticated');
+          setCurrentUser(data);
+          if (checkHasAdminAccess(data)) {
+            setAuthState('authenticated');
+          } else {
+            // Normal user logged in — do NOT show admin dashboard, show admin login page
+            setAuthState('login');
+          }
         } else {
+          setCurrentUser(null);
           setAuthState('login');
         }
       })
-      .catch(() => setAuthState('login'));
+      .catch(() => {
+        setCurrentUser(null);
+        setAuthState('login');
+      });
   }, []);
 
   // Redirect GESTIONNAIRE_COMMANDES landing on /admin directly to /admin/orders
@@ -62,6 +100,12 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
             try {
               await api.login(email, password);
               const data = await refreshMe();
+              setCurrentUser(data);
+              if (!checkHasAdminAccess(data)) {
+                setAuthError('Accès refusé : Ce compte ne dispose pas des privilèges administrateur.');
+                setAuthState('login');
+                return;
+              }
               setAuthState('authenticated');
               const role = (data?.role || '').toUpperCase().replace(/[\s_]+/g, '_');
               if (role === 'GESTIONNAIRE_COMMANDES') {
@@ -93,6 +137,16 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
               SECURED CONTROL CENTER
             </p>
           </div>
+
+          {currentUser && !checkHasAdminAccess(currentUser) && (
+            <div className="mb-5 p-3.5 rounded-2xl border border-amber-500/25 bg-amber-500/10 text-amber-300 text-xs font-medium flex items-start gap-2.5">
+              <ShieldAlert size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Compte supporter connecté</span>
+                Connecté avec <strong>{currentUser.email || currentUser.name}</strong>. Cet espace est réservé aux administrateurs.
+              </div>
+            </div>
+          )}
 
           <div className="space-y-5">
             {/* Email field */}
@@ -157,6 +211,16 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
                 </>
               )}
             </button>
+
+            <div className="pt-2 text-center">
+              <a
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft size={13} />
+                <span>Retour au site public</span>
+              </a>
+            </div>
           </div>
         </form>
       </main>
