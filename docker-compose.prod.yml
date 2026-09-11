@@ -94,6 +94,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       # Use a comma-separated list when more than one browser origin is valid.
       CLIENT_URL: ${CLIENT_URL:-http://localhost}
+      APP_DOMAIN: ${APP_DOMAIN:-usmonastir.tn}
+      APP_URL: ${APP_URL:-https://${APP_DOMAIN:-usmonastir.tn}}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_USE_SSL: "false"

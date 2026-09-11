@@ -33,6 +33,8 @@ const environmentSchema = z.object({
   MONGODB_URI: z.string().regex(/^mongodb(?:\+srv)?:\/\//, 'must be a MongoDB URI'),
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
   CLIENT_URL: commaSeparatedUrls.default('http://localhost:3000'),
+  APP_URL: z.string().optional(),
+  APP_DOMAIN: z.string().optional(),
   MINIO_ENDPOINT: z.string().min(1).refine(
     (value) => !value.includes('://') && !value.includes('/'),
     'must be a hostname without a scheme or path',

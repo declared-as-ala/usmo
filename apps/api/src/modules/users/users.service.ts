@@ -17,6 +17,7 @@ import { AdminSession } from '../auth/admin-session.schema';
 import { AuditLogsService } from '../auditlogs/auditlogs.service';
 import { MailService } from '../mail/mail.service';
 import { getRolePermissions } from '../roles/default-roles';
+import { getAppBaseUrl } from '../../common/app-url';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -267,7 +268,7 @@ export class UsersService implements OnModuleInit {
     await this.auditLogsService.logAction(dto.actorId, 'admin_created', 'User', newAdmin._id.toString());
 
     const relativeUrl = `/accept-invitation?token=${token}`;
-    const fullInvitationUrl = `${process.env.APP_URL || 'http://54.37.226.228'}${relativeUrl}`;
+    const fullInvitationUrl = `${getAppBaseUrl()}${relativeUrl}`;
 
     // Send invitation email asynchronously via OVH SMTP
     this.mailService.sendAdminInvitationEmail(

@@ -48,7 +48,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Get('all')
   async getAll(
     @Query('status') status?: string,
@@ -74,7 +74,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Get(':id')
   async getById(@Param('id') id: string) {
     return this.productsService.findOneById(id);

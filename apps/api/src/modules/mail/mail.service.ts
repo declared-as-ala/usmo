@@ -3,6 +3,7 @@ import * as nodemailer from 'nodemailer';
 import * as path from 'path';
 import * as fs from 'fs';
 import { USM_LOGO_BASE64, IBRAND_LOGO_BASE64 } from './mail-assets';
+import { sanitizeDomainUrl } from '../../common/app-url';
 
 @Injectable()
 export class MailService {
@@ -476,8 +477,8 @@ export class MailService {
         from: this.getFromAddress(),
         to,
         subject,
-        html,
-        text: text || subject,
+        html: sanitizeDomainUrl(html),
+        text: sanitizeDomainUrl(text || subject),
       };
 
       if (attachments && attachments.length > 0) {

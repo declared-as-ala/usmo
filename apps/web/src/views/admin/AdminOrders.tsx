@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../lib/api-client';
 import {
@@ -13,12 +13,21 @@ import {
   Save,
   ChevronDown,
   Plus,
+  Minus,
   RefreshCw,
   Users,
   AlertCircle,
   Truck,
   Download,
   Calculator,
+  User,
+  Phone,
+  MapPin,
+  Mail,
+  FileText,
+  Sparkles,
+  Package,
+  Check,
 } from 'lucide-react';
 
 export type OrderStatus =
@@ -99,6 +108,36 @@ const TUNISIAN_GOVERNORATES = [
   'Tunis',
   'Zaghouan',
 ];
+
+const STANDARD_CLOTHING_SIZES = [
+  'XS',
+  'S',
+  'M',
+  'L',
+  'XL',
+  '2XL',
+  '3XL',
+  '4XL',
+  'Enfant',
+  'Taille Unique',
+];
+
+const getItemAvailableSizes = (item: OrderItem, catalog: any[] = []): string[] => {
+  const match = catalog.find(
+    (p) => (p._id || p.id) === item.productId || (p.nameFr || p.name) === item.name
+  );
+  const fromProduct: string[] = Array.isArray(match?.sizes)
+    ? match.sizes
+    : Array.isArray(match?.variants)
+    ? match.variants.map((v: any) => v?.size).filter(Boolean)
+    : [];
+
+  const combined = Array.from(new Set([...fromProduct, ...STANDARD_CLOTHING_SIZES]));
+  if (item.size && !combined.includes(item.size)) {
+    combined.unshift(item.size);
+  }
+  return combined;
+};
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'En attente',
@@ -189,8 +228,10 @@ export default function AdminOrders() {
 
   // Catalog products for adding items
   const [catalogProducts, setCatalogProducts] = useState<any[]>([]);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [productSearch, setProductSearch] = useState('');
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const productDropdownRef = useRef<HTMLDivElement>(null);
 
   // Delivery zones admin manager toggle
   const [showZoneManager, setShowZoneManager] = useState(false);
@@ -229,11 +270,57 @@ export default function AdminOrders() {
 
   // Load catalog products for order items selection
   const loadCatalog = useCallback(async () => {
+    setLoadingCatalog(true);
     try {
-      const res = await api.getAdminProducts();
-      setCatalogProducts(res?.products || []);
-    } catch (err) {}
+      let prods: any[] = [];
+      try {
+        const res = await api.getAdminProducts();
+        if (res?.products && Array.isArray(res.products) && res.products.length > 0) {
+          prods = res.products;
+        }
+      } catch (adminErr) {
+        console.warn('getAdminProducts notice, falling back to public products', adminErr);
+      }
+      if (prods.length === 0) {
+        const publicRes = await api.getProducts({ limit: 100 });
+        if (publicRes?.products && Array.isArray(publicRes.products)) {
+          prods = publicRes.products;
+        }
+      }
+      setCatalogProducts(prods);
+    } catch (err) {
+      console.error('Error loading catalog products:', err);
+    } finally {
+      setLoadingCatalog(false);
+    }
   }, []);
+
+  // Close product dropdown on outside click
+  useEffect(() => {
+    if (!productDropdownOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        productDropdownRef.current &&
+        !productDropdownRef.current.contains(e.target as Node)
+      ) {
+        setProductDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [productDropdownOpen]);
+
+  // Handle ESC key to close drawer
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeDrawer();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen]);
 
   // Close export menu on outside click
   useEffect(() => {
@@ -411,6 +498,9 @@ export default function AdminOrders() {
 
     setProductSearch('');
     setProductDropdownOpen(false);
+    if (catalogProducts.length === 0) {
+      loadCatalog();
+    }
     setDrawerOpen(true);
   };
 
@@ -418,6 +508,18 @@ export default function AdminOrders() {
     setDrawerOpen(false);
     setCurrentOrder(null);
   };
+
+  // Filtered catalog products for order items selection
+  const filteredCatalogProducts = useMemo(() => {
+    if (!productSearch.trim()) return catalogProducts.slice(0, 20);
+    const q = productSearch.toLowerCase();
+    return catalogProducts.filter((p) => {
+      const name = (p.nameFr || p.name || '').toLowerCase();
+      const cat = (p.category?.name || '').toLowerCase();
+      const sku = (p.sku || '').toLowerCase();
+      return name.includes(q) || cat.includes(q) || sku.includes(q);
+    });
+  }, [catalogProducts, productSearch]);
 
   // Export handlers
   const handleExport = async (format: 'excel' | 'pdf') => {
@@ -458,8 +560,10 @@ export default function AdminOrders() {
       const next = [...prev];
       const target = { ...next[index], [field]: value };
       if (field === 'quantity' || field === 'price') {
-        const qty = Number(target.quantity) || 1;
-        const pr = Number(target.price) || 0;
+        const qty = Math.max(1, Number(target.quantity) || 1);
+        const pr = Math.max(0, Number(target.price) || 0);
+        target.quantity = qty;
+        target.price = pr;
         target.subtotal = qty * pr;
       }
       next[index] = target;
@@ -478,11 +582,18 @@ export default function AdminOrders() {
         : parseFloat(String(prod.price).replace(/[^\d.]/g, '')) || 0;
     const priceMillimes = rawPrice > 1000 ? rawPrice : Math.round(rawPrice * 1000);
 
+    const defaultSize =
+      Array.isArray(prod.sizes) && prod.sizes.length > 0
+        ? prod.sizes[0]
+        : Array.isArray(prod.variants) && prod.variants[0]?.size
+        ? prod.variants[0].size
+        : 'M';
+
     const newItem: OrderItem = {
       productId: prod._id || prod.id || `custom-${prod.name || 'item'}`,
       name: prod.nameFr || prod.name || 'Produit USM',
-      size: prod.sizes?.[0] || prod.variants?.[0]?.size || 'Taille Unique',
-      color: prod.colors?.[0] || 'noir*',
+      size: defaultSize,
+      color: prod.colors?.[0] || '',
       image: prod.coverImage || prod.imageUrl || prod.images?.[0] || '',
       quantity: 1,
       price: priceMillimes,
@@ -1140,7 +1251,7 @@ export default function AdminOrders() {
         </div>
       )}
 
-      {/* ── DRAWER / MODAL: "MODIFIER LA COMMANDE" (Screenshot 2) ── */}
+      {/* ── DRAWER / MODAL: "MODIFIER LA COMMANDE" (Ultra-responsive & Enhanced) ── */}
       <AnimatePresence>
         {drawerOpen && (
           <React.Fragment>
@@ -1150,7 +1261,7 @@ export default function AdminOrders() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={closeDrawer}
-              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 transition-opacity"
+              className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-50 transition-opacity"
             />
 
             {/* Slide-over Drawer Panel */}
@@ -1158,30 +1269,62 @@ export default function AdminOrders() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="fixed top-0 bottom-0 right-0 w-full max-w-2xl bg-[#FAFAFA] z-50 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed top-0 bottom-0 right-0 w-full sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl bg-[#F8FAFC] z-50 shadow-2xl flex flex-col overflow-hidden border-l border-slate-200"
             >
               {/* Drawer Top Header */}
-              <div className="p-4 px-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                  {drawerMode === 'new'
-                    ? 'Ajouter une commande'
-                    : drawerMode === 'view'
-                    ? 'Détails de la commande'
-                    : 'Modifier la commande'}
-                </h2>
-                <div className="flex items-center gap-3">
+              <div className="p-4 sm:px-6 bg-white border-b border-slate-200 flex items-center justify-between gap-3 shrink-0 shadow-2xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0D63FF] shrink-0">
+                    <SquarePen size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                        {drawerMode === 'new'
+                          ? 'Ajouter une commande'
+                          : drawerMode === 'view'
+                          ? 'Détails de la commande'
+                          : 'Modifier la commande'}
+                      </h2>
+                      {currentOrder && (
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                          #{currentOrder.orderNumber}
+                        </span>
+                      )}
+                      {currentOrder && (
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            STATUS_BADGES[formStatus]?.bg || 'bg-slate-100'
+                          } ${STATUS_BADGES[formStatus]?.text || 'text-slate-700'} ${
+                            STATUS_BADGES[formStatus]?.border || 'border-slate-200'
+                          }`}
+                        >
+                          {STATUS_LABELS[formStatus] || formStatus}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                      {currentOrder
+                        ? `Créée le ${formatDateTime(currentOrder.createdAt)}`
+                        : 'Création manuelle d’une nouvelle commande'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={handleSaveDrawer}
                     disabled={saving}
-                    className="px-4 py-2 bg-[#0D63FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 bg-[#0D63FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50"
                   >
                     <Save size={14} />
                     <span>{saving ? 'Enregistrement…' : 'Enregistrer'}</span>
                   </button>
                   <button
                     onClick={closeDrawer}
-                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                    className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                    title="Fermer (Échap)"
                   >
                     <X size={18} />
                   </button>
@@ -1189,151 +1332,158 @@ export default function AdminOrders() {
               </div>
 
               {/* Drawer Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Top Toggle: Échange checkbox */}
-                <div className="flex justify-end">
-                  <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={formIsExchange}
-                      onChange={(e) => setFormIsExchange(e.target.checked)}
-                      className="rounded border-slate-300 accent-[#0D63FF] cursor-pointer"
-                    />
-                    <span>Échange</span>
-                  </label>
-                </div>
-
-                {/* CARD 1: DÉTAILS DE LA COMMANDE */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    DÉTAILS DE LA COMMANDE
-                  </h3>
-
-                  {/* Creation Date */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                    <span className="text-slate-500 font-medium">Date de création :</span>
-                    <span className="font-mono font-bold text-slate-800">
-                      {formatDateTime(currentOrder?.createdAt || new Date().toISOString())}
-                    </span>
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+                {/* CARD 1: STATUT & EXPÉDITION */}
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Truck size={16} className="text-[#0D63FF]" />
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                        Statut & Expédition
+                      </h3>
+                    </div>
+                    <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer select-none bg-slate-50 hover:bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={formIsExchange}
+                        onChange={(e) => setFormIsExchange(e.target.checked)}
+                        className="rounded border-slate-300 accent-[#0D63FF] cursor-pointer"
+                      />
+                      <span>Commande d'échange</span>
+                    </label>
                   </div>
 
-                  {/* STATUT */}
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                      STATUT
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formStatus}
-                        onChange={(e) => setFormStatus(e.target.value as OrderStatus)}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-3 pr-8 text-xs font-semibold text-slate-800 outline-none focus:border-[#0D63FF] cursor-pointer appearance-none"
-                      >
-                        <option value="pending">En attente</option>
-                        <option value="confirmed">Confirmée</option>
-                        <option value="tentative">Tentative</option>
-                        <option value="prepared">En préparation</option>
-                        <option value="shipped">En cours de livraison</option>
-                        <option value="delivered">Livrée</option>
-                        <option value="cancelled">Annulée</option>
-                      </select>
-                      <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* STATUT */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Statut de la commande
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={formStatus}
+                          onChange={(e) => setFormStatus(e.target.value as OrderStatus)}
+                          className="w-full bg-white border border-slate-200 rounded-xl p-2.5 pr-8 text-xs font-bold text-slate-800 outline-none focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 cursor-pointer appearance-none transition-all"
+                        >
+                          <option value="pending">⏳ En attente</option>
+                          <option value="confirmed">✅ Confirmée</option>
+                          <option value="tentative">⚠️ Tentative</option>
+                          <option value="prepared">📦 En préparation</option>
+                          <option value="shipped">🚚 En cours de livraison</option>
+                          <option value="delivered">🎉 Livrée</option>
+                          <option value="cancelled">❌ Annulée</option>
+                        </select>
+                        <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* SOCIÉTÉ DE LIVRAISON */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Société de livraison
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={formShippingCompany}
+                          onChange={(e) => setFormShippingCompany(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl p-2.5 pr-8 text-xs font-bold text-slate-800 outline-none focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 cursor-pointer appearance-none transition-all"
+                        >
+                          <option value="-">— Non assignée —</option>
+                          <option value="Navex">Navex</option>
+                          <option value="Axess Logistique">Axess Logistique</option>
+                          <option value="First Delivery">First Delivery</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                        <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* SOCIÉTÉ DE LIVRAISON */}
+                  {/* NOTE PRIVÉE ADMIN */}
                   <div>
-                    <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                      SOCIÉTÉ DE LIVRAISON
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={formShippingCompany}
-                        onChange={(e) => setFormShippingCompany(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-3 pr-8 text-xs font-semibold text-slate-800 outline-none focus:border-[#0D63FF] cursor-pointer appearance-none"
-                      >
-                        <option value="-">-</option>
-                        <option value="Navex">Navex</option>
-                        <option value="Axess Logistique">Axess Logistique</option>
-                        <option value="First Delivery">First Delivery</option>
-                        <option value="Autre">Autre</option>
-                      </select>
-                      <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  {/* AJOUTER UNE NOTE PRIVÉE... */}
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                      AJOUTER UNE NOTE PRIVÉE...
+                    <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                      Note interne / privée (visible uniquement par les admins)
                     </label>
                     <textarea
-                      rows={3}
-                      placeholder="Ajouter une note privée..."
+                      rows={2}
+                      placeholder="Ex: Client a demandé une livraison après 17h, rappel prévu demain..."
                       value={formPrivateNote}
                       onChange={(e) => setFormPrivateNote(e.target.value)}
-                      className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors resize-none placeholder-slate-400"
+                      className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 rounded-xl p-2.5 outline-none transition-all resize-none placeholder-slate-400"
                     />
-                  </div>
-
-                  {/* Status Pills */}
-                  <div className="space-y-2 pt-1">
-                    <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-500">
-                      {formShippingCompany === 'Navex'
-                        ? 'Assigné à Navex.'
-                        : 'Pas encore envoyé à Navex.'}
-                    </div>
-                    <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-500">
-                      {formShippingCompany === 'Axess Logistique'
-                        ? 'Assigné à Axess Logistique.'
-                        : 'Pas encore envoyé à Axess Logistique.'}
-                    </div>
-                    <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-500">
-                      {formShippingCompany === 'First Delivery'
-                        ? 'Assigné à First Delivery.'
-                        : 'Pas encore envoyé à First Delivery.'}
-                    </div>
                   </div>
                 </div>
 
                 {/* CARD 2: DÉTAILS DU CLIENT */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    DÉTAILS DU CLIENT
-                  </h3>
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <User size={16} className="text-[#0D63FF]" />
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                      Informations Client & Livraison
+                    </h3>
+                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     {/* NOM */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        NOM
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Nom et Prénom *
                       </label>
                       <input
                         type="text"
                         placeholder="Foulen ben Foulen"
                         value={formCustomerName}
                         onChange={(e) => setFormCustomerName(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs font-semibold text-slate-800 rounded-xl p-2.5 outline-none transition-all placeholder-slate-400"
                       />
                     </div>
 
                     {/* TÉLÉPHONE */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        TÉLÉPHONE
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Téléphone Principal *
                       </label>
                       <input
-                        type="text"
-                        placeholder="+216 12 34 56 78"
+                        type="tel"
+                        placeholder="Ex: 54 123 456"
                         value={formCustomerPhone}
                         onChange={(e) => setFormCustomerPhone(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 font-mono rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs font-bold font-mono text-slate-800 rounded-xl p-2.5 outline-none transition-all placeholder-slate-400"
                       />
                     </div>
 
-                    {/* VILLE */}
+                    {/* TÉLÉPHONE 2 */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        VILLE
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Téléphone Secondaire (Optionnel)
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="Ex: 22 345 678"
+                        value={formCustomerPhone2}
+                        onChange={(e) => setFormCustomerPhone2(e.target.value)}
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs font-mono text-slate-800 rounded-xl p-2.5 outline-none transition-all placeholder-slate-400"
+                      />
+                    </div>
+
+                    {/* EMAIL */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Adresse Email
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="client@domaine.tn"
+                        value={formCustomerEmail}
+                        onChange={(e) => setFormCustomerEmail(e.target.value)}
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 rounded-xl p-2.5 outline-none transition-all placeholder-slate-400"
+                      />
+                    </div>
+
+                    {/* GOUVERNORAT */}
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Gouvernorat / Ville
                       </label>
                       <div className="relative">
                         <select
@@ -1341,14 +1491,14 @@ export default function AdminOrders() {
                           onChange={(e) => {
                             const newCity = e.target.value;
                             setFormCustomerCity(newCity);
-                            // Set shipping cost dynamically
+                            // Set shipping cost dynamically (Monastir: 4 DT, others: 8 DT)
                             setFormShippingCost(newCity === 'Monastir' ? 4000 : 8000);
                           }}
-                          className="w-full bg-white border border-slate-200 rounded-xl p-3 pr-8 text-xs font-semibold text-slate-800 outline-none focus:border-[#0D63FF] cursor-pointer appearance-none"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-2.5 pr-8 text-xs font-bold text-slate-800 outline-none focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 cursor-pointer appearance-none transition-all"
                         >
                           {TUNISIAN_GOVERNORATES.map((g) => (
                             <option key={g} value={g}>
-                              {g}
+                              {g} {g === 'Monastir' ? '(Frais réduits : 4 DT)' : '(Frais standard : 8 DT)'}
                             </option>
                           ))}
                         </select>
@@ -1356,127 +1506,189 @@ export default function AdminOrders() {
                       </div>
                     </div>
 
-                    {/* ADRESSE */}
+                    {/* FRAIS DE LIVRAISON */}
                     <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        ADRESSE
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Frais de livraison (DT)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={(formShippingCost || 0) / 1000}
+                          onChange={(e) =>
+                            setFormShippingCost(
+                              Math.round((parseFloat(e.target.value) || 0) * 1000)
+                            )
+                          }
+                          className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs font-bold font-mono text-slate-800 rounded-xl p-2.5 outline-none transition-all"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                          DT
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ADRESSE COMPLÈTE */}
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Adresse complète de livraison
                       </label>
                       <input
                         type="text"
-                        placeholder="Rue, Immeuble, Cité"
+                        placeholder="Rue, Numéro, Bâtiment, Code postal..."
                         value={formCustomerAddress}
                         onChange={(e) => setFormCustomerAddress(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 rounded-xl p-2.5 outline-none transition-all placeholder-slate-400"
                       />
                     </div>
 
-                    {/* TÉLÉPHONE 2 */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        TÉLÉPHONE 2
+                    {/* NOTE DU CLIENT */}
+                    <div className="sm:col-span-2">
+                      <label className="text-[10px] font-bold text-slate-600 uppercase block mb-1">
+                        Notes complémentaires du client
                       </label>
-                      <input
-                        type="text"
-                        placeholder="Entrez votre second numéro de téléphone"
-                        value={formCustomerPhone2}
-                        onChange={(e) => setFormCustomerPhone2(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 font-mono rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
+                      <textarea
+                        rows={2}
+                        placeholder="Instructions spéciales laissées par le client..."
+                        value={formNotes}
+                        onChange={(e) => setFormNotes(e.target.value)}
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 rounded-xl p-2.5 outline-none transition-all resize-none placeholder-slate-400"
                       />
                     </div>
-
-                    {/* EMAIL */}
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                        EMAIL
-                      </label>
-                      <input
-                        type="email"
-                        placeholder="yassinfhaiel74@gmail.com"
-                        value={formCustomerEmail}
-                        onChange={(e) => setFormCustomerEmail(e.target.value)}
-                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
-                      />
-                    </div>
-                  </div>
-
-                  {/* NOTE */}
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
-                      NOTE
-                    </label>
-                    <textarea
-                      rows={3}
-                      placeholder="Entrez les notes supplémentaires"
-                      value={formNotes}
-                      onChange={(e) => setFormNotes(e.target.value)}
-                      className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors resize-none placeholder-slate-400"
-                    />
                   </div>
                 </div>
 
-                {/* CARD 3: SÉLECTIONNER UN PRODUIT */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-3 relative">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    SÉLECTIONNER UN PRODUIT
-                  </h3>
+                {/* CARD 3: SÉLECTIONNER UN PRODUIT (CATALOGUE) */}
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Package size={16} className="text-[#0D63FF]" />
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                        Sélectionner & Ajouter un produit
+                      </h3>
+                    </div>
+                    {catalogProducts.length > 0 && (
+                      <span className="text-[11px] font-bold text-slate-400">
+                        {catalogProducts.length} articles au catalogue
+                      </span>
+                    )}
+                  </div>
 
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Produits"
-                      value={productSearch}
-                      onFocus={() => setProductDropdownOpen(true)}
-                      onChange={(e) => {
-                        setProductSearch(e.target.value);
-                        setProductDropdownOpen(true);
-                      }}
-                      className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] text-xs text-slate-800 rounded-xl p-3 outline-none transition-colors placeholder-slate-400"
-                    />
+                  <div ref={productDropdownRef} className="relative">
+                    <div className="relative">
+                      <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Rechercher un produit à ajouter (ex: Maillot officiel, Polo, Casquette)..."
+                        value={productSearch}
+                        onFocus={() => {
+                          setProductDropdownOpen(true);
+                          if (catalogProducts.length === 0) loadCatalog();
+                        }}
+                        onChange={(e) => {
+                          setProductSearch(e.target.value);
+                          setProductDropdownOpen(true);
+                        }}
+                        className="w-full bg-white border border-slate-200 focus:border-[#0D63FF] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 rounded-xl pl-10 pr-28 py-3 outline-none transition-all shadow-2xs placeholder-slate-400"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                        {productSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setProductSearch('')}
+                            className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductDropdownOpen((prev) => !prev);
+                            if (!productDropdownOpen && catalogProducts.length === 0) loadCatalog();
+                          }}
+                          className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#0D63FF] text-[11px] font-bold rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <span>Catalogue</span>
+                          <ChevronDown size={13} className={productDropdownOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                        </button>
+                      </div>
+                    </div>
 
                     {/* Product Search Dropdown list */}
                     {productDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-20 divide-y divide-slate-100">
-                        {catalogProducts
-                          .filter((p) =>
-                            (p.nameFr || p.name || '')
-                              .toLowerCase()
-                              .includes(productSearch.toLowerCase())
-                          )
-                          .slice(0, 10)
-                          .map((prod) => (
-                            <button
-                              key={prod._id || prod.id}
-                              type="button"
-                              onClick={() => handleAddProductToOrder(prod)}
-                              className="w-full p-2.5 px-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors text-left cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3">
-                                <img
-                                  src={prod.coverImage || prod.imageUrl || prod.images?.[0] || '/logo foot.png'}
-                                  alt=""
-                                  className="w-9 h-9 object-cover rounded-lg border border-slate-200 shrink-0"
-                                />
-                                <div>
-                                  <p className="font-bold text-xs text-slate-900">
-                                    {prod.nameFr || prod.name}
-                                  </p>
-                                  <p className="text-[10px] text-slate-400">
-                                    {prod.category?.name || 'Boutique officielle'}
-                                  </p>
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-72 overflow-y-auto z-30 divide-y divide-slate-100">
+                        <div className="p-2.5 px-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-bold text-slate-500">
+                          <span>Produits disponibles ({filteredCatalogProducts.length})</span>
+                          {loadingCatalog && <span className="text-[#0D63FF] animate-pulse">Chargement…</span>}
+                        </div>
+                        {filteredCatalogProducts.map((prod) => (
+                          <div
+                            key={prod._id || prod.id}
+                            className="p-3 px-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors gap-3"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <img
+                                src={prod.coverImage || prod.imageUrl || prod.images?.[0] || '/logo foot.png'}
+                                alt=""
+                                className="w-10 h-10 object-cover rounded-xl border border-slate-200 shrink-0 bg-slate-100"
+                              />
+                              <div className="min-w-0">
+                                <p className="font-bold text-xs text-slate-900 truncate">
+                                  {prod.nameFr || prod.name}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] text-slate-400">
+                                    {prod.category?.name || 'Boutique'}
+                                  </span>
+                                  {prod.stockStatus === 'OUT_OF_STOCK' ? (
+                                    <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.2 rounded border border-red-200">
+                                      Rupture
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                      En stock
+                                    </span>
+                                  )}
+                                  {Array.isArray(prod.sizes) && prod.sizes.length > 0 && (
+                                    <span className="text-[9px] text-slate-500 hidden sm:inline">
+                                      Tailles : {prod.sizes.slice(0, 4).join(', ')}{prod.sizes.length > 4 ? '…' : ''}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                              <span className="font-mono font-bold text-xs text-[#0D63FF]">
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="font-mono font-black text-xs text-slate-900">
                                 {formatDt(
                                   typeof prod.price === 'number' && prod.price > 1000
                                     ? prod.price
                                     : Math.round((parseFloat(prod.price) || 0) * 1000)
                                 )}
                               </span>
+                              <button
+                                type="button"
+                                onClick={() => handleAddProductToOrder(prod)}
+                                className="px-3 py-1.5 bg-[#0D63FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+                              >
+                                <Plus size={13} />
+                                <span>Ajouter</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {filteredCatalogProducts.length === 0 && !loadingCatalog && (
+                          <div className="p-6 text-center text-xs text-slate-400 space-y-2">
+                            <p>Aucun produit ne correspond à votre recherche.</p>
+                            <button
+                              type="button"
+                              onClick={loadCatalog}
+                              className="px-3 py-1 text-xs font-bold text-[#0D63FF] hover:underline cursor-pointer"
+                            >
+                              Actualiser le catalogue
                             </button>
-                          ))}
-                        {catalogProducts.length === 0 && (
-                          <div className="p-3 text-center text-xs text-slate-400">
-                            Aucun produit trouvé.
                           </div>
                         )}
                       </div>
@@ -1484,117 +1696,342 @@ export default function AdminOrders() {
                   </div>
                 </div>
 
-                {/* CARD 4: RÉSUMÉ DES COMMANDES (Table & Total) */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                    RÉSUMÉ DES COMMANDES
-                  </h3>
+                {/* CARD 4: ARTICLES COMMANDÉS (RESPONSIVE TABLE & CARDS) */}
+                <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag size={16} className="text-[#0D63FF]" />
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                        Articles de la commande ({formItems.length})
+                      </h3>
+                    </div>
+                    {formItems.length > 0 && (
+                      <span className="text-[11px] font-bold text-slate-500">
+                        {formItems.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0)} article(s) au total
+                      </span>
+                    )}
+                  </div>
 
-                  <div className="overflow-x-auto">
+                  {/* DESKTOP TABLE VIEW (>= 640px) */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
-                          <th className="py-2.5 px-3">PRODUIT</th>
-                          <th className="py-2.5 px-3 text-center">QTÉ</th>
-                          <th className="py-2.5 px-3 text-center">ATTRIBUTS</th>
-                          <th className="py-2.5 px-3 text-center">PRIX UNITAIRE</th>
-                          <th className="py-2.5 px-3 text-right">TOTAL</th>
+                          <th className="py-2.5 px-3">Produit & Flocage</th>
+                          <th className="py-2.5 px-3">Taille</th>
+                          <th className="py-2.5 px-3">Couleur</th>
+                          <th className="py-2.5 px-3 text-center">Qté</th>
+                          <th className="py-2.5 px-3 text-right">Prix Unit.</th>
+                          <th className="py-2.5 px-3 text-right">Sous-total</th>
                           <th className="py-2.5 px-2 w-8" />
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {formItems.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/50">
-                            {/* PRODUIT */}
-                            <td className="py-3 px-3">
-                              <div className="flex items-center gap-2.5">
-                                <img
-                                  src={item.image || '/logo foot.png'}
-                                  alt=""
-                                  className="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0"
-                                />
-                                <div className="min-w-0">
-                                  <span className="font-bold text-slate-900 line-clamp-2 max-w-[150px] block">
-                                    {item.name}
-                                  </span>
-                                  {(item.customName || item.customNumber) && (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded mt-1">
-                                      ⭐ Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}
+                        {formItems.map((item, idx) => {
+                          const availableSizes = getItemAvailableSizes(item, catalogProducts);
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                              {/* PRODUIT & FLOCAGE */}
+                              <td className="py-3 px-3">
+                                <div className="flex items-center gap-2.5">
+                                  <img
+                                    src={item.image || '/logo foot.png'}
+                                    alt=""
+                                    className="w-11 h-11 object-cover rounded-xl border border-slate-200 shrink-0 bg-slate-50"
+                                  />
+                                  <div className="min-w-0 max-w-[200px]">
+                                    <span className="font-bold text-slate-900 block truncate" title={item.name}>
+                                      {item.name}
                                     </span>
+                                    {/* Flocage inputs */}
+                                    <div className="mt-1 flex items-center gap-1">
+                                      <input
+                                        type="text"
+                                        placeholder="Nom flocage"
+                                        value={item.customName || ''}
+                                        onChange={(e) => handleUpdateItem(idx, 'customName', e.target.value.toUpperCase())}
+                                        className="w-24 px-1.5 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-slate-700 outline-none focus:border-[#0D63FF]"
+                                        title="Nom floqué"
+                                      />
+                                      <input
+                                        type="text"
+                                        placeholder="N°"
+                                        maxLength={2}
+                                        value={item.customNumber || ''}
+                                        onChange={(e) => handleUpdateItem(idx, 'customNumber', e.target.value.replace(/[^0-9]/g, ''))}
+                                        className="w-9 px-1 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-center text-slate-700 outline-none focus:border-[#0D63FF]"
+                                        title="Numéro floqué"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* TAILLE EDITABLE */}
+                              <td className="py-3 px-3">
+                                <div className="space-y-1">
+                                  <select
+                                    value={availableSizes.includes(item.size) ? item.size : '__custom__'}
+                                    onChange={(e) => {
+                                      if (e.target.value === '__custom__') {
+                                        handleUpdateItem(idx, 'size', '');
+                                      } else {
+                                        handleUpdateItem(idx, 'size', e.target.value);
+                                      }
+                                    }}
+                                    className="w-28 bg-white border border-slate-200 focus:border-[#0D63FF] rounded-lg px-2 py-1 text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                                  >
+                                    {availableSizes.map((s) => (
+                                      <option key={s} value={s}>
+                                        {s}
+                                      </option>
+                                    ))}
+                                    <option value="__custom__">Autre...</option>
+                                  </select>
+                                  {(!availableSizes.includes(item.size) || item.size === '') && (
+                                    <input
+                                      type="text"
+                                      placeholder="Taille..."
+                                      value={item.size || ''}
+                                      onChange={(e) => handleUpdateItem(idx, 'size', e.target.value)}
+                                      className="w-28 px-1.5 py-0.5 bg-white border border-[#0D63FF] rounded text-[11px] font-bold text-slate-800 outline-none"
+                                    />
                                   )}
-                                  {/* Inputs for admin editing of flocage */}
-                                  <div className="mt-1 flex items-center gap-1">
-                                    <input
-                                      type="text"
-                                      placeholder="Nom flocage"
-                                      value={item.customName || ''}
-                                      onChange={(e) => handleUpdateItem(idx, 'customName', e.target.value.toUpperCase())}
-                                      className="w-24 px-1.5 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-slate-700 outline-none focus:border-[#0D63FF]"
-                                      title="Nom floqué sur le maillot"
-                                    />
-                                    <input
-                                      type="text"
-                                      placeholder="N°"
-                                      maxLength={2}
-                                      value={item.customNumber || ''}
-                                      onChange={(e) => handleUpdateItem(idx, 'customNumber', e.target.value.replace(/[^0-9]/g, ''))}
-                                      className="w-10 px-1.5 py-0.5 border border-slate-200 bg-white rounded text-[10px] font-bold text-center text-slate-700 outline-none focus:border-[#0D63FF]"
-                                      title="Numéro floqué"
-                                    />
-                                  </div>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
 
-                            {/* QTÉ */}
-                            <td className="py-3 px-3 text-center">
-                              <input
-                                type="number"
-                                min={1}
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  handleUpdateItem(
-                                    idx,
-                                    'quantity',
-                                    parseInt(e.target.value) || 1
-                                  )
-                                }
-                                className="w-14 px-2 py-1.5 border border-slate-200 rounded-lg text-center font-bold text-xs outline-none focus:border-[#0D63FF]"
+                              {/* COULEUR EDITABLE */}
+                              <td className="py-3 px-3">
+                                <input
+                                  type="text"
+                                  placeholder="Couleur"
+                                  value={item.color || ''}
+                                  onChange={(e) => handleUpdateItem(idx, 'color', e.target.value)}
+                                  className="w-24 px-2 py-1 bg-white border border-slate-200 focus:border-[#0D63FF] rounded-lg text-xs font-semibold text-slate-700 outline-none"
+                                />
+                              </td>
+
+                              {/* QTÉ STEPPER */}
+                              <td className="py-3 px-3 text-center">
+                                <div className="inline-flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white shadow-2xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateItem(idx, 'quantity', Math.max(1, (Number(item.quantity) || 1) - 1))}
+                                    className="px-2 py-1 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                                  >
+                                    <Minus size={12} />
+                                  </button>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      handleUpdateItem(
+                                        idx,
+                                        'quantity',
+                                        parseInt(e.target.value) || 1
+                                      )
+                                    }
+                                    className="w-10 py-1 text-center font-bold text-xs outline-none border-x border-slate-200"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateItem(idx, 'quantity', (Number(item.quantity) || 1) + 1)}
+                                    className="px-2 py-1 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                                  >
+                                    <Plus size={12} />
+                                  </button>
+                                </div>
+                              </td>
+
+                              {/* PRIX UNITAIRE */}
+                              <td className="py-3 px-3 text-right">
+                                <div className="inline-flex items-center gap-1 justify-end">
+                                  <input
+                                    type="number"
+                                    step="0.5"
+                                    value={(item.price || 0) / 1000}
+                                    onChange={(e) =>
+                                      handleUpdateItem(
+                                        idx,
+                                        'price',
+                                        Math.round(
+                                          (parseFloat(e.target.value) || 0) * 1000
+                                        )
+                                      )
+                                    }
+                                    className="w-16 px-1.5 py-1 border border-slate-200 rounded-lg text-right font-mono font-bold text-xs outline-none focus:border-[#0D63FF]"
+                                  />
+                                  <span className="text-[10px] text-slate-400 font-bold">DT</span>
+                                </div>
+                              </td>
+
+                              {/* TOTAL ITEM */}
+                              <td className="py-3 px-3 text-right font-black font-mono text-slate-900 whitespace-nowrap">
+                                {formatDt(item.subtotal || item.price * item.quantity)}
+                              </td>
+
+                              {/* REMOVE TRASH BUTTON */}
+                              <td className="py-3 px-2 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveItem(idx)}
+                                  className="p-1.5 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Supprimer cet article"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {formItems.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={7}
+                              className="py-8 text-center text-slate-400 text-xs font-medium"
+                            >
+                              Aucun article dans cette commande. Utilisez le sélecteur ci-dessus pour ajouter des produits.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* MOBILE CARDS VIEW (< 640px) */}
+                  <div className="block sm:hidden space-y-3">
+                    {formItems.map((item, idx) => {
+                      const availableSizes = getItemAvailableSizes(item, catalogProducts);
+                      return (
+                        <div
+                          key={idx}
+                          className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3"
+                        >
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={item.image || '/logo foot.png'}
+                                alt=""
+                                className="w-12 h-12 object-cover rounded-lg border border-slate-200 shrink-0 bg-white"
                               />
-                            </td>
-
-                            {/* ATTRIBUTS (Couleur, Taille & Flocage) */}
-                            <td className="py-3 px-3 text-center">
-                              <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                <div className="border border-blue-200 bg-blue-50/50 rounded-lg px-2 py-1 text-[11px] font-semibold text-blue-700">
-                                  <span className="text-[9px] text-slate-400 block uppercase leading-none">
-                                    Couleur
-                                  </span>
-                                  <span>{item.color || 'noir*'}</span>
-                                </div>
-                                <div className="border border-blue-200 bg-blue-50/50 rounded-lg px-2 py-1 text-[11px] font-semibold text-blue-700">
-                                  <span className="text-[9px] text-slate-400 block uppercase leading-none">
-                                    Taille
-                                  </span>
-                                  <span>{item.size || 'Unique'}</span>
-                                </div>
-                                {(item.customName || item.customNumber) ? (
-                                  <div className="border border-amber-300 bg-amber-50 rounded-lg px-2 py-1 text-[11px] font-bold text-amber-900 shadow-2xs">
-                                    <span className="text-[9px] text-amber-600 block uppercase font-extrabold leading-none">
-                                      Flocage
-                                    </span>
-                                    <span className="font-mono">{[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}</span>
-                                  </div>
-                                ) : (
-                                  <div className="border border-slate-200 bg-slate-50 rounded-lg px-2 py-1 text-[10px] font-medium text-slate-400">
-                                    <span>Sans flocage</span>
-                                  </div>
-                                )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-xs text-slate-900 truncate">
+                                  {item.name}
+                                </p>
+                                <p className="font-mono font-bold text-xs text-[#0D63FF] mt-0.5">
+                                  {formatDt(item.subtotal || item.price * item.quantity)}
+                                </p>
                               </div>
-                            </td>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveItem(idx)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
 
-                            {/* PRIX UNITAIRE */}
-                            <td className="py-3 px-3 text-center">
+                          {/* Attributes grid */}
+                          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
+                            {/* Taille */}
+                            <div>
+                              <label className="text-[9px] uppercase font-bold text-slate-500 block mb-0.5">
+                                Taille
+                              </label>
+                              <select
+                                value={availableSizes.includes(item.size) ? item.size : '__custom__'}
+                                onChange={(e) => {
+                                  if (e.target.value === '__custom__') {
+                                    handleUpdateItem(idx, 'size', '');
+                                  } else {
+                                    handleUpdateItem(idx, 'size', e.target.value);
+                                  }
+                                }}
+                                className="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold text-slate-800"
+                              >
+                                {availableSizes.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                                <option value="__custom__">Autre...</option>
+                              </select>
+                              {(!availableSizes.includes(item.size) || item.size === '') && (
+                                <input
+                                  type="text"
+                                  placeholder="Taille personnalisée"
+                                  value={item.size || ''}
+                                  onChange={(e) => handleUpdateItem(idx, 'size', e.target.value)}
+                                  className="w-full mt-1 px-2 py-1 bg-white border border-[#0D63FF] rounded text-xs font-bold"
+                                />
+                              )}
+                            </div>
+
+                            {/* Couleur */}
+                            <div>
+                              <label className="text-[9px] uppercase font-bold text-slate-500 block mb-0.5">
+                                Couleur
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Couleur"
+                                value={item.color || ''}
+                                onChange={(e) => handleUpdateItem(idx, 'color', e.target.value)}
+                                className="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-semibold text-slate-700"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Flocage */}
+                          <div className="pt-1">
+                            <label className="text-[9px] uppercase font-bold text-slate-500 block mb-0.5">
+                              Flocage (Nom & N°)
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                placeholder="Nom floqué"
+                                value={item.customName || ''}
+                                onChange={(e) => handleUpdateItem(idx, 'customName', e.target.value.toUpperCase())}
+                                className="flex-1 px-2 py-1 border border-slate-200 bg-white rounded-lg text-xs font-bold text-slate-700"
+                              />
+                              <input
+                                type="text"
+                                placeholder="N°"
+                                maxLength={2}
+                                value={item.customNumber || ''}
+                                onChange={(e) => handleUpdateItem(idx, 'customNumber', e.target.value.replace(/[^0-9]/g, ''))}
+                                className="w-12 px-2 py-1 border border-slate-200 bg-white rounded-lg text-xs font-bold text-center text-slate-700"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Stepper and Price */}
+                          <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
+                            <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItem(idx, 'quantity', Math.max(1, (Number(item.quantity) || 1) - 1))}
+                                className="px-2.5 py-1 text-slate-600"
+                              >
+                                <Minus size={12} />
+                              </button>
+                              <span className="px-3 py-1 font-bold text-xs border-x border-slate-200">
+                                {item.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItem(idx, 'quantity', (Number(item.quantity) || 1) + 1)}
+                                className="px-2.5 py-1 text-slate-600"
+                              >
+                                <Plus size={12} />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-slate-400 font-bold">Prix unit:</span>
                               <input
                                 type="number"
                                 step="0.5"
@@ -1608,65 +2045,76 @@ export default function AdminOrders() {
                                     )
                                   )
                                 }
-                                className="w-16 px-2 py-1.5 border border-slate-200 rounded-lg text-center font-mono font-bold text-xs outline-none focus:border-[#0D63FF]"
+                                className="w-16 px-1.5 py-0.5 border border-slate-200 rounded-md text-right font-mono font-bold text-xs"
                               />
-                            </td>
+                              <span className="text-[10px] text-slate-500 font-bold">DT</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
 
-                            {/* TOTAL ITEM */}
-                            <td className="py-3 px-3 text-right font-bold font-mono text-slate-900 whitespace-nowrap">
-                              {formatDt(item.subtotal || item.price * item.quantity)}
-                            </td>
-
-                            {/* REMOVE TRASH BUTTON */}
-                            <td className="py-3 px-2 text-right">
-                              <button
-                                onClick={() => handleRemoveItem(idx)}
-                                className="p-1 text-red-400 hover:text-red-600 transition-colors cursor-pointer"
-                                title="Retirer l'article"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-
-                        {formItems.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              className="py-6 text-center text-slate-400 text-xs font-medium"
-                            >
-                              Aucun produit ajouté. Utilisez le sélecteur ci-dessus pour ajouter des articles.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                    {formItems.length === 0 && (
+                      <div className="p-6 text-center text-slate-400 text-xs font-medium">
+                        Aucun article dans cette commande.
+                      </div>
+                    )}
                   </div>
 
                   {/* Calculations breakdown at bottom right */}
                   <div className="border-t border-slate-100 pt-4 flex justify-end">
-                    <div className="w-64 space-y-2 text-xs">
+                    <div className="w-full sm:w-72 space-y-2 text-xs">
                       <div className="flex justify-between text-slate-600">
-                        <span className="font-bold uppercase text-[10px]">SOUS-TOTAL</span>
+                        <span className="font-bold uppercase text-[10px] tracking-wider">Sous-total articles</span>
                         <span className="font-mono font-bold text-slate-900">
                           {formatDt(drawerSubtotal)}
                         </span>
                       </div>
                       <div className="flex justify-between text-slate-600">
-                        <span className="font-bold uppercase text-[10px]">FRAIS DE LIVRAISON</span>
+                        <span className="font-bold uppercase text-[10px] tracking-wider">Frais de livraison ({formCustomerCity})</span>
                         <span className="font-mono font-bold text-slate-900">
                           {formatDt(formShippingCost)}
                         </span>
                       </div>
                       <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-black">
-                        <span className="uppercase text-xs text-slate-900">TOTAL</span>
-                        <span className="font-mono text-[#0D63FF] text-base">
+                        <span className="uppercase text-xs text-slate-900">Montant Total</span>
+                        <span className="font-mono text-[#0D63FF] text-lg">
                           {formatDt(drawerTotal)}
                         </span>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* STICKY BOTTOM ACTION BAR */}
+              <div className="p-4 sm:px-6 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0 shadow-lg">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block leading-none">
+                    Total de la commande
+                  </span>
+                  <span className="text-base sm:text-xl font-black font-mono text-[#0D63FF]">
+                    {formatDt(drawerTotal)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={closeDrawer}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveDrawer}
+                    disabled={saving}
+                    className="px-5 py-2.5 bg-[#0D63FF] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Save size={15} />
+                    <span>{saving ? 'Enregistrement…' : 'Enregistrer les modifications'}</span>
+                  </button>
                 </div>
               </div>
             </motion.div>

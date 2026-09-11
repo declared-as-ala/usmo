@@ -5,6 +5,7 @@ import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './register.dto';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+import { getAppBaseUrl } from '../../common/app-url';
 
 @Injectable()
 export class AuthService {
@@ -81,7 +82,7 @@ export class AuthService {
       emailVerificationExpires: verificationExpires,
     } as any);
 
-    const appUrl = process.env.APP_URL || 'http://54.37.226.228';
+    const appUrl = getAppBaseUrl();
     const verificationUrl = `${appUrl}/verify-email?token=${verificationToken}`;
 
     // Send verification email asynchronously via OVH SMTP
@@ -123,7 +124,7 @@ export class AuthService {
     user.resetPasswordExpires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
     await user.save();
 
-    const appUrl = process.env.APP_URL || 'http://54.37.226.228';
+    const appUrl = getAppBaseUrl();
     const resetUrl = `${appUrl}/auth/reset-password?token=${resetToken}`;
 
     // Send reset password email via OVH SMTP
