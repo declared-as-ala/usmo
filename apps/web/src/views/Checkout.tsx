@@ -616,17 +616,21 @@ export const Checkout: React.FC = () => {
                     onChange={(e) => setGovernorate(e.target.value)}
                     className="w-full bg-white border border-usm-border text-sm text-usm-blue-dark font-semibold rounded-xl p-3.5 pl-10 outline-none focus:border-usm-blue-primary cursor-pointer transition-all appearance-none"
                   >
-                    {TUNISIAN_GOVERNORATES.map((g) => (
-                      <option key={g} value={g}>
-                        {g} {g === 'Monastir' ? '(Frais de livraison : 4.000 DT)' : '(Frais de livraison : 8.000 DT)'}
-                      </option>
-                    ))}
+                    {TUNISIAN_GOVERNORATES.map((g) => {
+                      const zone = deliveryZones.find((z) => g === 'Monastir' ? z.name?.toLowerCase().includes('monastir') : !z.name?.toLowerCase().includes('monastir'));
+                      const price = zone?.price ?? (g === 'Monastir' ? 4000 : 8000);
+                      return (
+                        <option key={g} value={g}>
+                          {g} (Frais de livraison : {formatMoney(price)})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                  {governorate === 'Monastir'
-                    ? 'Tarif spécial Monastir : 4.000 DT'
-                    : 'Tarif standard autres régions : 8.000 DT'}
+                  {matchingZone?.price
+                    ? `Tarif ${governorate === 'Monastir' ? 'spécial Monastir' : 'standard'} : ${formatMoney(matchingZone.price)}`
+                    : `Tarif standard : ${governorate === 'Monastir' ? '4.000' : '8.000'} DT`}
                 </p>
               </div>
 
