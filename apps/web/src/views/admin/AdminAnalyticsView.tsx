@@ -89,6 +89,12 @@ export const AdminAnalyticsView: React.FC = () => {
   const uniqueVisitors = overview?.uniqueVisitors || 0;
   const viewsToday = overview?.viewsToday || 0;
   const viewsYesterday = overview?.viewsYesterday || 0;
+  const visitorsToday = overview?.visitorsToday ?? overview?.uniqueVisitors ?? 0;
+  const visitorsYesterday = overview?.visitorsYesterday ?? 0;
+  const prevVisitors = overview?.prevVisitors ?? 0;
+  const todayTrend = overview?.todayTrend ?? 0;
+  const visitorsTrend = overview?.visitorsTrend ?? 0;
+  const viewsTrend = overview?.viewsTrend ?? 0;
   const activeNow = realtime?.activeVisitors || overview?.activeNow || 0;
 
   return (
@@ -168,7 +174,14 @@ export const AdminAnalyticsView: React.FC = () => {
             <Eye size={16} className="text-usm-blue-primary" />
           </div>
           <p className="text-2xl font-black text-usm-blue-dark">{totalViews.toLocaleString()}</p>
-          <p className="text-[10px] text-slate-400 mt-1">Total vues cumulées</p>
+          <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>Total vues cumulées</span>
+            {viewsTrend !== 0 && (
+              <span className={`font-semibold ${viewsTrend > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                ({viewsTrend > 0 ? '+' : ''}{viewsTrend}%)
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-usm-border">
@@ -177,16 +190,48 @@ export const AdminAnalyticsView: React.FC = () => {
             <Users size={16} className="text-indigo-500" />
           </div>
           <p className="text-2xl font-black text-usm-blue-dark">{uniqueVisitors.toLocaleString()}</p>
-          <p className="text-[10px] text-slate-400 mt-1">Sessions individuelles</p>
+          <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>Sessions individuelles</span>
+            {range !== 'today' && visitorsTrend !== 0 && (
+              <span className={`font-semibold ${visitorsTrend > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                ({visitorsTrend > 0 ? '+' : ''}{visitorsTrend}%)
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-usm-border">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Visiteurs Aujourd'hui</span>
-            <TrendingUp size={16} className="text-emerald-500" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">
+              {range === 'yesterday' ? 'Visiteurs Hier' : "Visiteurs Aujourd'hui"}
+            </span>
+            <TrendingUp
+              size={16}
+              className={
+                (range === 'yesterday' ? visitorsTrend : todayTrend) >= 0
+                  ? 'text-emerald-500'
+                  : 'text-rose-500'
+              }
+            />
           </div>
-          <p className="text-2xl font-black text-usm-blue-dark">{viewsToday.toLocaleString()}</p>
-          <p className="text-[10px] text-slate-400 mt-1">Hier: {viewsYesterday.toLocaleString()}</p>
+          <p className="text-2xl font-black text-usm-blue-dark">
+            {(range === 'yesterday' ? visitorsYesterday : visitorsToday).toLocaleString()}
+          </p>
+          <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <span>
+              {range === 'yesterday' ? 'Avant-hier: ' : 'Hier: '}
+              {(range === 'yesterday' ? prevVisitors : visitorsYesterday).toLocaleString()}
+            </span>
+            {(() => {
+              const trend = range === 'yesterday' ? visitorsTrend : todayTrend;
+              if (trend === 0) return null;
+              return (
+                <span className={`font-semibold ${trend > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  ({trend > 0 ? '+' : ''}{trend}%)
+                </span>
+              );
+            })()}
+          </p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-usm-border">

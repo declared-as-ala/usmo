@@ -75,45 +75,59 @@ export class AnalyticsService {
     return { success: true };
   }
 
-  // ── Date Filtering Helper ──────────────────────────────────────────────────
+  // ── Date Filtering Helpers (Africa/Tunis) ──────────────────────────────────
+
+  private getStartOfDayInTunis(date = new Date()): Date {
+    const tunisStr = date.toLocaleDateString('en-CA', { timeZone: 'Africa/Tunis' });
+    return new Date(`${tunisStr}T00:00:00.000+01:00`);
+  }
+
+  private getEndOfDayInTunis(date = new Date()): Date {
+    const tunisStr = date.toLocaleDateString('en-CA', { timeZone: 'Africa/Tunis' });
+    return new Date(`${tunisStr}T23:59:59.999+01:00`);
+  }
 
   private parseDateRange(range?: string, from?: string, to?: string): { startDate: Date; endDate: Date } {
-    const endDate = to ? new Date(to) : new Date();
-    endDate.setHours(23, 59, 59, 999);
-
-    let startDate = new Date();
     if (from) {
-      startDate = new Date(from);
-      startDate.setHours(0, 0, 0, 0);
+      const startDate = new Date(`${from}T00:00:00.000+01:00`);
+      const endDate = to ? new Date(`${to}T23:59:59.999+01:00`) : this.getEndOfDayInTunis();
       return { startDate, endDate };
     }
 
+    const now = new Date();
+    let startDate: Date;
+    let endDate = this.getEndOfDayInTunis(now);
+
     switch (range) {
       case 'today':
-        startDate.setHours(0, 0, 0, 0);
+        startDate = this.getStartOfDayInTunis(now);
         break;
-      case 'yesterday':
-        startDate.setDate(startDate.getDate() - 1);
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setDate(endDate.getDate() - 1);
-        endDate.setHours(23, 59, 59, 999);
+      case 'yesterday': {
+        const yDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        startDate = this.getStartOfDayInTunis(yDate);
+        endDate = this.getEndOfDayInTunis(yDate);
         break;
+      }
       case 'week':
-      case '7days':
-        startDate.setDate(startDate.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
+      case '7days': {
+        startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000 + 1);
         break;
+      }
       case 'month':
-      case '30days':
-        startDate.setDate(startDate.getDate() - 30);
-        startDate.setHours(0, 0, 0, 0);
+      case '30days': {
+        startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000 + 1);
         break;
-      case 'season':
-        startDate = new Date(new Date().getFullYear() - 1, 8, 1); // Sept 1st of previous year
+      }
+      case 'season': {
+        const tunisYear = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Africa/Tunis' }).split('-')[0], 10);
+        const tunisMonth = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Africa/Tunis' }).split('-')[1], 10);
+        const startYear = tunisMonth >= 9 ? tunisYear : tunisYear - 1;
+        startDate = new Date(`${startYear}-09-01T00:00:00.000+01:00`);
         break;
-      default:
-        startDate.setDate(startDate.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
+      }
+      default: {
+        startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000 + 1);
+      }
     }
 
     return { startDate, endDate };
@@ -124,28 +138,46 @@ export class AnalyticsService {
   async getOverview(range?: string, from?: string, to?: string) {
     const { startDate, endDate } = this.parseDateRange(range, from, to);
 
-    const matchStage = { $match: { createdAt: { $gte: startDate, $lte: endDate } } };
-
     const totalViews = await this.eventModel.countDocuments({
       createdAt: { $gte: startDate, $lte: endDate },
       eventType: 'page_view',
     });
 
     const uniqueVisitorsRes = await this.eventModel.aggregate([
-      matchStage,
+      { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
       { $group: { _id: '$sessionId' } },
       { $count: 'count' },
     ]);
     const uniqueVisitors = uniqueVisitorsRes[0]?.count || 0;
 
-    // Today & Yesterday comparison
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-    const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
+    // Previous period calculation (same duration immediately preceding startDate)
+    const durationMs = endDate.getTime() - startDate.getTime() + 1;
+    const prevEndDate = new Date(startDate.getTime() - 1);
+    const prevStartDate = new Date(prevEndDate.getTime() - durationMs + 1);
 
+    const prevViews = await this.eventModel.countDocuments({
+      createdAt: { $gte: prevStartDate, $lte: prevEndDate },
+      eventType: 'page_view',
+    });
+
+    const prevVisitorsRes = await this.eventModel.aggregate([
+      { $match: { createdAt: { $gte: prevStartDate, $lte: prevEndDate } } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'count' },
+    ]);
+    const prevVisitors = prevVisitorsRes[0]?.count || 0;
+
+    // Today & Yesterday fixed metrics in Africa/Tunis timezone
+    const now = new Date();
+    const todayStart = this.getStartOfDayInTunis(now);
+    const todayEnd = this.getEndOfDayInTunis(now);
+    const yDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayStart = this.getStartOfDayInTunis(yDate);
+    const yesterdayEnd = this.getEndOfDayInTunis(yDate);
+
+    // Page views today & yesterday (for backward compatibility)
     const viewsToday = await this.eventModel.countDocuments({
-      createdAt: { $gte: todayStart },
+      createdAt: { $gte: todayStart, $lte: todayEnd },
       eventType: 'page_view',
     });
     const viewsYesterday = await this.eventModel.countDocuments({
@@ -153,17 +185,51 @@ export class AnalyticsService {
       eventType: 'page_view',
     });
 
+    // Real unique visitors today & yesterday (distinct sessionId count)
+    const visitorsTodayRes = await this.eventModel.aggregate([
+      { $match: { createdAt: { $gte: todayStart, $lte: todayEnd } } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'count' },
+    ]);
+    const visitorsToday = visitorsTodayRes[0]?.count || 0;
+
+    const visitorsYesterdayRes = await this.eventModel.aggregate([
+      { $match: { createdAt: { $gte: yesterdayStart, $lte: yesterdayEnd } } },
+      { $group: { _id: '$sessionId' } },
+      { $count: 'count' },
+    ]);
+    const visitorsYesterday = visitorsYesterdayRes[0]?.count || 0;
+
     const activeNow = await this.getRealtimeActiveCount();
+
+    const visitorsTrend = prevVisitors > 0
+      ? Math.round(((uniqueVisitors - prevVisitors) / prevVisitors) * 100)
+      : (uniqueVisitors > 0 ? 100 : 0);
+
+    const viewsTrend = prevViews > 0
+      ? Math.round(((totalViews - prevViews) / prevViews) * 100)
+      : (totalViews > 0 ? 100 : 0);
+
+    const todayTrend = visitorsYesterday > 0
+      ? Math.round(((visitorsToday - visitorsYesterday) / visitorsYesterday) * 100)
+      : (visitorsToday > 0 ? 100 : 0);
 
     return {
       totalViews,
       uniqueVisitors,
       viewsToday,
       viewsYesterday,
+      visitorsToday,
+      visitorsYesterday,
+      prevViews,
+      prevVisitors,
+      visitorsTrend,
+      viewsTrend,
+      todayTrend,
       activeNow,
       avgSessionDuration: Math.round(180 + Math.random() * 60), // Avg ~3 mins calculated or fallback
       pagesPerSession: uniqueVisitors > 0 ? parseFloat((totalViews / uniqueVisitors).toFixed(1)) : 0,
-      period: { startDate, endDate },
+      period: { startDate, endDate, prevStartDate, prevEndDate },
     };
   }
 
@@ -175,7 +241,7 @@ export class AnalyticsService {
       {
         $group: {
           _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Africa/Tunis' },
           },
           pageViews: { $sum: { $cond: [{ $eq: ['$eventType', 'page_view'] }, 1, 0] } },
           uniqueVisitors: { $addToSet: '$sessionId' },

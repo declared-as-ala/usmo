@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminTopbar } from './AdminTopbar';
@@ -213,13 +214,13 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
             </button>
 
             <div className="pt-2 text-center">
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
               >
                 <ArrowLeft size={13} />
                 <span>Retour au site public</span>
-              </a>
+              </Link>
             </div>
           </div>
         </form>
