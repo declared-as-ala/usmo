@@ -56,6 +56,12 @@ compose config --quiet
 echo "[deploy] Building production images..."
 compose build --pull api web nginx
 
+echo "[deploy] Cleaning any dangling temporary containers..."
+for stale_container in $(docker ps -a --filter "name=_usm-" --format '{{.ID}}'); do
+  echo "[deploy] Removing stale temporary container: $stale_container"
+  docker rm -f "$stale_container" || true
+done
+
 echo "[deploy] Starting internal services before Nginx preflight..."
 compose up -d mongo minio mc api web
 

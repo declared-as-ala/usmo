@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Truck,
   Download,
+  Calculator,
 } from 'lucide-react';
 
 export type OrderStatus =
@@ -334,6 +335,28 @@ export default function AdminOrders() {
     orders.forEach((o) => o.items.forEach((i) => i.name && names.add(i.name)));
     return Array.from(names);
   }, [orders]);
+
+  // Totals calculations for the summary bar / footer
+  const totals = useMemo(() => {
+    const list =
+      selectedOrderIds.length > 0
+        ? displayedOrders.filter((o) => selectedOrderIds.includes(o._id))
+        : displayedOrders;
+
+    const totalOrders = list.length;
+    const totalQuantity = list.reduce(
+      (sum, o) =>
+        sum + (o.items?.reduce((iSum, it) => iSum + (Number(it.quantity) || 1), 0) || 0),
+      0
+    );
+    const totalAmount = list.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    return {
+      totalOrders,
+      totalQuantity,
+      totalAmount,
+    };
+  }, [displayedOrders, selectedOrderIds]);
 
   // Select all checkboxes
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -787,15 +810,16 @@ export default function AdminOrders() {
                       className="rounded border-slate-300 accent-[#0D63FF] cursor-pointer"
                     />
                   </th>
-                  <th className="py-3.5 px-4">ID</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">ID</th>
                   <th className="py-3.5 px-4">CLIENT</th>
-                  <th className="py-3.5 px-4">DATE</th>
-                  <th className="py-3.5 px-4">TÉLÉPHONE</th>
+                  <th className="py-3.5 px-4">PRODUIT</th>
+                  <th className="py-3.5 px-4 text-center whitespace-nowrap">QUANTITÉ</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">DATE & HEURE</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">TÉLÉPHONE</th>
                   <th className="py-3.5 px-4">VILLE</th>
-                  <th className="py-3.5 px-4 text-center">STATUT</th>
-                  <th className="py-3.5 px-4 text-center">EXPÉDITION</th>
-                  <th className="py-3.5 px-4">TOTAL</th>
-                  <th className="py-3.5 px-4 text-right">ACTIONS</th>
+                  <th className="py-3.5 px-4 text-center whitespace-nowrap">STATUT</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap">TOTAL</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap">ACTIONS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -805,6 +829,8 @@ export default function AdminOrders() {
                   const isChecked = selectedOrderIds.includes(order._id);
                   const cleanPhone = order.customer?.phone?.replace(/\s+/g, '') || '';
                   const isRegularCustomer = (phoneCounts[cleanPhone] || 0) > 1;
+                  const orderQuantity =
+                    order.items?.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0) || 0;
 
                   return (
                     <tr
@@ -823,8 +849,8 @@ export default function AdminOrders() {
                         />
                       </td>
 
-                      {/* ID */}
-                      <td className="py-3.5 px-4">
+                      {/* 1. ID */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
                           onClick={() => openDrawer(order, 'edit')}
                           className="font-bold text-slate-900 hover:text-[#0D63FF] transition-colors cursor-pointer text-xs block"
@@ -838,7 +864,7 @@ export default function AdminOrders() {
                         )}
                       </td>
 
-                      {/* CLIENT */}
+                      {/* 2. CLIENT */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-slate-900">
@@ -852,14 +878,73 @@ export default function AdminOrders() {
                         </div>
                       </td>
 
-                      {/* DATE */}
+                      {/* 3. PRODUIT */}
+                      <td className="py-3.5 px-4 min-w-[160px] max-w-[240px]">
+                        {order.items && order.items.length > 0 ? (
+                          <div>
+                            <p
+                              className="font-semibold text-slate-900 truncate text-xs"
+                              title={order.items
+                                .map(
+                                  (it) =>
+                                    `${it.name} (${it.size || 'Unique'}) x${it.quantity || 1}`
+                                )
+                                .join(', ')}
+                            >
+                              {order.items[0]?.name || 'Article USM'}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500">
+                              {order.items[0]?.size && (
+                                <span className="bg-slate-100 px-1.5 py-0.5 rounded font-mono font-medium text-slate-600">
+                                  T: {order.items[0].size}
+                                </span>
+                              )}
+                              {order.items.length > 1 && (
+                                <span
+                                  className="text-[10px] font-bold text-[#0D63FF] bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded cursor-help"
+                                  title={order.items
+                                    .slice(1)
+                                    .map(
+                                      (it) =>
+                                        `${it.name} (${it.size || '-'}) x${it.quantity || 1}`
+                                    )
+                                    .join(', ')}
+                                >
+                                  +{order.items.length - 1} autre
+                                  {order.items.length > 2 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </td>
+
+                      {/* 4. QUANTITÉ */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-xs font-mono">
+                          {orderQuantity}
+                        </span>
+                      </td>
+
+                      {/* 5. DATE & HEURE */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <div>
-                          <p className="text-slate-700 font-medium">
+                          <p className="text-slate-800 font-medium text-xs">
                             {formatDateOnly(order.createdAt)}
+                            <span className="text-slate-400 font-normal font-mono ml-1.5 text-[11px]">
+                              {(() => {
+                                const d = new Date(order.createdAt);
+                                if (isNaN(d.getTime())) return '';
+                                return `${String(d.getHours()).padStart(2, '0')}:${String(
+                                  d.getMinutes()
+                                ).padStart(2, '0')}`;
+                              })()}
+                            </span>
                           </p>
                           {order.status === 'confirmed' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold bg-[#ECFDF3] text-[#027A48] border border-[#A6F4C5] mt-1">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-[#ECFDF3] text-[#027A48] border border-[#A6F4C5] mt-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#12B76A]" />
                               Conf: {formatDateTime(order.confirmedAt || order.updatedAt || order.createdAt)}
                             </span>
@@ -867,45 +952,41 @@ export default function AdminOrders() {
                         </div>
                       </td>
 
-                      {/* TÉLÉPHONE */}
+                      {/* 6. TÉLÉPHONE */}
                       <td className="py-3.5 px-4 font-mono text-slate-700 whitespace-nowrap">
-                        {order.customer?.phone || '—'}
+                        {order.customer?.phone ? (
+                          <a
+                            href={`tel:${order.customer.phone}`}
+                            className="hover:text-[#0D63FF] hover:underline"
+                          >
+                            {order.customer.phone}
+                          </a>
+                        ) : (
+                          '—'
+                        )}
                       </td>
 
-                      {/* VILLE */}
-                      <td className="py-3.5 px-4 text-slate-700 font-medium">
+                      {/* 7. VILLE */}
+                      <td className="py-3.5 px-4 text-slate-700 font-medium whitespace-nowrap">
                         {order.customer?.city || '—'}
                       </td>
 
-                      {/* STATUT */}
+                      {/* 8. STATUT */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
                         >
                           {STATUS_LABELS[order.status] || order.status}
                         </span>
-                      </td>
-
-                      {/* EXPÉDITION */}
-                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                        {order.shippingCompany && order.shippingCompany !== '-' ? (
-                          <div className="inline-flex flex-col items-center">
-                            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5">
-                              {order.shippingCompany} ✓
-                            </span>
-                            {order.trackingNumber && (
-                              <span className="text-[9px] text-slate-400 font-mono mt-0.5">
-                                {order.trackingNumber}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-slate-300 font-bold">—</span>
+                        {order.shippingCompany && order.shippingCompany !== '-' && (
+                          <span className="block text-[9px] font-bold text-emerald-700 mt-0.5">
+                            {order.shippingCompany} ✓
+                          </span>
                         )}
                       </td>
 
-                      {/* TOTAL */}
-                      <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap">
+                      {/* 9. TOTAL */}
+                      <td className="py-3.5 px-4 font-bold text-slate-900 whitespace-nowrap font-mono">
                         {formatDt(order.total)}
                       </td>
 
@@ -941,18 +1022,56 @@ export default function AdminOrders() {
 
                 {displayedOrders.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="py-16 text-center text-slate-400 text-xs font-medium">
+                    <td colSpan={11} className="py-16 text-center text-slate-400 text-xs font-medium">
                       Aucune commande ne correspond à vos filtres.
                     </td>
                   </tr>
                 )}
               </tbody>
+
+              {/* TABLE FOOTER / TOTAUX INTÉGRÉS */}
+              {displayedOrders.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-slate-200 bg-slate-50/90 font-bold text-slate-900 text-xs">
+                    <td className="py-3.5 px-4" colSpan={4}>
+                      <div className="flex items-center gap-2">
+                        <span className="uppercase text-[10px] tracking-wider text-slate-500 font-bold">
+                          Total
+                        </span>
+                        <span className="bg-slate-200/80 text-slate-700 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                          {totals.totalOrders} commande{totals.totalOrders > 1 ? 's' : ''}
+                        </span>
+                        {selectedOrderIds.length > 0 && (
+                          <span className="bg-blue-100 text-[#0D63FF] text-[11px] font-bold px-2 py-0.5 rounded-full">
+                            ({selectedOrderIds.length} sélectionnée{selectedOrderIds.length > 1 ? 's' : ''})
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    {/* Under QUANTITÉ */}
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 rounded-lg bg-white border border-slate-300 shadow-2xs font-mono font-black text-xs text-[#0D63FF]">
+                        {totals.totalQuantity}
+                      </span>
+                    </td>
+                    {/* Under DATE & HEURE, TÉLÉPHONE, VILLE, STATUT */}
+                    <td colSpan={4} className="py-3.5 px-4 text-right text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                      Montant Total :
+                    </td>
+                    {/* Under TOTAL */}
+                    <td className="py-3.5 px-4 font-black text-slate-950 text-xs whitespace-nowrap font-mono text-[#0D63FF]">
+                      {formatDt(totals.totalAmount)}
+                    </td>
+                    <td className="py-3.5 px-4"></td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           )}
         </div>
 
         {!loading && displayedOrders.length > 0 && (
-          <div className="p-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between px-4">
+          <div className="p-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between px-4 bg-white">
             <span>
               {selectedOrderIds.length > 0
                 ? `${selectedOrderIds.length} sélectionnée(s)`
@@ -964,6 +1083,62 @@ export default function AdminOrders() {
           </div>
         )}
       </div>
+
+      {/* ── BARRE DE TOTAUX / SUMMARY BAR (Chiffres globaux & sélectionnés) ── */}
+      {!loading && displayedOrders.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0D63FF] shrink-0">
+              <Calculator size={20} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                {selectedOrderIds.length > 0
+                  ? `Total des commandes sélectionnées (${selectedOrderIds.length})`
+                  : `Total des commandes affichées (${totals.totalOrders})`}
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {selectedOrderIds.length > 0
+                  ? `Calculé sur ${selectedOrderIds.length} commande(s) cochée(s) sur ${displayedOrders.length}`
+                  : `Calculé sur l'ensemble des ${displayedOrders.length} commande(s) selon vos filtres`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            {/* Total Commandes */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2 text-center min-w-[100px]">
+              <span className="text-[10px] uppercase font-bold text-slate-500 block tracking-wider">
+                Commandes
+              </span>
+              <span className="text-base font-black text-slate-900 font-mono">
+                {totals.totalOrders.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Total Quantité */}
+            <div className="bg-amber-50/60 border border-amber-200/60 rounded-xl px-4 py-2 text-center min-w-[110px]">
+              <span className="text-[10px] uppercase font-bold text-amber-800 block tracking-wider">
+                Quantité Totale
+              </span>
+              <span className="text-base font-black text-amber-700 font-mono">
+                {totals.totalQuantity.toLocaleString()}
+              </span>
+              <span className="text-[9px] text-amber-600 block -mt-0.5">articles</span>
+            </div>
+
+            {/* Total Montant */}
+            <div className="bg-emerald-50/60 border border-emerald-200/60 rounded-xl px-5 py-2 text-center min-w-[130px]">
+              <span className="text-[10px] uppercase font-bold text-emerald-800 block tracking-wider">
+                Montant Total
+              </span>
+              <span className="text-base font-black text-emerald-700 font-mono">
+                {formatDt(totals.totalAmount)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── DRAWER / MODAL: "MODIFIER LA COMMANDE" (Screenshot 2) ── */}
       <AnimatePresence>
