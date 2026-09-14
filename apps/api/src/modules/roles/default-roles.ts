@@ -52,6 +52,14 @@ export const SYSTEM_PERMISSIONS = {
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_EDIT: 'settings.edit',
 
+  // SEO Management
+  SEO_VIEW: 'seo.view',
+  SEO_EDIT: 'seo.edit',
+  SEO_ANALYZE: 'seo.analyze',
+  SEO_BULK_EDIT: 'seo.bulk_edit',
+  SEO_MANAGE_REDIRECTS: 'seo.manage_redirects',
+  SEO_MANAGE_SETTINGS: 'seo.manage_settings',
+
   // Security & Audit (SUPER_ADMIN ONLY)
   SECURITY_AUDIT_LOGS: 'security.audit_logs',
   SECURITY_LOGIN_HISTORY: 'security.login_history',
@@ -70,6 +78,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
     'analytics.view', 'analytics.export',
     'settings.view', 'settings.edit',
+    'seo.view', 'seo.edit', 'seo.analyze', 'seo.bulk_edit', 'seo.manage_redirects', 'seo.manage_settings',
   ],
   Admin: [
     'users.view', 'users.edit', 'users.suspend', 'users.export',
@@ -80,6 +89,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
     'media.view', 'media.upload', 'media.edit', 'media.delete', 'media.publish',
     'analytics.view', 'analytics.export',
     'settings.view', 'settings.edit',
+    'seo.view', 'seo.edit', 'seo.analyze', 'seo.bulk_edit', 'seo.manage_redirects', 'seo.manage_settings',
   ],
   GESTIONNAIRE_COMMANDES: [
     'orders.view',

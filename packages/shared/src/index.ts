@@ -223,3 +223,146 @@ export interface ISharedCoupon {
   endDate?: string;
   active: boolean;
 }
+
+// 9. SEO & Metadata Interfaces
+export type SeoEntityType =
+  | 'page'
+  | 'news'
+  | 'product'
+  | 'category'
+  | 'player'
+  | 'staff'
+  | 'match'
+  | 'competition'
+  | 'sponsor'
+  | 'media'
+  | 'legend'
+  | 'history'
+  | 'palmares'
+  | 'trophy'
+  | 'stadium'
+  | 'downloads'
+  | 'legal'
+  | 'custom';
+
+export type SeoScoreStatus = 'poor' | 'needs_improvement' | 'good' | 'excellent';
+
+export interface ISharedSeoAuditIssue {
+  type: 'error' | 'warning' | 'good';
+  code: string;
+  message: string;
+  messageFr: string;
+}
+
+export interface ISharedSeoMetadata {
+  id?: string;
+  entityType: SeoEntityType;
+  entityId: string;
+  path: string;
+  title: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  slug?: string;
+  focusKeyword?: string;
+  secondaryKeywords?: string[];
+  robotsIndex: boolean;
+  robotsFollow: boolean;
+  // Open Graph
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string; // 1200x630 Social Share Image
+  ogImageAlt?: string;
+  ogType?: string;
+  ogSiteName?: string;
+  // Twitter
+  twitterCard?: 'summary' | 'summary_large_image';
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  // Schema.org
+  schemaType?: string;
+  customJsonLd?: string;
+  // Multilingual & Sitemaps
+  hreflang?: Record<string, string>;
+  breadcrumbsEnabled?: boolean;
+  sitemapEnabled?: boolean;
+  priority?: number;
+  changeFrequency?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+  // Quality & Scoring
+  seoScore: number;
+  scoreStatus?: SeoScoreStatus;
+  seoIssues: ISharedSeoAuditIssue[];
+  lastAnalyzedAt?: string;
+  updatedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ISharedSeoSettings {
+  id?: string;
+  siteName: string;
+  organizationName: string;
+  titleTemplateDefault: string;
+  titleTemplateProducts: string;
+  titleTemplateNews: string;
+  titleTemplatePlayers: string;
+  titleTemplateMatches: string;
+  defaultMetaDescription: string;
+  defaultSocialImage: string; // 1200x630
+  twitterHandle: string;
+  facebookUrl: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  logoUrl: string;
+  canonicalDomain: string;
+  defaultLanguage: string;
+}
+
+export interface ISharedSeoRedirect {
+  id: string;
+  sourcePath: string;
+  destinationPath: string;
+  statusCode: 301 | 302;
+  active: boolean;
+  hits: number;
+  lastHitAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ISharedSeoNotFoundLog {
+  id: string;
+  path: string;
+  hits: number;
+  lastSeenAt: string;
+  referrers: string[];
+  resolved: boolean;
+  redirectId?: string;
+}
+
+export interface ISharedSeoOverview {
+  totalContent: number;
+  completeCount: number;
+  needsImprovementCount: number;
+  missingCount: number;
+  excellentCount: number;
+  goodCount: number;
+  poorCount: number;
+  averageScore: number;
+  completionRate: number;
+  missingSocialImageCount: number;
+  missingFocusKeywordCount: number;
+  duplicateTitlesCount: number;
+  noindexCount: number;
+  health: {
+    sitemapAccessible: boolean;
+    robotsAccessible: boolean;
+    canonicalDomainConfigured: boolean;
+    defaultSocialImageConfigured: boolean;
+    duplicateTitlesCount: number;
+    redirectsCount: number;
+    unresolved404Count: number;
+  };
+}

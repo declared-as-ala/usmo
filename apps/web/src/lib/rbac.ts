@@ -57,6 +57,12 @@ export const ALL_APPLICATION_PERMISSIONS = [
   'analytics.export',
   'settings.view',
   'settings.edit',
+  'seo.view',
+  'seo.edit',
+  'seo.analyze',
+  'seo.bulk_edit',
+  'seo.manage_redirects',
+  'seo.manage_settings',
 ] as const;
 
 export const RBAC_PERMISSIONS: Record<SystemRole, readonly string[]> = {

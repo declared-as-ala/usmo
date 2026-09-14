@@ -45,6 +45,7 @@ import { CompetitionsModule } from './modules/competitions/competitions.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { PlayersModule } from './modules/players/players.module';
 import { StaffModule } from './modules/staff/staff.module';
+import { SeoModule } from './modules/seo/seo.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { MailModule } from './modules/mail/mail.module';
@@ -112,6 +113,7 @@ import { PublicMediaUrlInterceptor } from './common/public-media-url.interceptor
     MatchesModule,
     PlayersModule,
     StaffModule,
+    SeoModule,
   ],
   controllers: [AppController],
   providers: [

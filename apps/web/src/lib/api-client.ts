@@ -1016,4 +1016,69 @@ export const api = {
     return fetchJson(`/admin/analytics/content${query ? '?' + query : ''}`);
   },
   getAnalyticsRealtime: () => fetchJson('/admin/analytics/realtime'),
+
+  // ── SEO Management (Yoast-style Enterprise SEO) ─────────────────────────
+  getSeoOverview: () => fetchJson('/admin/seo/overview'),
+  getSeoContentList: (params: {
+    type?: string;
+    status?: string;
+    missing?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  } = {}) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== '')
+      .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
+      .join('&');
+    return fetchJson(`/admin/seo/content${query ? '?' + query : ''}`);
+  },
+  getSeoContentItem: (type: string, id: string) => fetchJson(`/admin/seo/content/${type}/${id}`),
+  updateSeoContentItem: (type: string, id: string, data: any) =>
+    fetchJson(`/admin/seo/content/${type}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  bulkSeoAction: (action: string, ids?: string[]) =>
+    fetchJson('/admin/seo/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ action, ids }),
+    }),
+  analyzeAllSeo: () =>
+    fetchJson('/admin/seo/analyze-all', {
+      method: 'POST',
+    }),
+  getSeoSettings: () => fetchJson('/admin/seo/settings'),
+  updateSeoSettings: (data: any) =>
+    fetchJson('/admin/seo/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  getSeoRedirects: () => fetchJson('/admin/seo/redirects'),
+  createSeoRedirect: (data: any) =>
+    fetchJson('/admin/seo/redirects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateSeoRedirect: (id: string, data: any) =>
+    fetchJson(`/admin/seo/redirects/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteSeoRedirect: (id: string) =>
+    fetchJson(`/admin/seo/redirects/${id}`, {
+      method: 'DELETE',
+    }),
+  getSeo404Logs: () => fetchJson('/admin/seo/404'),
+  revalidateSeoPath: async (path: string) => {
+    try {
+      await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path }),
+      });
+    } catch {
+      // ignore
+    }
+  },
 };
