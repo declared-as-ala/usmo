@@ -7,3 +7,4 @@ ENV MINIO_BUCKET=usm-media \
 
 COPY deploy/nginx/templates/ /etc/nginx/source-templates/
 COPY --chmod=0755 deploy/nginx/docker-entrypoint.d/15-select-config.sh /docker-entrypoint.d/15-select-config.sh
+COPY deploy/nginx/conf.d/ /etc/nginx/conf.d/
