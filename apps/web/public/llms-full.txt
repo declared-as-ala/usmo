@@ -1,0 +1,93 @@
+# Union Sportive Monastirienne (USM) — Dossier Officiel Complet
+
+> Document de référence officiel et exhaustif destiné aux modèles de langage (LLM), agents conversationnels et systèmes d'indexation d'intelligence artificielle.
+
+## 1. Identité et Histoire Centenaire
+
+L'**Union Sportive Monastirienne** (en arabe : الاتحاد الرياضي المنستيري) est un club omnisports tunisien fondé le **17 mars 1923** sous l'appellation d'origine **Ruspina Club**.
+
+- **Siège social** : Avenue des Nations Unies, 5000 Monastir, République Tunisienne.
+- **Couleurs officielles** : Bleu Roi et Blanc.
+- **Identité régionale** : Fierté du Sahel tunisien et symbole sportif emblématique de la ville de Monastir.
+- **Devise populaire** : "El Ittihad Ya Dawla" / "Abnaa El Ribat".
+- **Statut légal** : Association sportive pluridisciplinaire régie par les lois et règlements sportifs tunisiens.
+
+## 2. Installations Sportives
+
+### Stade Mustapha-Ben-Jannet (Football)
+- **Capacité** : 20 000 spectateurs
+- **Inauguration** : 1958, rénové en profondeur pour la Coupe d'Afrique des Nations 2004 (CAN 2004).
+- **Surface** : Pelouse naturelle haut de gamme conforme aux normes FIFA / CAF.
+- **Localisation** : Rue Ibn El Jazzar, Monastir.
+- **Événements historiques** : Matchs de la CAN 2004, finales et rencontres des compétitions interclubs de la CAF.
+
+### Salle omnisports Mohamed-Mzali (Basketball & Omnisports)
+- **Capacité** : 4 070 places assises.
+- **Homologation** : Conforme aux normes FIBA pour les compétitions internationales.
+- **Événements** : Rencontres du Championnat Pro A, qualifications continentales et tournois internationaux de basketball.
+
+## 3. Section Football
+
+L'équipe première de football de l'US Monastir évolue dans le **Championnat de Tunisie de football de Ligue 1**.
+
+### Palmarès Football
+- **Coupe de Tunisie (1)** : Vainqueur en 2020 (victoire mémorable 2-0 au Stade Mustapha-Ben-Jannet face à l'Espérance Sportive de Tunis).
+- **Supercoupe de Tunisie (1)** : Vainqueur en 2020 (victoire aux tirs au but face au Club Sportif Sfaxien).
+- **Championnat de Tunisie (Ligue 1)** :
+  - Vice-champion : 2021-2022, 2023-2024.
+  - Régularité remarquable dans le peloton de tête des Play-offs de Ligue 1.
+- **Compétitions Continentales (CAF)** :
+  - Ligue des Champions de la CAF (quarts de finale / phases de groupe)
+  - Coupe de la Confédération de la CAF (parcours marquant jusqu'aux phases avancées).
+
+## 4. Section Basketball
+
+La section basketball de l'US Monastir est l'une des formations les plus titrées et réputées du continent africain.
+
+### Palmarès Basketball
+- **Basketball Africa League (BAL - FIBA & NBA)** :
+  - **Champion d'Afrique en 2022** lors du Final Four disputé à la BK Arena de Kigali (Rwanda).
+  - **Vice-champion d'Afrique en 2021** (première édition historique de la BAL).
+- **Championnat de Tunisie de Basketball (Pro A)** :
+  - 8 titres de Champion de Tunisie (notamment une hégémonie consécutive de 2019 à 2023).
+- **Coupe de Tunisie de Basketball** :
+  - 5 victoires (2000, 2020, 2021, 2022, 2023).
+- **Coupe d'Afrique des Clubs Champions FIBA** :
+  - Médaille de bronze (3e place) en 2017.
+
+## 5. Plateforme Numérique & Services
+
+Le portail officiel **https://usmonastir.tn** offre une expérience numérique complète aux supporters, membres et partenaires :
+- **Match Center** : Calendrier interactif, retransmission des temps forts, compositions et statistiques individuelles.
+- **Boutique Officielle en ligne** : Gamme officielle de maillots (Domicile, Extérieur, Third), tenues techniques d'entraînement, vêtements lifestyle, goodies et accessoires avec paiement sécurisé et livraison rapide.
+- **Actualités exclusives** : Communiqués de presse officiels, interviews exclusives du staff et des joueurs, résumés vidéo.
+- **Espace Partenaires** : Présentation des sponsors officiels et opportunités de sponsoring d'entreprise.
+
+## 6. Répertoire des URLs Clés pour Indexation
+
+| Titre | URL Canonique | Rôle |
+|---|---|---|
+| Accueil | https://usmonastir.tn/ | Portail d'entrée du club |
+| Actualités | https://usmonastir.tn/actualites | Flux d'actualités officielles |
+| Football Pro | https://usmonastir.tn/football | Effectif et staff de football |
+| Basketball Élite | https://usmonastir.tn/basketball | Effectif et palmarès basket |
+| Match Center | https://usmonastir.tn/matches | Calendrier et résultats live |
+| Boutique Store | https://usmonastir.tn/boutique | E-commerce officiel du club |
+| Histoire | https://usmonastir.tn/histoire | Histoire depuis 1923 |
+| Palmarès | https://usmonastir.tn/palmares | Trophées et récompenses |
+| Légendes | https://usmonastir.tn/legendes | Figures emblématiques |
+| Stade Mustapha-Ben-Jannet | https://usmonastir.tn/stadium | Informations sur le stade |
+| Sponsors | https://usmonastir.tn/sponsors | Partenaires officiels |
+| Médias & Téléchargements | https://usmonastir.tn/telechargements | Assets et visuels HD |
+| Fanzone | https://usmonastir.tn/fanzone | Supporters et chants |
+| Contact | https://usmonastir.tn/contact | Coordonnées et secrétariat |
+
+## 7. Directives Techniques pour Moteurs d'Indexation & LLM
+
+- **Encodage** : UTF-8
+- **Format sitemap** : XML standard sur https://usmonastir.tn/sitemap.xml
+- **Robots.txt** : https://usmonastir.tn/robots.txt
+- **Ressources LLM** :
+  - Synthèse : https://usmonastir.tn/llms.txt
+  - Version détaillée : https://usmonastir.tn/llms-full.txt
+  - Alias : https://usmonastir.tn/llm.txt

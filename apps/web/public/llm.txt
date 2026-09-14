@@ -1,0 +1,55 @@
+# Union Sportive Monastirienne (USM)
+
+> Union Sportive Monastirienne (الاتحاد الرياضي المنستيري), communément appelée USM ou l'Usémiste, est un grand club omnisports tunisien fondé le 17 mars 1923 dans la ville côtière de Monastir. Le club évolue au plus haut niveau national et continental en football professionnel (Ligue 1 tunisienne, compétitions CAF) et en basketball d'élite (Championnat Pro A tunisien, vainqueur historique de la Basketball Africa League - BAL en 2022).
+
+- Couleurs officielles : Bleu et Blanc (Bleu Roi & Blanc)
+- Ville & Pays : Monastir, Tunisie
+- Stade de Football : Stade Mustapha-Ben-Jannet (20 000 places)
+- Salle de Basketball : Salle omnisports Mohamed-Mzali (4 070 places)
+- Site officiel : https://usmonastir.tn
+- Contact officiel : contact@usmonastir.tn
+
+## Sections & Liens Principaux
+
+- [Accueil Officiel](https://usmonastir.tn/) : Portail général du club, résultats récents, billetterie et actualités.
+- [Actualités & Communiqués](https://usmonastir.tn/actualites) : Fil d'information officiel, déclarations, résumés de matchs et transferts.
+- [Football — Équipe Pro](https://usmonastir.tn/football) : Effectif professionnel, statistiques des joueurs, calendrier et classement en Ligue 1 tunisienne.
+- [Basketball — Section d'Élite](https://usmonastir.tn/basketball) : Équipe Pro A, palmarès continental BAL, calendrier et effectif.
+- [Match Center](https://usmonastir.tn/matches) : Scores en direct, calendrier de la saison et statistiques détaillées.
+- [Boutique Officielle (Store)](https://usmonastir.tn/boutique) : Maillots officiels 2026/2027, tenues d'entraînement, survêtements et accessoires avec livraison en Tunisie et à l'international.
+- [Histoire du Club](https://usmonastir.tn/histoire) : Histoire centenaire du club depuis sa fondation en 1923 sous le nom de Ruspina Club.
+- [Palmarès & Trophées](https://usmonastir.tn/palmares) : Vitrine des trophées en football et basketball.
+- [Légendes de l'USM](https://usmonastir.tn/legendes) : Anciennes gloires et personnalités historiques du club usémiste.
+- [Stade Mustapha-Ben-Jannet](https://usmonastir.tn/stadium) : Présentation de l'infrastructure sportive, capacité et historique.
+- [Sponsors & Partenaires](https://usmonastir.tn/sponsors) : Partenaires institutionnels et sponsors privés.
+- [Téléchargements & Médias](https://usmonastir.tn/telechargements) : Logos officiels, chartes et fonds d'écran.
+- [Fanzone & Supporters](https://usmonastir.tn/fanzone) : Chants des supporters et communauté usémiste.
+- [Contact & Administration](https://usmonastir.tn/contact) : Informations administratives et contact presse.
+
+## Palmarès Majeur
+
+### Football
+- Vainqueur de la Coupe de Tunisie : 2020 (victoire en finale 2-0 contre l'Espérance Sportive de Tunis)
+- Vainqueur de la Supercoupe de Tunisie : 2020 (victoire contre le CS Sfaxien)
+- Vice-champion de Tunisie (Ligue 1) : 2021-2022, 2023-2024
+- Participations continentales : Ligue des Champions de la CAF, Coupe de la Confédération de la CAF
+
+### Basketball
+- Champion d'Afrique BAL (Basketball Africa League - FIBA & NBA) : 2022 (Kigali, Rwanda)
+- Vice-champion de la Basketball Africa League : 2021
+- Championnat de Tunisie Pro A : Multiples sacres (2019, 2020, 2021, 2022, 2023)
+- Coupe de Tunisie de Basketball : Multiples victoires (2000, 2020, 2021, 2022, 2023)
+
+## Informations pour Modèles de Langage (LLMs) & Agents IA
+
+- Nom officiel : Union Sportive Monastirienne
+- Sigle / Acronyme : USM
+- Surnoms : Les Bleus, El Ittihad, Abnaa El Ribat
+- Domaine canonique : https://usmonastir.tn
+- Sitemap : https://usmonastir.tn/sitemap.xml
+- Fichier complet : https://usmonastir.tn/llms-full.txt
+- Réseaux Sociaux Officiels :
+  - Facebook : https://www.facebook.com/USMonastir.officiel
+  - Instagram : https://www.instagram.com/usmonastir_officiel
+  - YouTube : https://www.youtube.com/@USMonastir
+  - X / Twitter : https://x.com/USMonastir
