@@ -965,8 +965,10 @@ export class SeoService implements OnModuleInit {
     const fallbackImage = settings.defaultSocialImage || '/images/seo/usm-social-share-default.webp';
     const chosenImage = meta?.ogImage || fallbackImage;
 
-    const domain = settings.canonicalDomain || process.env.SITE_URL || 'https://www.usmonastir.tn';
+    const rawDomain = settings.canonicalDomain || process.env.SITE_URL || 'https://usmonastir.tn';
+    const domain = rawDomain.replace(/\/+$/, '').replace(/^https?:\/\/www\./, 'https://');
     let absoluteOgImage = chosenImage;
+
     if (chosenImage.startsWith('http://') || chosenImage.startsWith('https://')) {
       absoluteOgImage = chosenImage;
     } else {

@@ -52,8 +52,9 @@ export class SeoSettings extends Document {
   @Prop({ type: String, default: '/logo.webp' })
   logoUrl: string;
 
-  @Prop({ type: String, default: 'https://www.usmonastir.tn' })
+  @Prop({ type: String, default: 'https://usmonastir.tn' })
   canonicalDomain: string;
+
 
   @Prop({ type: String, default: 'fr' })
   defaultLanguage: string;

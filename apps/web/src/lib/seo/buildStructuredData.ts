@@ -1,6 +1,6 @@
-import { getPublicAbsoluteUrl } from './publicUrl';
+import { getPublicAbsoluteUrl, getCanonicalSiteUrl } from './publicUrl';
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.usmonastir.tn').replace(/\/+$/, '');
+const SITE_URL = getCanonicalSiteUrl();
 
 export function buildGlobalOrganizationSchema() {
   return {

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getPublicAbsoluteUrl } from './publicUrl';
+import { getPublicAbsoluteUrl, getCanonicalSiteUrl } from './publicUrl';
 
 interface BuildMetadataOptions {
   path: string;
@@ -11,7 +11,7 @@ interface BuildMetadataOptions {
 }
 
 const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.usmonastir.tn').replace(/\/+$/, '');
+const SITE_URL = getCanonicalSiteUrl();
 
 export async function buildPageMetadata(options: BuildMetadataOptions): Promise<Metadata> {
   const cleanPath = options.path.split('?')[0];

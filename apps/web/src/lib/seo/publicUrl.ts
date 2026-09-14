@@ -1,10 +1,19 @@
 /**
+ * Returns the canonical public domain of the platform, normalized without trailing slash or redundant 'www.'
+ */
+export function getCanonicalSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://usmonastir.tn';
+  return raw.replace(/\/+$/, '').replace(/^https?:\/\/www\./, 'https://');
+}
+
+/**
  * Resolves any image URL (local, MinIO, relative) into an absolute public URL
  * that external social crawlers (Facebook, WhatsApp, LinkedIn, X, Discord) can fetch.
  */
 export function getPublicAbsoluteUrl(pathOrUrl?: string): string {
+  const siteUrl = getCanonicalSiteUrl();
+
   if (!pathOrUrl) {
-    const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.usmonastir.tn').replace(/\/+$/, '');
     return `${siteUrl}/images/seo/usm-social-share-default.webp`;
   }
 
@@ -27,14 +36,13 @@ export function getPublicAbsoluteUrl(pathOrUrl?: string): string {
       }
 
       // Convert internal MinIO/Docker URL into public route
-      const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.usmonastir.tn').replace(/\/+$/, '');
       return `${siteUrl}${parsed.pathname}`;
     } catch {
       // ignore
     }
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://www.usmonastir.tn').replace(/\/+$/, '');
   const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return `${siteUrl}${cleanPath}`;
 }
+

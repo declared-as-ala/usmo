@@ -731,7 +731,7 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
                       '@type': schemaType,
                       name: metaTitle || item.title,
                       description: metaDescription,
-                      url: `https://www.usmonastir.tn${item.path}`,
+                      url: `https://usmonastir.tn${item.path}`,
                       inLanguage: 'fr-TN',
                     },
                     null,
@@ -856,7 +856,7 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
                 <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
 {`<title>${metaTitle || item.title}</title>
 <meta name="description" content="${metaDescription}" />
-<link rel="canonical" href="https://www.usmonastir.tn${item.path}" />
+<link rel="canonical" href="https://usmonastir.tn${item.path}" />
 <meta property="og:title" content="${ogTitle || metaTitle || item.title}" />
 <meta property="og:description" content="${ogDescription || metaDescription}" />
 <meta property="og:image" content="${ogImage || defaultSocialImage}" />
@@ -879,8 +879,9 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
                 </div>
                 <a
                   href={`https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(
-                    `https://www.usmonastir.tn${item.path}`
+                    `https://usmonastir.tn${item.path}`
                   )}`}
+
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold cursor-pointer transition-colors"
