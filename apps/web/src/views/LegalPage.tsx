@@ -43,10 +43,10 @@ export function LegalPage({ pageKey, fallbackTitle }: { pageKey: LegalPageKey; f
 
   return (
     <main className="min-h-screen usm-premium-bg text-usm-blue-dark pt-36 sm:pt-40 lg:pt-44 pb-24">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="mx-auto max-w-5xl lg:max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Navigation Tabs between Legal Documents */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {LEGAL_LINKS.map((item) => {
             const isActive = item.key === pageKey;
             const Icon = item.icon;
@@ -54,13 +54,13 @@ export function LegalPage({ pageKey, fallbackTitle }: { pageKey: LegalPageKey; f
               <Link
                 key={item.key}
                 href={item.href}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${
+                className={`inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                   isActive
                     ? 'bg-usm-blue-primary text-white shadow-md'
                     : 'bg-white border border-[#DDE8F8] text-slate-600 hover:text-usm-blue-primary hover:border-usm-blue-primary/40 shadow-2xs'
                 }`}
               >
-                <Icon size={14} />
+                <Icon size={14} className="shrink-0" />
                 <span>{item.label}</span>
               </Link>
             );
