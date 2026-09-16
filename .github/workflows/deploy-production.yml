@@ -102,8 +102,10 @@ jobs:
             fi
 
             git fetch --prune origin main
-            git checkout -B main origin/main
+            git clean -fd
+            git checkout -f -B main origin/main
             git reset --hard origin/main
+            git clean -fd
 
             # Clean up credentials after use
             rm -f ~/.git-credentials

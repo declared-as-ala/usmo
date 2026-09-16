@@ -46,8 +46,10 @@ if [[ "${DEPLOY_SKIP_GIT_PULL:-0}" != 1 ]]; then
     false
   fi
   git fetch --prune origin "$DEPLOY_BRANCH"
-  git checkout -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH"
+  git clean -fd
+  git checkout -f -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH"
   git reset --hard "origin/$DEPLOY_BRANCH"
+  git clean -fd
 fi
 
 echo "[deploy] Validating Compose interpolation and required environment variables..."
