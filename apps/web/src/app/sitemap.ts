@@ -12,6 +12,7 @@ const STATIC_FALLBACK_ROUTES = [
   'boutique', 'histoire', 'palmares', 'legendes', 'stadium', 'telechargements',
   'sponsors', 'fanzone', 'contact', 'don', 'dons-donateurs',
   'conditions-utilisation', 'confidentialite', 'cookies',
+  'retours-remboursements', 'annulation-commande',
 ];
 
 interface SeoEntry {

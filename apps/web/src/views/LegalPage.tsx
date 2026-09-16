@@ -2,16 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, FileText, Cookie, Mail, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, FileText, Cookie, RotateCcw, Ban, Mail, MapPin, CheckCircle2, ArrowRight } from 'lucide-react';
 import { api } from '../lib/api-client';
 
-type LegalPageKey = 'privacy' | 'terms' | 'cookies';
+type LegalPageKey = 'privacy' | 'terms' | 'cookies' | 'returns' | 'cancellation';
 type LegalPageData = { key: LegalPageKey; title: string; content: string; updatedAt?: string };
 
 const LEGAL_LINKS: { key: LegalPageKey; href: string; label: string; icon: any }[] = [
   { key: 'privacy', href: '/confidentialite', label: 'Confidentialité', icon: ShieldCheck },
   { key: 'terms', href: '/conditions-utilisation', label: 'Conditions d’utilisation', icon: FileText },
   { key: 'cookies', href: '/cookies', label: 'Cookies', icon: Cookie },
+  { key: 'returns', href: '/retours-remboursements', label: 'Retours & Remboursements', icon: RotateCcw },
+  { key: 'cancellation', href: '/annulation-commande', label: 'Annulation de Commande', icon: Ban },
 ];
 
 export function LegalPage({ pageKey, fallbackTitle }: { pageKey: LegalPageKey; fallbackTitle: string }) {
@@ -40,7 +42,7 @@ export function LegalPage({ pageKey, fallbackTitle }: { pageKey: LegalPageKey; f
     .filter(Boolean);
 
   return (
-    <main className="min-h-screen usm-premium-bg text-usm-blue-dark pt-28 pb-20">
+    <main className="min-h-screen usm-premium-bg text-usm-blue-dark pt-36 sm:pt-40 lg:pt-44 pb-24">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
         
         {/* Navigation Tabs between Legal Documents */}

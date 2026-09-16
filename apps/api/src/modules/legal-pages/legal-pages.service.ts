@@ -7,7 +7,7 @@ const DEFAULTS: Record<LegalPageKey, { title: string; content: string }> = {
   privacy: {
     title: 'Politique de Confidentialité',
     content: `1. Engagement et Responsable du Traitement
-L’Union Sportive Monastirienne (USM), association sportive fondée en 1923 dont le siège est situé à l'Avenue de l'ind�pendance, 5000 Monastir (Tunisie), accorde la plus haute importance à la protection et à la confidentialité des données personnelles de ses supporters, adhérents, visiteurs et partenaires.
+L’Union Sportive Monastirienne (USM), association sportive fondée en 1923 dont le siège est situé à l'Avenue de l'ind�pendance, 5000 Monastir (Tunisie), accorde la plus haute importance à la protection et à la confidentialité des données personnelles de ses supporters, adhérents, visiteurs et partenaires.
 
 Le présent document détaille nos engagements conformément à la loi organique tunisienne n° 2004-63 du 27 juillet 2004 portant sur la protection des données à caractère personnel ainsi qu'aux meilleurs standards internationaux (RGPD).
 
@@ -41,7 +41,7 @@ Conformément à la réglementation applicable, vous disposez des droits d'accè
 
 Pour exercer vos droits ou pour toute question relative à vos données personnelles, vous pouvez contacter notre secrétariat général :
 • Par e-mail : contact@usmonastir.org.tn
-• Par courrier : Union Sportive Monastirienne — Secrétariat Général, Avenue de l'ind�pendance, 5000 Monastir, Tunisie.`,
+• Par courrier : Union Sportive Monastirienne — Secrétariat Général, Avenue de l'ind�pendance, 5000 Monastir, Tunisie.`,
   },
   terms: {
     title: "Conditions Générales d'Utilisation",
@@ -101,6 +101,71 @@ Vous pouvez à tout moment configurer votre navigateur internet pour accepter, r
 • Microsoft Edge : Paramètres > Cookies et autorisations de site.
 
 Veuillez noter que le blocage des cookies strictement nécessaires peut altérer certaines fonctionnalités essentielles du site, telles que la gestion de votre panier dans la boutique officielle ou l'accès à votre espace supporter.`,
+  },
+  returns: {
+    title: 'Politique de Retours & Remboursements',
+    content: `1. Délai de Rétractation et Retours
+Conformément aux pratiques commerciales et à la réglementation en vigueur, vous disposez d'un délai de quatorze (14) jours calendaires à compter de la date de réception de votre commande pour exercer votre droit de retour sans pénalité.
+
+Les retours peuvent être effectués :
+• Directement à la Boutique Officielle de l'Union Sportive Monastirienne (aux abords du Stade Mustapha Ben Jannet à Monastir).
+• Par voie postale ou par transporteur à l'adresse officielle de notre secrétariat : Union Sportive Monastirienne, Boutique Officielle, Avenue de l'indépendance, 5000 Monastir, Tunisie.
+
+2. Conditions d'Éligibilité et État des Produits
+Pour que le retour soit accepté, chaque produit doit être restitué dans son état d'origine rigoureusement intact :
+• Article neuf, non porté, non lavé et exempt de toute odeur ou trace d'utilisation.
+• Muni de toutes ses étiquettes d'origine intactes et non détachées.
+• Dans son emballage officiel d'origine complet avec ses accessoires éventuels.
+• Accompagné du bordereau de livraison ou de la facture d'achat correspondante.
+
+3. Articles Non Retournables et Exceptions
+Pour des raisons de personnalisation et d'hygiène, certains articles ne peuvent faire l'objet d'aucun retour ni remboursement :
+• Les maillots officiels personnalisés (flocage sur mesure d'un prénom, nom ou numéro choisi par l'acheteur). Seuls les maillots sans flocage ou portant le flocage standard d'un joueur sous contrat peuvent être acceptés.
+• Les articles d'hygiène ou sous-vêtements (chaussettes, protège-tibias, gourdes descellées).
+• Les articles soldés ou en déstockage portant expressément la mention "Ni repris ni échangé".
+• Les billets de match ou abonnements de saison (régis par les conditions particulières de billetterie).
+
+4. Modalités et Délais de Remboursement
+Dès réception et validation de la conformité de l'article retourné par notre équipe contrôle qualité :
+• Le remboursement est effectué sous un délai de sept (7) à quatorze (14) jours ouvrés.
+• Le remboursement s'effectue via le moyen de paiement utilisé lors de l'achat initial (carte bancaire, Konnect / Flouci) ou, pour les paiements à la livraison, sous la forme d'un avoir boutique / bon d'achat valable un (1) an ou d'un virement bancaire sur communication d'un RIB.
+• Les frais de livraison initiaux ne sont remboursables que dans le cas d'une non-conformité avérée ou d'un défaut de fabrication.
+
+5. Échanges et Articles Défectueux
+Si vous recevez un produit présentant un défaut de fabrication avéré ou une erreur de préparation de notre part :
+• Contactez immédiatement le service client sous 48 heures ouvrées avec photos justificatives.
+• L'US Monastir prendra intégralement en charge les frais de retour et organisera le renvoi immédiat d'un produit conforme de remplacement, sous réserve des stocks disponibles.`,
+  },
+  cancellation: {
+    title: "Politique d'Annulation de Commande",
+    content: `1. Modalités d'Annulation par le Client
+Vous avez la possibilité de solliciter l'annulation de votre commande passée sur la boutique en ligne de l'Union Sportive Monastirienne sous réserve que celle-ci n'ait pas encore été prise en charge pour expédition :
+• Commande en statut « En attente » ou « Confirmée » : L'annulation est possible sans frais et sans motif particulier.
+• Commande en statut « En cours de préparation » ou « Expédiée » : L'annulation n'est plus réalisable directement ; il conviendra d'attendre la livraison du colis pour solliciter un retour conformément à notre Politique de Retours & Remboursements.
+
+2. Procédure pour Demander une Annulation
+Pour annuler votre commande :
+• Rendez-vous dans votre « Espace Compte > Mes Commandes » pour vérifier le statut de la commande.
+• Contactez au plus vite notre service client officiel par e-mail à contact@usmonastir.org.tn ou par téléphone en précisant votre numéro de commande (#USM-XXXX) et le nom associé.
+• Une confirmation écrite d'annulation vous sera adressée dès que votre demande est validée par nos équipes.
+
+3. Délais et Remboursement suite à Annulation
+Lorsqu'une annulation est validée avant l'expédition :
+• Le montant total de votre commande (incluant les éventuels frais de livraison payés) est intégralement remboursé.
+• Le remboursement est déclenché sous trois (3) à sept (7) jours ouvrés selon les délais interbancaires tunisiens.
+• Si le paiement avait été choisi en "Paiement à la livraison", la commande sera simplement clôturée et aucun montant ne vous sera réclamé.
+
+4. Exceptions : Commandes Personnalisées
+Toute commande comprenant un flocage personnalisé (maillot avec nom/numéro sur mesure) entre en fabrication de manière prioritaire :
+• Dès que la personnalisation ou le flocage a débuté dans nos ateliers, la commande ne peut plus faire l'objet d'aucune annulation ni modification.
+• Nous vous invitons à vérifier scrupuleusement l'orthographe, les numéros et les tailles avant de finaliser votre paiement.
+
+5. Annulation à l'Initiative de l'Union Sportive Monastirienne
+Le club se réserve le droit exceptionnel d'annuler tout ou partie d'une commande dans les cas suivants :
+• Rupture de stock imprévue d'un article ou indisponibilité de taille chez nos équipementiers.
+• Suspicion légitime de transaction frauduleuse ou défaut de paiement bancaire.
+• Incident logistique majeur empêchant l'acheminement de la marchandise.
+Dans cette éventualité, vous en serez informé(e) sans délai par e-mail ou téléphone, et le montant correspondant vous sera intégralement recrédité sous 48 à 72 heures.`,
   },
 };
 

@@ -5,12 +5,14 @@ import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { api } from '../../lib/api-client';
 import { FileText, Loader2, Save, ShieldCheck } from 'lucide-react';
 
-type LegalPageKey = 'privacy' | 'terms' | 'cookies';
+type LegalPageKey = 'privacy' | 'terms' | 'cookies' | 'returns' | 'cancellation';
 
 const TABS: { key: LegalPageKey; label: string; route: string }[] = [
   { key: 'privacy', label: 'Confidentialité', route: '/confidentialite' },
   { key: 'terms', label: "Conditions d'utilisation", route: '/conditions-utilisation' },
   { key: 'cookies', label: 'Cookies', route: '/cookies' },
+  { key: 'returns', label: 'Retours & Remboursements', route: '/retours-remboursements' },
+  { key: 'cancellation', label: 'Annulation de Commande', route: '/annulation-commande' },
 ];
 
 type FormState = Record<LegalPageKey, { title: string; content: string }>;
@@ -19,6 +21,8 @@ const emptyForm: FormState = {
   privacy: { title: '', content: '' },
   terms: { title: '', content: '' },
   cookies: { title: '', content: '' },
+  returns: { title: '', content: '' },
+  cancellation: { title: '', content: '' },
 };
 
 export default function AdminLegalPages() {

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export const LEGAL_PAGE_KEYS = ['privacy', 'terms', 'cookies'] as const;
+export const LEGAL_PAGE_KEYS = ['privacy', 'terms', 'cookies', 'returns', 'cancellation'] as const;
 export type LegalPageKey = (typeof LEGAL_PAGE_KEYS)[number];
 
 @Schema({ timestamps: true })

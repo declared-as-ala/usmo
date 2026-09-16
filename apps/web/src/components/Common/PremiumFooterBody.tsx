@@ -180,6 +180,12 @@ export function PremiumFooterBody({ language, year, settings, navigate, install 
             <Link href="/cookies" className="hover:text-usm-blue-light">
               {tr(language, 'Cookies', 'Cookies', 'ملفات تعريف الارتباط')}
             </Link>
+            <Link href="/retours-remboursements" className="hover:text-usm-blue-light">
+              {tr(language, 'Returns & Refunds', 'Retours & Remboursements', 'الإرجاع واسترداد الأموال')}
+            </Link>
+            <Link href="/annulation-commande" className="hover:text-usm-blue-light">
+              {tr(language, 'Order Cancellation', 'Annulation de commande', 'إلغاء الطلب')}
+            </Link>
             <button onClick={install} className="flex items-center gap-1.5 font-bold text-usm-blue-light hover:text-white">
               <Download size={13}/> {tr(language, 'Install the Application', "Installer l'application", 'تثبيت التطبيق')}
             </button>
