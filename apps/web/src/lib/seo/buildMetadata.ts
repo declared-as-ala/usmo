@@ -10,22 +10,37 @@ interface BuildMetadataOptions {
   keywords?: string[];
 }
 
-const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+function getInternalApiBase(): string | null {
+  if (process.env.INTERNAL_API_URL) return process.env.INTERNAL_API_URL;
+  if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.startsWith('http')) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  // During CI build (e.g. GitHub Actions), if CI is true and no backend is up, do not attempt to connect and hang
+  if (process.env.CI || process.env.GITHUB_ACTIONS) {
+    return null;
+  }
+  return 'http://localhost:3001/api';
+}
+
 const SITE_URL = getCanonicalSiteUrl();
 
 export async function buildPageMetadata(options: BuildMetadataOptions): Promise<Metadata> {
   const cleanPath = options.path.split('?')[0];
 
   let serverSeo: any = null;
-  try {
-    const res = await fetch(`${API_BASE}/seo/metadata?path=${encodeURIComponent(cleanPath)}`, {
-      next: { revalidate: 60 },
-    });
-    if (res.ok) {
-      serverSeo = await res.json();
+  const apiBase = getInternalApiBase();
+  if (apiBase) {
+    try {
+      const res = await fetch(`${apiBase}/seo/metadata?path=${encodeURIComponent(cleanPath)}`, {
+        next: { revalidate: 60 },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        serverSeo = await res.json();
+      }
+    } catch {
+      // Graceful fallback to provided options
     }
-  } catch {
-    // Graceful fallback to provided options
   }
 
   const title = serverSeo?.title || options.fallbackTitle || 'Union Sportive Monastirienne';

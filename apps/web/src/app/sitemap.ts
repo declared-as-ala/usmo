@@ -27,7 +27,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 1. Try to fetch from centralized SEO service
   try {
-    const res = await fetch(`${API_URL}/seo/sitemap-entries`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API_URL}/seo/sitemap-entries`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(2000),
+    });
     if (res.ok) {
       const entries: SeoEntry[] = await res.json();
       if (Array.isArray(entries) && entries.length > 0) {

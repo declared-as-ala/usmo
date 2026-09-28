@@ -10,6 +10,7 @@ async function fetchArticleBySlug(slug: string) {
   try {
     const res = await fetch(`${API_BASE}/news/slug/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
+      signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) return null;
     return res.json();
