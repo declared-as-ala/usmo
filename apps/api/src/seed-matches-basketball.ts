@@ -122,9 +122,9 @@ const matches = [
     homeTeam: 'US Monastir',
     homeTeamAr: 'الاتحاد الرياضي المنستيري',
     homeLogo: '/logo basket.png',
-    awayTeam: 'Club Africain',
-    awayTeamAr: 'النادي الإفريقي',
-    awayLogo: '/teams/ca.png',
+    awayTeam: 'CSS Sfax',
+    awayTeamAr: 'النادي الرياضي صفاقس',
+    awayLogo: '',
     date: '2026-10-18',
     time: '18:00',
     venue: 'Salle Omnisports Mohamed Mzali, Monastir',
@@ -162,19 +162,35 @@ async function bootstrap() {
   console.log('[seed-matches-basketball] Connected to MongoDB');
 
   let inserted = 0;
+  let updated = 0;
   for (const m of matches) {
-    const baseSlug = slugify(`${m.homeTeam}-vs-${m.awayTeam}-${m.date}`);
-    const exists = await MatchModel.findOne({ slug: baseSlug });
-    if (exists) {
-      console.log(`[seed-matches-basketball] Skipping (already exists): ${baseSlug}`);
-      continue;
+    const baseSlug = slugify(`${m.sport}-${m.homeTeam}-vs-${m.awayTeam}-${m.date}`);
+    const result = await MatchModel.findOneAndUpdate(
+      { slug: baseSlug },
+      { ...m, slug: baseSlug },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+    if (result && result.isNew !== false) {
+      inserted++;
+      console.log(`[seed-matches-basketball] Inserted: ${baseSlug}`);
+    } else {
+      updated++;
+      console.log(`[seed-matches-basketball] Updated: ${baseSlug}`);
     }
-    await MatchModel.create({ ...m, slug: baseSlug });
-    inserted++;
-    console.log(`[seed-matches-basketball] Inserted: ${baseSlug} (${m.score.home}-${m.score.away})`);
   }
 
-  console.log(`[seed-matches-basketball] Done — ${inserted} new match(es) inserted ✅`);
+  // Also delete any stale J1 record that used the old slug (Club Africain)
+  const oldJ1Slug = slugify('basketball-us-monastir-vs-club-africain-2026-10-18');
+  const altOldJ1Slug = slugify('us-monastir-vs-club-africain-2026-10-18');
+  const deleted = await MatchModel.deleteMany({
+    sport: 'basketball',
+    slug: { $in: [oldJ1Slug, altOldJ1Slug] },
+  });
+  if (deleted.deletedCount) {
+    console.log(`[seed-matches-basketball] Removed ${deleted.deletedCount} stale J1 record(s) (Club Africain)`);
+  }
+
+  console.log(`[seed-matches-basketball] Done — ${inserted} inserted, ${updated} updated ✅`);
   await mongoose.disconnect();
 }
 

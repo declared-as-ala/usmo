@@ -7,7 +7,7 @@ import { LeagueStandingsTable } from '../components/Common/LeagueStandingsTable'
 import { Logo } from '../components/Common/Logo';
 import {
   MapPin, Calendar, Users2,
-  Clock3, ExternalLink, Radio, Trophy,
+  Clock3, ExternalLink, Radio,
 } from 'lucide-react';
 
 interface ResultRow {
@@ -344,12 +344,7 @@ export const MatchCenter: React.FC = () => {
                         <span className="font-bold text-usm-blue-dark">{teamInfo.stadiumCapacity.toLocaleString()}</span>
                       </div>
                     )}
-                    {teamInfo.formedYear && (
-                      <div className="flex items-center justify-between border-t border-usm-border pt-2">
-                        <span className="text-slate-500 flex items-center gap-1"><Trophy size={11} /> {language === 'ar' ? 'التأسيس' : 'Fondé en'}</span>
-                        <span className="font-bold text-usm-blue-dark">{teamInfo.formedYear}</span>
-                      </div>
-                    )}
+
                   </div>
                   {teamInfo.website && (
                     <a
@@ -488,10 +483,8 @@ export const MatchCenter: React.FC = () => {
                       <span className="text-slate-500 flex items-center gap-1"><Users2 size={11} /> {language === 'ar' ? 'السعة' : 'Capacité'}</span>
                       <span className="font-bold text-usm-blue-dark">4 075 places</span>
                     </div>
-                    <div className="flex items-center justify-between border-t border-usm-border pt-2">
-                      <span className="text-slate-500 flex items-center gap-1"><Trophy size={11} /> {language === 'ar' ? 'التأسيس' : 'Fondé en'}</span>
-                      <span className="font-bold text-usm-blue-dark">1959</span>
-                    </div>
+
+
                   </div>
                   <a
                     href="https://usmonastir.tn"
