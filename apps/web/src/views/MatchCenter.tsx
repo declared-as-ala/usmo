@@ -216,8 +216,10 @@ export const MatchCenter: React.FC = () => {
     }
   };
 
-  // Derive basketball next match
-  const bbUpcoming = basketballMatches.filter((m) => m.status === 'upcoming' || m.status === 'live');
+  // Derive basketball next match (sorted ascending by date so the earliest upcoming match is first)
+  const bbUpcoming = basketballMatches
+    .filter((m) => m.status === 'upcoming' || m.status === 'live')
+    .sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime());
   const nextBBMatch = bbUpcoming.length > 0 ? bbUpcoming[0] : null;
 
   return (
@@ -410,7 +412,11 @@ export const MatchCenter: React.FC = () => {
                             {nextBBMatch.homeTeam.slice(0, 3).toUpperCase()}
                           </div>
                         ) : (
-                          <Logo size={56} className="mb-2" />
+                          <img
+                            src="/images/usm-basketball-logo.png"
+                            alt="US Monastir Basketball"
+                            className="h-14 w-14 object-contain mb-2 drop-shadow-sm"
+                          />
                         )}
                         <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.homeTeamAr || nextBBMatch.homeTeam : nextBBMatch.homeTeam}
@@ -442,7 +448,11 @@ export const MatchCenter: React.FC = () => {
                             {nextBBMatch.awayTeam.slice(0, 3).toUpperCase()}
                           </div>
                         ) : (
-                          <Logo size={56} className="mb-2" />
+                          <img
+                            src="/images/usm-basketball-logo.png"
+                            alt="US Monastir Basketball"
+                            className="h-14 w-14 object-contain mb-2 drop-shadow-sm"
+                          />
                         )}
                         <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.awayTeamAr || nextBBMatch.awayTeam : nextBBMatch.awayTeam}
@@ -471,7 +481,11 @@ export const MatchCenter: React.FC = () => {
                 <div className="skeleton-loader h-32 w-full rounded-xl" />
               ) : bbTeamInfo ? (
                 <>
-                  <Logo size={64} className="mb-3" />
+                  <img
+                    src="/images/usm-basketball-logo.png"
+                    alt="US Monastir Basketball"
+                    className="h-16 w-16 object-contain mb-3 drop-shadow-sm"
+                  />
                   <h4 className="font-display font-black text-usm-blue-dark uppercase tracking-wide text-sm mb-1">{bbTeamInfo.name}</h4>
                   <span className="text-[10px] text-slate-500 font-bold uppercase mb-4">{bbTeamInfo.league}</span>
                   <div className="w-full space-y-2 text-[11px] text-slate-600">

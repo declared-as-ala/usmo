@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   Lock,
   RefreshCw,
+  Pencil,
+  ArrowLeftRight,
 } from 'lucide-react';
 
 const STATUS_STYLES: Record<Match['status'], string> = {
@@ -31,6 +33,27 @@ const DATA_SOURCE_STYLES: Record<string, string> = {
   sportsdb: 'bg-purple-50 text-purple-700 border-purple-200',
   manual: 'bg-emerald-50 text-emerald-700 border-emerald-200',
 };
+
+export const BASKETBALL_TUNISIAN_TEAMS = [
+  { name: 'CSS Sfax', nameAr: 'النادي الرياضي صفاقس', venue: 'Salle Raed Béjaoui, Sfax' },
+  { name: 'Étoile du Sahel', nameAr: 'النجم الرياضي الساحلي', venue: 'Salle Olympique de Sousse' },
+  { name: 'Club Africain', nameAr: 'النادي الإفريقي', venue: 'Salle Chérif Bellamine (Gorjani), Tunis' },
+  { name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', venue: 'Salle Aziz Miled, Kairouan' },
+  { name: 'ES Radès', nameAr: 'النجم الرادسي', venue: 'Salle Taoufik Bouhima, Radès' },
+  { name: 'Stade Nabeulien', nameAr: 'الملعب النابلي', venue: 'Salle Bir Challouf, Nabeul' },
+  { name: 'DS Grombalia', nameAr: 'الدالية الرياضية بقرمبالية', venue: 'Salle Omnisports de Grombalia' },
+  { name: 'US Ansar', nameAr: 'الاتحاد الرياضي الأنصاري', venue: 'Salle Dar Chaabane El Fehri' },
+  { name: 'Ezzahra Sports', nameAr: 'الزهراء الرياضية', venue: 'Salle Ezzahra' },
+  { name: 'JS Manazeh', nameAr: 'شبيبة المنازه', venue: 'Palais des Sports d\'El Menzah' },
+];
+
+export const BASKETBALL_JOURNEES = [
+  'J1', 'J2', 'J3', 'J4', 'J5', 'J6', 'J7', 'J8', 'J9', 'J10',
+  'J11', 'J12', 'J13', 'J14', 'J15', 'J16', 'J17', 'J18', 'J19', 'J20', 'J21', 'J22',
+  'Play-off J1', 'Play-off J2', 'Play-off J3', 'Play-off J4', 'Play-off J5', 'Play-off J6',
+  'Super Play-off (1/2)', 'Super Play-off (Finale)',
+  'Coupe de Tunisie', 'BAL (Basketball Africa League)',
+];
 
 interface BackendMatch {
   _id?: string;
@@ -60,6 +83,9 @@ interface BackendMatch {
 }
 
 function normalizeMatch(m: any): Match & { quarters?: { home: number[]; away: number[] } | null; dataSource?: string; manualOverride?: boolean } {
+  const isBasketball = m.sport === 'basketball';
+  const defaultUsmLogo = isBasketball ? '/images/usm-basketball-logo.png' : '/brand/usm-logo.webp';
+
   return {
     id: m._id || m.id || m.slug,
     sport: m.sport,
@@ -67,13 +93,13 @@ function normalizeMatch(m: any): Match & { quarters?: { home: number[]; away: nu
     competitionAr: m.competitionAr || m.competition,
     homeTeam: m.homeTeam,
     homeTeamAr: m.homeTeamAr || m.homeTeam,
-    homeLogo: m.homeLogo || (m.homeTeam?.includes('Monastir') ? '/brand/usm-logo.webp' : ''),
+    homeLogo: m.homeLogo || (m.homeTeam?.toLowerCase().includes('monastir') ? defaultUsmLogo : ''),
     awayTeam: m.awayTeam,
     awayTeamAr: m.awayTeamAr || m.awayTeam,
-    awayLogo: m.awayLogo || (m.awayTeam?.includes('Monastir') ? '/brand/usm-logo.webp' : ''),
+    awayLogo: m.awayLogo || (m.awayTeam?.toLowerCase().includes('monastir') ? defaultUsmLogo : ''),
     date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
     time: m.time || '18:00',
-    venue: m.venue || (m.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
+    venue: m.venue || (isBasketball ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
     venueAr: m.venueAr || m.venue,
     status: m.status || 'upcoming',
     score: m.score || { home: 0, away: 0 },
@@ -122,18 +148,23 @@ export default function AdminMatches() {
     }
   }, [searchParams, router]);
 
-  // Add match form state
+  // Add / Edit match form state
+  const [editingMatchId, setEditingMatchId] = useState<string | null>(null);
   const [form, setForm] = useState({
     sport: 'basketball' as 'football' | 'basketball',
-    competition: 'Championnat Pro A',
+    competition: 'Championnat National Pro A',
+    journee: 'J1',
     season: '2026/2027',
     homeTeam: 'US Monastir',
-    homeLogo: '/brand/usm-logo.webp',
+    homeTeamAr: 'الاتحاد الرياضي المنستيري',
+    homeLogo: '/images/usm-basketball-logo.png',
     awayTeam: '',
+    awayTeamAr: '',
     awayLogo: '',
     date: '',
     time: '18:00',
     venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+    venueAr: 'قاعة محمد مزالي، المنستير',
     status: 'upcoming' as 'upcoming' | 'live' | 'finished',
     scoreHome: 0,
     scoreAway: 0,
@@ -148,21 +179,172 @@ export default function AdminMatches() {
   });
 
   const handleSportChange = (sport: 'football' | 'basketball') => {
+    const isBb = sport === 'basketball';
     setForm((f) => ({
       ...f,
       sport,
-      competition: sport === 'basketball' ? 'Championnat Pro A' : 'Ligue 1 Professionnelle',
-      venue:
-        sport === 'basketball'
-          ? 'Salle Omnisports Mohamed Mzali, Monastir'
-          : 'Stade Mustapha Ben Jannet, Monastir',
+      competition: isBb ? 'Championnat National Pro A' : 'Ligue 1 Professionnelle',
+      journee: isBb ? (f.journee || 'J1') : '',
+      venue: isBb
+        ? 'Salle Omnisports Mohamed Mzali, Monastir'
+        : 'Stade Mustapha Ben Jannet, Monastir',
+      venueAr: isBb ? 'قاعة محمد مزالي، المنستير' : 'ملعب مصطفى بن جنات، المنستير',
+      homeLogo: isBb ? '/images/usm-basketball-logo.png' : '/brand/usm-logo.webp',
     }));
   };
 
-  const handleAddMatch = async (e: React.FormEvent) => {
+  const handleOpenAdd = () => {
+    setEditingMatchId(null);
+    setForm({
+      sport: 'basketball',
+      competition: 'Championnat National Pro A',
+      journee: 'J1',
+      season: '2026/2027',
+      homeTeam: 'US Monastir',
+      homeTeamAr: 'الاتحاد الرياضي المنستيري',
+      homeLogo: '/images/usm-basketball-logo.png',
+      awayTeam: '',
+      awayTeamAr: '',
+      awayLogo: '',
+      date: '',
+      time: '18:00',
+      venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+      venueAr: 'قاعة محمد مزالي، المنستير',
+      status: 'upcoming',
+      scoreHome: 0,
+      scoreAway: 0,
+      q1Home: 0,
+      q1Away: 0,
+      q2Home: 0,
+      q2Away: 0,
+      q3Home: 0,
+      q3Away: 0,
+      q4Home: 0,
+      q4Away: 0,
+    });
+    setShowAddForm(true);
+  };
+
+  const handleOpenEdit = (m: any) => {
+    setEditingMatchId(m.id);
+    let comp = m.competition || '';
+    let j = '';
+    if (comp.includes('—')) {
+      const parts = comp.split('—').map((s: string) => s.trim());
+      comp = parts[0];
+      j = parts[1] || '';
+    } else if (comp.includes(' - ')) {
+      const parts = comp.split(' - ').map((s: string) => s.trim());
+      comp = parts[0];
+      j = parts[1] || '';
+    }
+
+    setForm({
+      sport: m.sport || 'basketball',
+      competition: comp || (m.sport === 'basketball' ? 'Championnat National Pro A' : 'Ligue 1 Professionnelle'),
+      journee: j,
+      season: m.season || '2026/2027',
+      homeTeam: m.homeTeam || 'US Monastir',
+      homeTeamAr: m.homeTeamAr || '',
+      homeLogo: m.homeLogo || (m.sport === 'basketball' ? '/images/usm-basketball-logo.png' : '/brand/usm-logo.webp'),
+      awayTeam: m.awayTeam || '',
+      awayTeamAr: m.awayTeamAr || '',
+      awayLogo: m.awayLogo || '',
+      date: typeof m.date === 'string' ? m.date.slice(0, 10) : '',
+      time: m.time || '18:00',
+      venue: m.venue || (m.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
+      venueAr: m.venueAr || '',
+      status: m.status || 'upcoming',
+      scoreHome: m.score?.home ?? 0,
+      scoreAway: m.score?.away ?? 0,
+      q1Home: m.quarters?.home?.[0] ?? 0,
+      q1Away: m.quarters?.away?.[0] ?? 0,
+      q2Home: m.quarters?.home?.[1] ?? 0,
+      q2Away: m.quarters?.away?.[1] ?? 0,
+      q3Home: m.quarters?.home?.[2] ?? 0,
+      q3Away: m.quarters?.away?.[2] ?? 0,
+      q4Home: m.quarters?.home?.[3] ?? 0,
+      q4Away: m.quarters?.away?.[3] ?? 0,
+    });
+    setShowAddForm(true);
+  };
+
+  const handleInvertHomeAway = () => {
+    setForm((f) => {
+      const newHome = f.awayTeam;
+      const newHomeAr = f.awayTeamAr;
+      const newHomeLogo = f.awayLogo;
+      const newAway = f.homeTeam;
+      const newAwayAr = f.homeTeamAr;
+      const newAwayLogo = f.homeLogo;
+
+      // Smart venue prediction
+      let newVenue = f.venue;
+      if (f.sport === 'basketball') {
+        if (newHome.toLowerCase().includes('monastir')) {
+          newVenue = 'Salle Omnisports Mohamed Mzali, Monastir';
+        } else {
+          const matchOpp = BASKETBALL_TUNISIAN_TEAMS.find((t) => t.name.toLowerCase() === newHome.toLowerCase());
+          if (matchOpp) newVenue = matchOpp.venue;
+        }
+      }
+
+      return {
+        ...f,
+        homeTeam: newHome,
+        homeTeamAr: newHomeAr,
+        homeLogo: newHomeLogo,
+        awayTeam: newAway,
+        awayTeamAr: newAwayAr,
+        awayLogo: newAwayLogo,
+        venue: newVenue,
+        scoreHome: f.scoreAway,
+        scoreAway: f.scoreHome,
+        q1Home: f.q1Away,
+        q1Away: f.q1Home,
+        q2Home: f.q2Away,
+        q2Away: f.q2Home,
+        q3Home: f.q3Away,
+        q3Away: f.q3Home,
+        q4Home: f.q4Away,
+        q4Away: f.q4Home,
+      };
+    });
+  };
+
+  const handleSelectJournee = (j: string) => {
+    setForm((f) => ({
+      ...f,
+      journee: j,
+    }));
+  };
+
+  const handleSelectOpponent = (opp: typeof BASKETBALL_TUNISIAN_TEAMS[0]) => {
+    setForm((f) => {
+      const isUsmHome = f.homeTeam.toLowerCase().includes('monastir');
+      if (isUsmHome) {
+        return {
+          ...f,
+          awayTeam: opp.name,
+          awayTeamAr: opp.nameAr,
+          awayLogo: '',
+        };
+      } else {
+        return {
+          ...f,
+          homeTeam: opp.name,
+          homeTeamAr: opp.nameAr,
+          homeLogo: '',
+          venue: opp.venue,
+        };
+      }
+    });
+  };
+
+  const handleSaveMatch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.awayTeam || !form.competition || !form.date || !form.venue) {
-      showToast?.('Veuillez remplir tous les champs obligatoires.', 'error');
+    if (!form.homeTeam || !form.awayTeam || !form.competition || !form.date || !form.venue) {
+      showToast?.('Veuillez remplir tous les champs obligatoires (équipes, date, lieu).', 'error');
       return;
     }
 
@@ -175,21 +357,26 @@ export default function AdminMatches() {
             }
           : null;
 
+      const fullComp = form.journee ? `${form.competition} — ${form.journee}` : form.competition;
+      const fullCompAr = form.journee ? `${form.competition} — ${form.journee}` : form.competition;
+
+      const defaultUsmLogo = form.sport === 'basketball' ? '/images/usm-basketball-logo.png' : '/brand/usm-logo.webp';
+
       const payload = {
         sport: form.sport,
-        competition: form.competition,
-        competitionAr: form.competition,
+        competition: fullComp,
+        competitionAr: fullCompAr,
         season: form.season,
         homeTeam: form.homeTeam,
-        homeTeamAr: form.homeTeam,
-        homeLogo: form.homeLogo || '/brand/usm-logo.webp',
+        homeTeamAr: form.homeTeamAr || form.homeTeam,
+        homeLogo: form.homeLogo || (form.homeTeam.toLowerCase().includes('monastir') ? defaultUsmLogo : ''),
         awayTeam: form.awayTeam,
-        awayTeamAr: form.awayTeam,
-        awayLogo: form.awayLogo || '',
+        awayTeamAr: form.awayTeamAr || form.awayTeam,
+        awayLogo: form.awayLogo || (form.awayTeam.toLowerCase().includes('monastir') ? defaultUsmLogo : ''),
         date: form.date,
         time: form.time,
         venue: form.venue,
-        venueAr: form.venue,
+        venueAr: form.venueAr || form.venue,
         status: form.status,
         score: {
           home: Number(form.scoreHome),
@@ -200,35 +387,19 @@ export default function AdminMatches() {
         manualOverride: true,
       };
 
-      await api.createAdminMatch(payload);
-      showToast?.('Match créé et verrouillé manuellement avec succès.', 'success');
+      if (editingMatchId) {
+        await api.updateAdminMatch(editingMatchId, payload);
+        showToast?.('Match mis à jour avec succès.', 'success');
+      } else {
+        await api.createAdminMatch(payload);
+        showToast?.('Match créé et verrouillé manuellement avec succès.', 'success');
+      }
+
       setShowAddForm(false);
+      setEditingMatchId(null);
       fetchMatches();
-      setForm({
-        sport: 'basketball',
-        competition: 'Championnat Pro A',
-        season: '2026/2027',
-        homeTeam: 'US Monastir',
-        homeLogo: '/brand/usm-logo.webp',
-        awayTeam: '',
-        awayLogo: '',
-        date: '',
-        time: '18:00',
-        venue: 'Salle Omnisports Mohamed Mzali, Monastir',
-        status: 'upcoming',
-        scoreHome: 0,
-        scoreAway: 0,
-        q1Home: 0,
-        q1Away: 0,
-        q2Home: 0,
-        q2Away: 0,
-        q3Home: 0,
-        q3Away: 0,
-        q4Home: 0,
-        q4Away: 0,
-      });
     } catch (err: any) {
-      showToast?.(`Erreur lors de la création : ${err.message || 'Échec réseau'}`, 'error');
+      showToast?.(`Erreur lors de l'enregistrement : ${err.message || 'Échec réseau'}`, 'error');
     }
   };
 
@@ -333,7 +504,7 @@ export default function AdminMatches() {
               Actualiser
             </button>
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => handleOpenAdd()}
               className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm"
             >
               <Plus size={14} /> Planifier un match
@@ -427,6 +598,13 @@ export default function AdminMatches() {
                   </td>
                   <td className="py-3 px-4 text-right rtl:text-left">
                     <div className="flex items-center justify-end rtl:justify-start gap-1.5">
+                      <button
+                        onClick={() => handleOpenEdit(m)}
+                        className="px-2.5 py-1 rounded font-bold cursor-pointer transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-[11px]"
+                        title="Modifier ce match (Journée, date, score...)"
+                      >
+                        <Pencil size={11} /> Modifier
+                      </button>
                       <button
                         onClick={() => setSelectedMatchId(m.id)}
                         className={`px-2.5 py-1 rounded font-bold cursor-pointer transition-all ${
@@ -643,24 +821,31 @@ export default function AdminMatches() {
         </div>
       )}
 
-      {/* Add match modal */}
+      {/* Add / Edit match modal */}
       {showAddForm && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowAddForm(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowAddForm(false); setEditingMatchId(null); }}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Planifier / Ajouter un Match (Manuel Garanti)</h3>
-              <button onClick={() => setShowAddForm(false)} className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  {editingMatchId ? 'Modifier la rencontre' : 'Planifier / Ajouter un Match (Manuel Garanti)'}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {editingMatchId ? 'Ajustez la journée, les scores par quart-temps, la date ou la salle.' : 'Planifiez facilement les matchs de basketball par journée.'}
+                </p>
+              </div>
+              <button onClick={() => { setShowAddForm(false); setEditingMatchId(null); }} className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer">
                 <X size={16} />
               </button>
             </div>
-            <form onSubmit={handleAddMatch} className="p-5 space-y-3 max-h-[75vh] overflow-y-auto text-xs">
+            <form onSubmit={handleSaveMatch} className="p-5 space-y-3 max-h-[78vh] overflow-y-auto text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Sport</label>
                   <select
                     value={form.sport}
                     onChange={(e) => handleSportChange(e.target.value as 'football' | 'basketball')}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary font-bold"
                   >
                     <option value="basketball">🏀 Basketball</option>
                     <option value="football">⚽ Football</option>
@@ -673,11 +858,78 @@ export default function AdminMatches() {
                     type="text"
                     value={form.competition}
                     onChange={(e) => setForm((f) => ({ ...f, competition: e.target.value }))}
-                    placeholder={form.sport === 'basketball' ? 'Championnat Pro A' : 'Ligue 1 Professionnelle'}
+                    placeholder={form.sport === 'basketball' ? 'Championnat National Pro A' : 'Ligue 1 Professionnelle'}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
               </div>
+
+              {/* Journée selector for Basketball */}
+              {form.sport === 'basketball' && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
+                      🏀 Journée du Championnat Pro A
+                    </span>
+                    {form.journee && (
+                      <span className="text-[10px] font-mono font-bold bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded">
+                        {form.journee}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1">
+                    {BASKETBALL_JOURNEES.map((j) => (
+                      <button
+                        key={j}
+                        type="button"
+                        onClick={() => handleSelectJournee(j)}
+                        className={`px-2 py-1 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                          form.journee === j
+                            ? 'bg-amber-600 text-white shadow-xs'
+                            : 'bg-white border border-amber-200 text-amber-900 hover:bg-amber-100'
+                        }`}
+                      >
+                        {j}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Basketball Opponents & Home/Away swap */}
+              {form.sport === 'basketball' && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-800">
+                      Adversaires Pro A Tunisie (sélection rapide)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleInvertHomeAway}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-[10px] rounded-lg cursor-pointer transition-colors shadow-2xs"
+                      title="Inverser Domicile et Extérieur"
+                    >
+                      <ArrowLeftRight size={11} /> Inverser Domicile / Extérieur
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {BASKETBALL_TUNISIAN_TEAMS.map((opp) => (
+                      <button
+                        key={opp.name}
+                        type="button"
+                        onClick={() => handleSelectOpponent(opp)}
+                        className={`px-2 py-1 rounded text-[10px] font-medium transition-colors cursor-pointer ${
+                          form.awayTeam === opp.name || form.homeTeam === opp.name
+                            ? 'bg-usm-blue-primary text-white font-bold'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opp.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -707,8 +959,9 @@ export default function AdminMatches() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Équipe Domicile</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Équipe Domicile *</label>
                   <input
+                    required
                     type="text"
                     value={form.homeTeam}
                     onChange={(e) => setForm((f) => ({ ...f, homeTeam: e.target.value }))}
@@ -722,7 +975,7 @@ export default function AdminMatches() {
                     type="text"
                     value={form.awayTeam}
                     onChange={(e) => setForm((f) => ({ ...f, awayTeam: e.target.value }))}
-                    placeholder="ex. Club Africain, Etoile du Sahel..."
+                    placeholder="ex. CSS Sfax, Club Africain, Etoile du Sahel..."
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
@@ -766,7 +1019,7 @@ export default function AdminMatches() {
                   <div className="font-bold text-[11px] text-slate-800">Score Final</div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.homeTeam}</label>
+                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.homeTeam || 'Domicile'}</label>
                       <input
                         type="number"
                         min="0"
@@ -776,7 +1029,7 @@ export default function AdminMatches() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.awayTeam || 'Adversaire'}</label>
+                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.awayTeam || 'Extérieur'}</label>
                       <input
                         type="number"
                         min="0"
@@ -874,7 +1127,7 @@ export default function AdminMatches() {
                 type="submit"
                 className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 shadow-sm"
               >
-                Enregistrer et Verrouiller le Match
+                {editingMatchId ? 'Mettre à jour et Verrouiller le Match' : 'Enregistrer et Verrouiller le Match'}
               </button>
             </form>
           </div>

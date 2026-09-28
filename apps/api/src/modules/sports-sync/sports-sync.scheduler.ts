@@ -37,6 +37,18 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
           this.logger.log('No prior basketball sync or zero basketball matches found in MongoDB. Running basketball sync...');
           await this.syncService.syncAll('basketball', 'SYSTEM');
         }
+
+        // Clean up any stale J1 basketball fixtures with old opponent (Club Africain)
+        await this.matchModel.deleteMany({
+          sport: 'basketball',
+          $or: [
+            { slug: 'us-monastir-vs-club-africain-2026-10-18' },
+            { slug: 'basketball-us-monastir-vs-club-africain-2026-10-18' },
+          ],
+        }).catch((e) => this.logger.warn(`Stale match cleanup notice: ${e.message}`));
+
+        // Always sync basketball upcoming fixtures on boot so J1 (CSS Sfax) and J2 (ESS) are guaranteed fresh
+        await this.syncService.syncUpcomingMatches('basketball', 'SYSTEM');
       } catch (err: any) {
         this.logger.warn(`Initial bootstrap sync failed: ${err.message}`);
       }
@@ -116,6 +128,7 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
   async handleScheduledResultsSync() {
     this.logger.log('Running scheduled 3-hour results synchronization...');
     await this.syncService.syncRecentResults('football', 'CRON');
+    await this.syncService.syncRecentResults('basketball', 'CRON');
   }
 
   /**
@@ -126,6 +139,7 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
   async handleScheduledFixturesSync() {
     this.logger.log('Running scheduled 6-hour fixtures synchronization...');
     await this.syncService.syncUpcomingMatches('football', 'CRON');
+    await this.syncService.syncUpcomingMatches('basketball', 'CRON');
   }
 
   /**
