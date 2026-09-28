@@ -47,13 +47,7 @@ const nextConfig: NextConfig = {
   },
 
   async redirects() {
-    return [
-      {
-        source: '/matchs',
-        destination: '/matches',
-        permanent: true,
-      },
-    ];
+    return [];
   },
 
   // Allow the Next.js dev server to accept connections from Docker network

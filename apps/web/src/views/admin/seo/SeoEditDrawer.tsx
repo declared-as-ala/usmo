@@ -38,6 +38,32 @@ interface SeoEditDrawerProps {
   defaultSocialImage?: string;
 }
 
+export const getPathPrefix = (entityType?: string, path?: string): string => {
+  if (!entityType || !path) return '/';
+  switch (entityType) {
+    case 'news':
+      return '/actualites/';
+    case 'product':
+      return '/product/';
+    case 'player': {
+      const parts = path.split('/');
+      if (parts.length >= 3 && parts[1]) {
+        return `/${parts[1]}/joueurs/`;
+      }
+      return '/football/joueurs/';
+    }
+    case 'category':
+      return '/boutique?category=';
+    case 'sponsor':
+      return '/sponsors#';
+    case 'media':
+      return '/media#';
+    case 'page':
+    default:
+      return '/';
+  }
+};
+
 export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
   isOpen,
   onClose,
@@ -122,7 +148,13 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
       setMetaDescription(item.metaDescription || '');
       setFocusKeyword(item.focusKeyword || '');
       setSecondaryKeywords(item.secondaryKeywords || []);
-      setSlug(item.slug || '');
+      const derivedSlug =
+        item.slug ||
+        (item.path === '/'
+          ? ''
+          : item.path.replace(/^\//, '').split('/').pop()?.split('?')[0]?.split('#')[0]) ||
+        '';
+      setSlug(derivedSlug);
       setCanonicalUrl(item.canonicalUrl || item.path || '');
       setRobotsIndex(item.robotsIndex !== false);
       setRobotsFollow(item.robotsFollow !== false);
@@ -196,13 +228,18 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
   const handleSaveForm = async () => {
     setSaving(true);
     try {
+      const prefix = getPathPrefix(item.entityType, item.path);
+      const cleanSlug = slug.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+      const newPath = cleanSlug ? `${prefix}${cleanSlug}` : item.path;
+
       await onSave({
         metaTitle,
         metaDescription,
         focusKeyword,
         secondaryKeywords,
-        slug,
-        canonicalUrl,
+        slug: cleanSlug,
+        path: newPath,
+        canonicalUrl: canonicalUrl || newPath,
         robotsIndex,
         robotsFollow,
         sitemapEnabled,
@@ -623,20 +660,43 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
           {activeTab === 'indexing' && (
             <div className="space-y-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-800">
-                  Slug de l’URL
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800">
+                    Slug de l’URL (Chemin d’accès)
+                  </label>
+                  <span className="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-medium">
+                    Redirection 301 automatique créée si modifié
+                  </span>
+                </div>
                 <div className="flex items-center">
                   <span className="bg-slate-100 border border-r-0 border-slate-200 px-3 py-2 text-xs text-slate-500 rounded-l-xl font-mono">
-                    /
+                    {getPathPrefix(item.entityType, item.path)}
                   </span>
                   <input
                     type="text"
                     value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    placeholder={item.path.replace(/^\//, '')}
-                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-r-xl text-xs text-slate-900 font-mono"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\s+/g, '-').toLowerCase();
+                      setSlug(val);
+                      const prefix = getPathPrefix(item.entityType, item.path);
+                      const full = `${prefix}${val}`;
+                      if (!canonicalUrl || canonicalUrl === item.path) {
+                        setCanonicalUrl(full);
+                      }
+                    }}
+                    placeholder={item.path === '/' ? 'accueil' : item.path.replace(/^\//, '')}
+                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-r-xl text-xs text-slate-900 font-mono focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-slate-500 pt-0.5">
+                  <span>
+                    URL finale : <code className="text-blue-700 bg-blue-50/70 px-1.5 py-0.5 rounded font-mono font-medium">{`https://usmonastir.tn${getPathPrefix(item.entityType, item.path)}${slug}`}</code>
+                  </span>
+                  {slug && slug !== (item.slug || item.path.replace(/^\//, '').split('/').pop()?.split('?')[0]) && (
+                    <span className="text-amber-600 font-semibold flex items-center gap-1">
+                      ⚠️ Ancienne URL redirigée (301) vers la nouvelle
+                    </span>
+                  )}
                 </div>
               </div>
 

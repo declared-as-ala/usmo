@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SeoMetadata } from './schemas/seo-metadata.schema';
@@ -300,6 +300,7 @@ export class SeoService implements OnModuleInit {
           entityId: p.id,
           path: p.path,
           title: p.title,
+          slug: p.path === '/' ? '' : p.path.replace(/^\//, ''),
           defaultTitle: p.defaultTitle,
           defaultDesc: p.defaultDesc,
           schemaType: p.schemaType,
@@ -500,9 +501,10 @@ export class SeoService implements OnModuleInit {
         lastAnalyzedAt: new Date(),
       });
     } else {
-      // Update path/title if changed, but keep custom SEO fields intact
+      // Update path/title if changed, but keep custom SEO fields and custom slugs intact
       let changed = false;
-      if (existing.path !== params.path) {
+      // Only sync path if the entity hasn't been customized with a custom slug/path
+      if (!existing.slug && existing.path !== params.path) {
         existing.path = params.path;
         changed = true;
       }
@@ -702,21 +704,83 @@ export class SeoService implements OnModuleInit {
       }
     }
 
-    // Slug change detection -> auto redirect suggestion
-    if (dto.slug && item.slug && dto.slug !== item.slug && item.entityType === 'product') {
-      const oldPath = `/product/${item.slug}`;
-      const newPath = `/product/${dto.slug}`;
-      await this.redirectModel.findOneAndUpdate(
-        { sourcePath: oldPath },
-        {
-          sourcePath: oldPath,
-          destinationPath: newPath,
-          statusCode: 301,
-          active: true,
-          notes: `Auto-générée suite à la modification du slug produit : ${item.title}`,
-        },
-        { upsert: true },
-      );
+    const oldPath = item.path;
+
+    // Handle slug or path modifications across all entity types
+    let cleanSlug = dto.slug !== undefined ? dto.slug.trim().replace(/^\/+/, '').replace(/\/+$/, '').toLowerCase() : undefined;
+    let newPath = dto.path;
+
+    if (cleanSlug !== undefined && cleanSlug !== '' && (!newPath || newPath === oldPath)) {
+      if (item.entityType === 'news') {
+        newPath = `/actualites/${cleanSlug}`;
+      } else if (item.entityType === 'product') {
+        newPath = `/product/${cleanSlug}`;
+      } else if (item.entityType === 'player') {
+        const player = await this.playerModel.findById(entityId).lean();
+        const sport = player?.sport || 'football';
+        newPath = `/${sport}/joueurs/${cleanSlug}`;
+      } else if (item.entityType === 'category') {
+        newPath = `/boutique?category=${cleanSlug}`;
+      } else if (item.entityType === 'sponsor') {
+        newPath = `/sponsors#${cleanSlug}`;
+      } else if (item.entityType === 'media') {
+        newPath = `/media#${cleanSlug}`;
+      } else {
+        // 'page' or other
+        newPath = `/${cleanSlug}`;
+      }
+    }
+
+    if (newPath && newPath !== oldPath) {
+      // Verify no other SEO record is already using this path
+      const existingConflict = await this.seoModel.findOne({
+        path: newPath,
+        _id: { $ne: item._id },
+      });
+      if (existingConflict) {
+        throw new BadRequestException(
+          `L'URL "${newPath}" est déjà utilisée par "${existingConflict.title}". Veuillez choisir un autre slug.`
+        );
+      }
+
+      // Auto-create / upsert 301 Permanent Redirect
+      if (oldPath && oldPath !== '/' && newPath !== '/') {
+        await this.redirectModel.findOneAndUpdate(
+          { sourcePath: oldPath },
+          {
+            sourcePath: oldPath,
+            destinationPath: newPath,
+            statusCode: 301,
+            active: true,
+            notes: `Auto-générée suite à la modification du slug (${item.entityType}: ${item.title})`,
+          },
+          { upsert: true }
+        );
+        this.logger.log(`Created auto 301 redirect: ${oldPath} -> ${newPath}`);
+      }
+
+      // Update underlying database entity if slug is updated
+      if (cleanSlug) {
+        if (item.entityType === 'news') {
+          await this.newsModel.findByIdAndUpdate(entityId, { slug: cleanSlug });
+        } else if (item.entityType === 'product') {
+          await this.productModel.findByIdAndUpdate(entityId, { slug: cleanSlug });
+        } else if (item.entityType === 'player') {
+          await this.playerModel.findByIdAndUpdate(entityId, { slug: cleanSlug });
+        } else if (item.entityType === 'category') {
+          await this.categoryModel.findByIdAndUpdate(entityId, { slug: cleanSlug });
+        }
+      }
+
+      item.path = newPath;
+      if (cleanSlug) {
+        item.slug = cleanSlug;
+      }
+      if (!dto.canonicalUrl || item.canonicalUrl === oldPath) {
+        item.canonicalUrl = newPath;
+      }
+    } else if (cleanSlug !== undefined) {
+      item.slug = cleanSlug;
     }
 
     Object.assign(item, dto);
@@ -775,8 +839,11 @@ export class SeoService implements OnModuleInit {
       });
     }
 
-    // Invalidate Next.js frontend cache for this route immediately
+    // Invalidate Next.js frontend cache for both new and old routes immediately
     await this.triggerFrontendRevalidation(item.path);
+    if (oldPath && oldPath !== item.path) {
+      await this.triggerFrontendRevalidation(oldPath);
+    }
 
     return saved;
   }

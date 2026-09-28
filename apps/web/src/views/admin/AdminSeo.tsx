@@ -177,10 +177,17 @@ export default function AdminSeo() {
   // Save drawer item
   const handleSaveDrawerItem = async (updated: Partial<ISharedSeoMetadata>) => {
     if (!editingItem) return;
-    await api.updateSeoContentItem(editingItem.entityType, editingItem.entityId, updated);
-    await api.revalidateSeoPath(editingItem.path);
+    const oldPath = editingItem.path;
+    const res: any = await api.updateSeoContentItem(editingItem.entityType, editingItem.entityId, updated);
+    await api.revalidateSeoPath(oldPath);
+    if (res?.path && res.path !== oldPath) {
+      await api.revalidateSeoPath(res.path);
+    }
     await fetchContent();
     await fetchOverview();
+    if (activeMainTab === 'redirects') {
+      await fetchRedirects();
+    }
   };
 
   // Create redirect
