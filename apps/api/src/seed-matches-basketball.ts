@@ -125,7 +125,7 @@ const matches = [
     awayTeam: 'CSS Sfax',
     awayTeamAr: 'النادي الرياضي صفاقس',
     awayLogo: '',
-    date: '2026-10-18',
+    date: '2026-09-30',
     time: '18:00',
     venue: 'Salle Omnisports Mohamed Mzali, Monastir',
     venueAr: 'قاعة محمد مزالي، المنستير',

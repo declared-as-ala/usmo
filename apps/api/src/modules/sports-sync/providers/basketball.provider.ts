@@ -130,7 +130,7 @@ export const REAL_BASKETBALL_FIXTURES: FixtureDto[] = [
     competitionAr: 'البطولة الوطنية المحترفة أ — الجولة 1',
     season: '2026/27',
     round: 'Journée 1',
-    date: '2026-10-18T18:00:00+01:00',
+    date: '2026-09-30T18:00:00+01:00',
     time: '18:00',
     venue: 'Salle Omnisports Mohamed Mzali, Monastir',
     venueAr: 'قاعة محمد مزالي، المنستير',
