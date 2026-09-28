@@ -77,6 +77,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Operations & Community',
     items: [
+      { label: 'Supporters & Fans (Comptes)', href: '/admin/users', icon: Users, permission: 'users.view' },
+      { label: 'Adhésions & Cartes Membre', href: '/admin/memberships', icon: Crown },
       { label: 'Synchronisation Sportive', href: '/admin/sports-sync', icon: Radio },
       { label: 'Shop Orders', href: '/admin/orders', icon: ShoppingCart, permission: 'orders.view' },
       { label: 'Discount Codes', href: '/admin/discount-codes', icon: Percent },

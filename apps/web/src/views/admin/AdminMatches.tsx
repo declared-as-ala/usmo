@@ -18,7 +18,9 @@ import {
   RefreshCw,
   Pencil,
   ArrowLeftRight,
+  Image as ImageIcon,
 } from 'lucide-react';
+import { MediaUploader } from '../../components/Admin/MediaUploader';
 
 const STATUS_STYLES: Record<Match['status'], string> = {
   upcoming: 'bg-slate-100 text-slate-600',
@@ -35,16 +37,16 @@ const DATA_SOURCE_STYLES: Record<string, string> = {
 };
 
 export const BASKETBALL_TUNISIAN_TEAMS = [
-  { name: 'CSS Sfax', nameAr: 'النادي الرياضي صفاقس', venue: 'Salle Raed Béjaoui, Sfax' },
-  { name: 'Étoile du Sahel', nameAr: 'النجم الرياضي الساحلي', venue: 'Salle Olympique de Sousse' },
-  { name: 'Club Africain', nameAr: 'النادي الإفريقي', venue: 'Salle Chérif Bellamine (Gorjani), Tunis' },
-  { name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', venue: 'Salle Aziz Miled, Kairouan' },
-  { name: 'ES Radès', nameAr: 'النجم الرادسي', venue: 'Salle Taoufik Bouhima, Radès' },
-  { name: 'Stade Nabeulien', nameAr: 'الملعب النابلي', venue: 'Salle Bir Challouf, Nabeul' },
-  { name: 'DS Grombalia', nameAr: 'الدالية الرياضية بقرمبالية', venue: 'Salle Omnisports de Grombalia' },
-  { name: 'US Ansar', nameAr: 'الاتحاد الرياضي الأنصاري', venue: 'Salle Dar Chaabane El Fehri' },
-  { name: 'Ezzahra Sports', nameAr: 'الزهراء الرياضية', venue: 'Salle Ezzahra' },
-  { name: 'JS Manazeh', nameAr: 'شبيبة المنازه', venue: 'Palais des Sports d\'El Menzah' },
+  { name: 'CSS Sfax', nameAr: 'النادي الرياضي صفاقس', venue: 'Salle Raed Béjaoui, Sfax', logo: '/teams/css.png' },
+  { name: 'Étoile du Sahel', nameAr: 'النجم الرياضي الساحلي', venue: 'Salle Olympique de Sousse', logo: '/teams/ess.png' },
+  { name: 'Club Africain', nameAr: 'النادي الإفريقي', venue: 'Salle Chérif Bellamine (Gorjani), Tunis', logo: '/teams/ca.png' },
+  { name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', venue: 'Salle Aziz Miled, Kairouan', logo: '/teams/jsk.svg' },
+  { name: 'ES Radès', nameAr: 'النجم الرادسي', venue: 'Salle Taoufik Bouhima, Radès', logo: '/teams/esg.svg' },
+  { name: 'Stade Nabeulien', nameAr: 'الملعب النابلي', venue: 'Salle Bir Challouf, Nabeul', logo: '/teams/st.png' },
+  { name: 'DS Grombalia', nameAr: 'الدالية الرياضية بقرمبالية', venue: 'Salle Omnisports de Grombalia', logo: '/teams/dsg.svg' },
+  { name: 'US Ansar', nameAr: 'الاتحاد الرياضي الأنصاري', venue: 'Salle Dar Chaabane El Fehri', logo: '' },
+  { name: 'Ezzahra Sports', nameAr: 'الزهراء الرياضية', venue: 'Salle Ezzahra', logo: '/teams/esz.png' },
+  { name: 'JS Manazeh', nameAr: 'شبيبة المنازه', venue: 'Palais des Sports d\'El Menzah', logo: '/teams/jso.png' },
 ];
 
 export const BASKETBALL_JOURNEES = [
@@ -327,17 +329,32 @@ export default function AdminMatches() {
           ...f,
           awayTeam: opp.name,
           awayTeamAr: opp.nameAr,
-          awayLogo: '',
+          awayLogo: opp.logo || f.awayLogo || '',
         };
       } else {
         return {
           ...f,
           homeTeam: opp.name,
           homeTeamAr: opp.nameAr,
-          homeLogo: '',
+          homeLogo: opp.logo || f.homeLogo || '',
           venue: opp.venue,
         };
       }
+    });
+  };
+
+  const isUsmHome = form.homeTeam.toLowerCase().includes('monastir');
+  const isUsmAway = form.awayTeam.toLowerCase().includes('monastir');
+  const adversaryIsAway = isUsmHome || !isUsmAway;
+  const adversaryTeamName = adversaryIsAway ? form.awayTeam : form.homeTeam;
+  const adversaryLogoUrl = adversaryIsAway ? form.awayLogo : form.homeLogo;
+
+  const setAdversaryLogo = (url: string) => {
+    setForm((f) => {
+      const usmHome = f.homeTeam.toLowerCase().includes('monastir');
+      const usmAway = f.awayTeam.toLowerCase().includes('monastir');
+      const isAway = usmHome || !usmAway;
+      return isAway ? { ...f, awayLogo: url } : { ...f, homeLogo: url };
     });
   };
 
@@ -566,8 +583,32 @@ export default function AdminMatches() {
                     </span>
                   </td>
                   <td className="py-3 px-4 font-bold text-slate-900">
-                    {m.homeTeam} <span className="text-slate-400 font-normal">vs</span> {m.awayTeam}
-                    <span className="block text-[10px] text-slate-400 font-normal">{m.competition}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {m.homeLogo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={m.homeLogo} alt={m.homeTeam} className="w-5 h-5 object-contain rounded shrink-0 bg-slate-50 p-0.5 border border-slate-100" />
+                        ) : (
+                          <span className="w-5 h-5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold flex items-center justify-center shrink-0">
+                            {m.homeTeam ? m.homeTeam.substring(0, 2).toUpperCase() : 'US'}
+                          </span>
+                        )}
+                        <span className="truncate max-w-[120px]">{m.homeTeam}</span>
+                      </div>
+                      <span className="text-slate-400 font-normal text-[10px] shrink-0">vs</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {m.awayLogo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={m.awayLogo} alt={m.awayTeam} className="w-5 h-5 object-contain rounded shrink-0 bg-slate-50 p-0.5 border border-slate-100" />
+                        ) : (
+                          <span className="w-5 h-5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold flex items-center justify-center shrink-0">
+                            {m.awayTeam ? m.awayTeam.substring(0, 2).toUpperCase() : 'OP'}
+                          </span>
+                        )}
+                        <span className="truncate max-w-[120px]">{m.awayTeam}</span>
+                      </div>
+                    </div>
+                    <span className="block text-[10px] text-slate-400 font-normal mt-0.5">{m.competition}</span>
                     {m.quarters && (
                       <span className="block text-[10px] font-mono text-slate-500 mt-0.5">
                         Q1: {m.quarters.home[0]}-{m.quarters.away[0]} | Q2: {m.quarters.home[1]}-{m.quarters.away[1]} | Q3: {m.quarters.home[2]}-{m.quarters.away[2]} | Q4: {m.quarters.home[3]}-{m.quarters.away[3]}
@@ -979,6 +1020,92 @@ export default function AdminMatches() {
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
+              </div>
+
+              {/* Photo / Logo de l'Adversaire */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <ImageIcon size={14} className="text-usm-blue-primary" />
+                    <span className="text-[11px] font-bold text-slate-800">
+                      Photo / Logo de l&apos;adversaire ({adversaryTeamName || 'Équipe adverse'})
+                    </span>
+                  </div>
+                  {adversaryLogoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setAdversaryLogo('')}
+                      className="text-[10px] font-bold text-red-500 hover:text-red-700 cursor-pointer"
+                    >
+                      Effacer la photo
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                  <div>
+                    <label className="text-[10px] font-semibold text-slate-500 block mb-1">
+                      Téléverser le logo / la photo
+                    </label>
+                    <MediaUploader
+                      folder="teams"
+                      currentUrl={adversaryLogoUrl}
+                      label="Glisser ou choisir la photo adverse"
+                      compact
+                      onUpload={(file) => setAdversaryLogo(file.url)}
+                      onRemove={() => setAdversaryLogo('')}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-slate-500 block mb-1">
+                      Ou URL / Chemin direct
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={adversaryLogoUrl}
+                        onChange={(e) => setAdversaryLogo(e.target.value)}
+                        placeholder="/teams/css.png ou https://..."
+                        className="flex-1 bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none focus:border-usm-blue-primary font-mono"
+                      />
+                      {adversaryLogoUrl && (
+                        <div className="w-8 h-8 rounded-lg border border-slate-200 bg-white p-1 flex items-center justify-center shrink-0 shadow-2xs">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={adversaryLogoUrl} alt="Logo adverse" className="max-w-full max-h-full object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Advanced: individual logos for both teams */}
+                <details className="text-[10px] text-slate-500 pt-1">
+                  <summary className="cursor-pointer font-bold hover:text-usm-blue-primary">
+                    Options avancées : Personnaliser les 2 logos (Domicile & Extérieur)
+                  </summary>
+                  <div className="grid grid-cols-2 gap-2.5 mt-2 pt-2 border-t border-slate-200">
+                    <div>
+                      <span className="block font-semibold mb-1 truncate">Logo {form.homeTeam || 'Domicile'}</span>
+                      <input
+                        type="text"
+                        value={form.homeLogo}
+                        onChange={(e) => setForm((f) => ({ ...f, homeLogo: e.target.value }))}
+                        placeholder="/brand/usm-logo.webp"
+                        className="w-full bg-white border border-slate-200 rounded p-1.5 text-[11px] font-mono outline-none"
+                      />
+                    </div>
+                    <div>
+                      <span className="block font-semibold mb-1 truncate">Logo {form.awayTeam || 'Extérieur'}</span>
+                      <input
+                        type="text"
+                        value={form.awayLogo}
+                        onChange={(e) => setForm((f) => ({ ...f, awayLogo: e.target.value }))}
+                        placeholder="/teams/adversaire.png"
+                        className="w-full bg-white border border-slate-200 rounded p-1.5 text-[11px] font-mono outline-none"
+                      />
+                    </div>
+                  </div>
+                </details>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

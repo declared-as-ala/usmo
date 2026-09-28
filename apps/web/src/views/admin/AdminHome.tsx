@@ -39,6 +39,7 @@ export default function AdminHome() {
   const [adminOrders, setAdminOrders] = useState<any[]>([]);
   const [totalOrdersCount, setTotalOrdersCount] = useState<number>(0);
   const [partnerLeads, setPartnerLeads] = useState<any[]>([]);
+  const [fanAccountsCount, setFanAccountsCount] = useState<number>(0);
 
   useEffect(() => {
     api
@@ -55,6 +56,14 @@ export default function AdminHome() {
     api
       .getAdminPartnerLeads()
       .then((data: any) => setPartnerLeads(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+    api
+      .getAdminUsers()
+      .then((data: any) => {
+        const list = Array.isArray(data) ? data : data?.users || [];
+        setFanAccountsCount(list.length);
+      })
       .catch(() => {});
   }, []);
 
@@ -143,13 +152,15 @@ export default function AdminHome() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div onClick={() => router.push('/admin/users')} className="cursor-pointer group">
+          <StatCard label="Comptes Supporters (Fans)" value={fanAccountsCount} icon={Users} accent="blue" />
+        </div>
         <StatCard label="Pending Orders" value={pendingOrders.length} icon={Clock} accent="amber" />
         <StatCard label="Total Orders" value={totalOrdersCount || effectiveOrders.length} icon={ShoppingCart} accent="blue" />
         <StatCard label="Products in Catalog" value={products.length} icon={Package} accent="slate" />
         <StatCard label="Out of Stock" value={outOfStockProducts.length} icon={AlertTriangle} accent="red" />
         <StatCard label="Active Sponsors" value={activeSponsors} icon={Handshake} accent="blue" />
         <StatCard label="New Partner Leads" value={newPartnerLeads.length} icon={Mail} accent="amber" />
-        <StatCard label="Published Articles" value={publishedArticles} icon={Newspaper} accent="emerald" />
         <StatCard label="Live/Upcoming Matches" value={matches.filter((m) => m.status !== 'finished').length} icon={Radio} accent="blue" />
         <StatCard label="Fan Blue Points (session)" value={bluePoints} icon={Users} accent="emerald" />
       </div>
