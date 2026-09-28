@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { SquadRoster } from '../../views/SquadRoster';
+import { buildPageMetadata } from '../../lib/seo/buildMetadata';
 
-export const metadata: Metadata = {
-  title: 'Effectif Football | Union Sportive Monastirienne',
-  description: 'Découvrez la liste officielle des joueurs de football de l’US Monastir : gardiens de but, défenseurs, milieux de terrain et attaquants.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    path: '/football',
+    fallbackTitle: 'Équipe Première Football | Union Sportive Monastirienne',
+    fallbackDescription:
+      'Découvrez l’effectif pro, les statistiques, le staff technique et les performances de l’équipe de football de l’USM.',
+  });
+}
 
 export default function FootballRosterPage() {
   return <SquadRoster sport="football" />;

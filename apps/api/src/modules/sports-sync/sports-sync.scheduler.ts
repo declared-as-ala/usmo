@@ -32,8 +32,9 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
           this.logger.log('No prior football sync found in MongoDB cache. Running initial synchronization...');
           await this.syncService.syncAll('football', 'SYSTEM');
         }
-        if (!health.basketball.lastSuccessfulSyncAt) {
-          this.logger.log('No prior basketball sync found in MongoDB cache. Running initial synchronization...');
+        const bbMatchCount = await this.matchModel.countDocuments({ sport: 'basketball' });
+        if (!health.basketball.lastSuccessfulSyncAt || bbMatchCount === 0) {
+          this.logger.log('No prior basketball sync or zero basketball matches found in MongoDB. Running basketball sync...');
           await this.syncService.syncAll('basketball', 'SYSTEM');
         }
       } catch (err: any) {

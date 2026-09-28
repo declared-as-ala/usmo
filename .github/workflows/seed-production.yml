@@ -73,5 +73,6 @@ jobs:
             run_seed seed-sponsor-slugs
             run_seed seed-jerseys
             run_seed seed-donations
+            run_seed seed-matches-basketball
 
             echo "[seed] All seed scripts completed successfully."

@@ -1,11 +1,16 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Palmares } from '../../views/Palmares';
+import { buildPageMetadata } from '../../lib/seo/buildMetadata';
 
-export const metadata: Metadata = {
-  title: 'Palmarès & Héritage | Union Sportive Monastirienne',
-  description: 'Les titres, exploits et moments historiques de l’Union Sportive Monastirienne en football et basketball, dont le sacre continental BAL 2022.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    path: '/palmares',
+    fallbackTitle: 'Palmarès de l’US Monastir | Titres Football, Basketball & BAL',
+    fallbackDescription:
+      'Tous les trophées remportés par l’USM : Coupe de Tunisie, Supercoupe, Championnat de Basketball et sacre continental BAL.',
+  });
+}
 
 export default function PalmaresPage() {
   return (

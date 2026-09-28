@@ -433,14 +433,16 @@ export class SportsSyncService {
               awayLogo: f.awayTeam.logo || existing?.awayLogo || '',
               date: f.date.slice(0, 10),
               time: f.time,
-              venue: f.venue || existing?.venue || 'Stade Mustapha Ben Jannet',
-              venueAr: f.venueAr || existing?.venueAr || 'ملعب مصطفى بن جنات',
+              venue: f.venue || existing?.venue || (f.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
+              venueAr: f.venueAr || existing?.venueAr || (f.sport === 'basketball' ? 'قاعة محمد مزالي، المنستير' : 'ملعب مصطفى بن جنات، المنستير'),
               status: f.status,
               score: {
                 home: f.score.home ?? 0,
                 away: f.score.away ?? 0,
               },
-              dataSource: 'EXTERNAL_API',
+              quarters: f.quarters || existing?.quarters || null,
+              stats: f.stats || existing?.stats || {},
+              dataSource: existing?.dataSource === 'MANUAL' ? 'HYBRID' : 'EXTERNAL_API',
               providerUpdatedAt: new Date(),
               syncedAt: new Date(),
             },
@@ -552,14 +554,16 @@ export class SportsSyncService {
               awayLogo: r.awayTeam.logo || existing?.awayLogo || '',
               date: r.date.slice(0, 10),
               time: r.time,
-              venue: r.venue || existing?.venue || 'Stade Mustapha Ben Jannet',
-              venueAr: r.venueAr || existing?.venueAr || 'ملعب مصطفى بن جنات',
+              venue: r.venue || existing?.venue || (r.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
+              venueAr: r.venueAr || existing?.venueAr || (r.sport === 'basketball' ? 'قاعة محمد مزالي، المنستير' : 'ملعب مصطفى بن جنات، المنستير'),
               status: 'finished',
               score: {
                 home: r.score.home ?? existing?.score?.home ?? 0,
                 away: r.score.away ?? existing?.score?.away ?? 0,
               },
-              dataSource: 'EXTERNAL_API',
+              quarters: r.quarters || existing?.quarters || null,
+              stats: r.stats || existing?.stats || {},
+              dataSource: existing?.dataSource === 'MANUAL' ? 'HYBRID' : 'EXTERNAL_API',
               providerUpdatedAt: new Date(),
               syncedAt: new Date(),
             },
@@ -882,6 +886,14 @@ export class SportsSyncService {
       lastStatus: status?.status || 'SUCCESS',
       serverTime: new Date(),
     };
+  }
+
+  /**
+   * Return team profile information for the given sport.
+   */
+  async getTeamInfo(sport: SportType = 'football') {
+    const { provider, teamExternalId } = await this.providerService.getProviderForSport(sport);
+    return provider.getTeamInfo(teamExternalId);
   }
 
   /**

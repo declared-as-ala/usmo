@@ -31,18 +31,45 @@ const cormorant = Cormorant_Garamond({
   display: 'swap',
 });
 
-const SITE_URL = process.env.SITE_URL || 'http://localhost:3000';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || 'https://usmonastir.tn';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Union Sportive Monastirienne (US Monastir) - Official Club Portal',
-  description: 'Welcome to the official digital universe of Union Sportive Monastirienne (USM). One City, One Heart, One Club. Get the latest football news, basketball updates, live match center scores, fan zone predictions, official store catalog, and sponsor portal.',
-  keywords: 'US Monastir, Union Sportive Monastirienne, USM, Monastir Football, Monastir Basketball, BAL 2022 Champions, Ligue 1 Tunisia, Stade Mustapha Ben Jannet, Tunisia sports',
+  title: {
+    default: 'Union Sportive Monastirienne | Site Officiel',
+    template: '%s | US Monastir',
+  },
+  description: 'Portail officiel de l\'Union Sportive Monastirienne (USM). Suivez l\'actualité, les résultats football & basketball, le Match Center en direct et la boutique officielle.',
+  keywords: 'US Monastir, Union Sportive Monastirienne, USM, Monastir Football, Monastir Basketball, BAL Champions, Ligue 1 Tunisie, Stade Mustapha Ben Jannet',
   authors: [{ name: 'Union Sportive Monastirienne' }],
   manifest: '/manifest.json',
   icons: {
     icon: '/logo.webp',
     apple: '/icons/apple-touch-icon.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    url: SITE_URL,
+    siteName: 'Union Sportive Monastirienne',
+    title: 'Union Sportive Monastirienne | Site Officiel',
+    description: 'Portail officiel de l\'Union Sportive Monastirienne (USM). Retrouvez l\'actualité, le Match Center et la boutique officielle.',
+    images: [
+      {
+        url: `${SITE_URL}/images/seo/usm-social-share-default.webp`,
+        width: 1200,
+        height: 630,
+        alt: 'Union Sportive Monastirienne',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@USMonastir',
+    creator: '@USMonastir',
+    title: 'Union Sportive Monastirienne | Site Officiel',
+    description: 'Portail officiel de l\'Union Sportive Monastirienne (USM). Retrouvez l\'actualité, le Match Center et la boutique officielle.',
+    images: [`${SITE_URL}/images/seo/usm-social-share-default.webp`],
   },
   appleWebApp: {
     capable: true,

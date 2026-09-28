@@ -39,6 +39,11 @@ export class SportsSyncController {
     return this.syncService.getDataFreshness(sport);
   }
 
+  @Get('sports-sync/team-info')
+  async getTeamInfo(@Query('sport') sport: SportType = 'football') {
+    return this.syncService.getTeamInfo(sport);
+  }
+
   // ── Admin Endpoints ────────────────────────────────────────────────────
 
   @Get('admin/sports-sync/status')

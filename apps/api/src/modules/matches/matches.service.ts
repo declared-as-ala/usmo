@@ -19,19 +19,19 @@ export class MatchesService {
 
   async findUpcoming(sport?: string, limit = 10) {
     const filter: Record<string, unknown> = { status: { $in: ['upcoming', 'live'] } };
-    if (sport) filter.sport = sport;
+    if (sport) filter.sport = sport.toLowerCase().trim();
     return this.matchModel.find(filter).sort({ date: 1, time: 1 }).limit(limit).lean();
   }
 
   async findResults(sport?: string, limit = 10) {
     const filter: Record<string, unknown> = { status: 'finished' };
-    if (sport) filter.sport = sport;
+    if (sport) filter.sport = sport.toLowerCase().trim();
     return this.matchModel.find(filter).sort({ date: -1 }).limit(limit).lean();
   }
 
   async findPublic(sport?: string) {
     const filter: Record<string, unknown> = {};
-    if (sport) filter.sport = sport;
+    if (sport) filter.sport = sport.toLowerCase().trim();
     return this.matchModel.find(filter).sort({ date: -1 }).lean();
   }
 
@@ -50,11 +50,20 @@ export class MatchesService {
     let slug = slugify(base) || randomUUID();
     const exists = await this.matchModel.exists({ slug });
     if (exists) slug = `${slug}-${Date.now().toString(36)}`;
-    return this.matchModel.create({ ...input, slug });
+    return this.matchModel.create({
+      dataSource: 'MANUAL',
+      manualOverride: true,
+      ...input,
+      slug,
+    });
   }
 
   async update(id: string, input: Partial<Match>) {
-    const match = await this.matchModel.findByIdAndUpdate(id, { $set: input }, { new: true });
+    const match = await this.matchModel.findByIdAndUpdate(
+      id,
+      { $set: { manualOverride: true, dataSource: 'MANUAL', ...input } },
+      { new: true },
+    );
     if (!match) throw new NotFoundException('Match not found');
     return match;
   }
@@ -69,12 +78,18 @@ export class MatchesService {
     const match = await this.matchModel.findById(id);
     if (!match) throw new NotFoundException('Match not found');
     match.score = { ...match.score, [team]: Math.max(0, (match.score?.[team] || 0) + amount) };
+    match.manualOverride = true;
+    match.dataSource = 'HYBRID';
     await match.save();
     return match;
   }
 
   async updateStatus(id: string, status: 'upcoming' | 'live' | 'finished') {
-    const match = await this.matchModel.findByIdAndUpdate(id, { $set: { status } }, { new: true });
+    const match = await this.matchModel.findByIdAndUpdate(
+      id,
+      { $set: { status, manualOverride: true, dataSource: 'HYBRID' } },
+      { new: true },
+    );
     if (!match) throw new NotFoundException('Match not found');
     return match;
   }
@@ -83,6 +98,7 @@ export class MatchesService {
     const match = await this.matchModel.findById(id);
     if (!match) throw new NotFoundException('Match not found');
     match.timeline.push({ ...event, id: randomUUID() } as Match['timeline'][number]);
+    match.manualOverride = true;
     await match.save();
     return match;
   }

@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import { Legends } from '../../views/Legends';
+import { buildPageMetadata } from '../../lib/seo/buildMetadata';
 
-export const metadata: Metadata = {
-  title: 'Légendes du club | Union Sportive Monastirienne',
-  description: 'Les joueurs, capitaines et bâtisseurs qui ont marqué à jamais l’histoire de l’Union Sportive Monastirienne.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    path: '/legendes',
+    fallbackTitle: 'Légendes de l’US Monastir | Joueurs & Figures Historiques',
+    fallbackDescription:
+      'Hommage aux joueurs et entraîneurs emblématiques qui ont marqué l’histoire de l’Union Sportive Monastirienne.',
+  });
+}
 
 export default function LegendsPage() {
   return <Legends />;

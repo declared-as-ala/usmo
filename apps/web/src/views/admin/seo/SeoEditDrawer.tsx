@@ -20,8 +20,10 @@ import {
   Tag,
   UploadCloud,
   Trash2,
+  RefreshCw,
 } from 'lucide-react';
 import { ISharedSeoMetadata } from 'shared';
+import { api } from '../../../lib/api-client';
 import { computeSeoScore } from '../../../lib/seo/seoScoreCalculator';
 import { SeoScoreBadge } from './SeoScoreBadge';
 import { SocialSharePreview } from './SocialSharePreview';
@@ -75,6 +77,44 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
   const [saving, setSaving] = useState(false);
   const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
+  const [revalidating, setRevalidating] = useState(false);
+  const [revalidatedMsg, setRevalidatedMsg] = useState<string | null>(null);
+
+  const fetchDiagnostics = async () => {
+    if (!item?.path) return;
+    setDiagLoading(true);
+    try {
+      const res = await api.getSeoDiagnostics(item.path);
+      setDiagnostics(res);
+    } catch {
+      setDiagnostics(null);
+    } finally {
+      setDiagLoading(false);
+    }
+  };
+
+  const handleManualRevalidate = async () => {
+    if (!item?.path) return;
+    setRevalidating(true);
+    try {
+      await api.revalidateSeoPath(item.path);
+      setRevalidatedMsg('Cache Next.js invalidé avec succès !');
+      setTimeout(() => setRevalidatedMsg(null), 4000);
+      fetchDiagnostics();
+    } catch (e: any) {
+      setRevalidatedMsg(`Erreur : ${e.message}`);
+    } finally {
+      setRevalidating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'tools' && item?.path && !diagnostics && !diagLoading) {
+      fetchDiagnostics();
+    }
+  }, [activeTab, item?.path]);
 
   useEffect(() => {
     if (item) {
@@ -848,10 +888,88 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
           {/* TAB 7: TOOLS & DEBUGGER */}
           {activeTab === 'tools' && (
             <div className="space-y-5">
+              {/* Live Backend Diagnostics Panel */}
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                    <Code2 className="w-4 h-4 text-usm-blue-primary" />
+                    Diagnostics SEO & Métadonnées Serveur en Direct
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={fetchDiagnostics}
+                      disabled={diagLoading}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${diagLoading ? 'animate-spin' : ''}`} />
+                      Actualiser
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleManualRevalidate}
+                      disabled={revalidating}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+                    >
+                      {revalidating ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                      Purger le Cache Next.js
+                    </button>
+                  </div>
+                </div>
+
+                {revalidatedMsg && (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    {revalidatedMsg}
+                  </div>
+                )}
+
+                {diagLoading ? (
+                  <div className="py-6 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-usm-blue-primary" />
+                    Chargement des données stockées et résolues...
+                  </div>
+                ) : diagnostics ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    {/* Stored in MongoDB */}
+                    <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="font-bold text-slate-800 pb-1 border-b border-slate-100 flex items-center justify-between">
+                        <span>Données Stockées (MongoDB)</span>
+                        <span className="text-[10px] text-emerald-600 font-mono">Prêt</span>
+                      </div>
+                      <div className="space-y-1 text-slate-600">
+                        <div><strong>Title:</strong> <span className="font-mono text-[11px] text-slate-800">{diagnostics.storedSeo?.metaTitle || '(hérité)'}</span></div>
+                        <div><strong>Description:</strong> <span className="font-mono text-[11px] text-slate-800 truncate block">{diagnostics.storedSeo?.metaDescription || '(hérité)'}</span></div>
+                        <div><strong>OG Image stockée:</strong> <span className="font-mono text-[10px] text-slate-800 break-all">{diagnostics.storedSeo?.ogImage || '(défaut)'}</span></div>
+                        <div><strong>Score SEO:</strong> <span className="font-bold text-usm-blue-primary">{diagnostics.storedSeo?.seoScore ?? '-'}/100</span></div>
+                        <div><strong>Indexation:</strong> {diagnostics.storedSeo?.robotsIndex !== false ? '✅ Index' : '❌ Noindex'}</div>
+                      </div>
+                    </div>
+
+                    {/* Resolved Public Output */}
+                    <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="font-bold text-slate-800 pb-1 border-b border-slate-100 flex items-center justify-between">
+                        <span>Métadonnées Publiques Résolues</span>
+                        <span className="text-[10px] text-blue-600 font-mono">Public HTTPS</span>
+                      </div>
+                      <div className="space-y-1 text-slate-600">
+                        <div><strong>Canonical:</strong> <span className="font-mono text-[11px] text-blue-700 block truncate">{diagnostics.canonicalUrl}</span></div>
+                        <div><strong>Public OG Image:</strong> <span className="font-mono text-[10px] text-emerald-700 break-all block">{diagnostics.ogImage}</span></div>
+                        <div><strong>Statut HTTPS:</strong> {diagnostics.isHttps ? '🔒 Sécurisé (HTTPS)' : '⚠️ Non-sécurisé'}</div>
+                        <div><strong>Type:</strong> <span className="font-mono text-[11px]">{diagnostics.resolvedMetadata?.openGraph?.type || 'website'}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">Cliquez sur « Actualiser » pour tester la résolution serveur en temps réel.</p>
+                )}
+              </div>
+
+              {/* Raw HTML Head snippet preview */}
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
                 <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                   <Code2 className="w-4 h-4 text-blue-600" />
-                  Balises Meta HTML générées pour les réseaux sociaux
+                  Balises Meta HTML envoyées aux robots (Facebook, WhatsApp, Google)
                 </h4>
                 <pre className="p-4 bg-slate-900 text-slate-100 rounded-xl text-[11px] font-mono overflow-x-auto leading-relaxed">
 {`<title>${metaTitle || item.title}</title>
@@ -859,29 +977,29 @@ export const SeoEditDrawer: React.FC<SeoEditDrawerProps> = ({
 <link rel="canonical" href="https://usmonastir.tn${item.path}" />
 <meta property="og:title" content="${ogTitle || metaTitle || item.title}" />
 <meta property="og:description" content="${ogDescription || metaDescription}" />
-<meta property="og:image" content="${ogImage || defaultSocialImage}" />
+<meta property="og:image" content="${ogImage ? (ogImage.startsWith('http') ? ogImage : `https://usmonastir.tn${ogImage.startsWith('/') ? '' : '/'}${ogImage}`) : 'https://usmonastir.tn/images/seo/usm-social-share-default.webp'}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:site_name" content="Union Sportive Monastirienne" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="${twitterCard}" />
 <meta name="twitter:title" content="${metaTitle || item.title}" />
-<meta name="twitter:image" content="${ogImage || defaultSocialImage}" />`}
+<meta name="twitter:image" content="${ogImage ? (ogImage.startsWith('http') ? ogImage : `https://usmonastir.tn${ogImage.startsWith('/') ? '' : '/'}${ogImage}`) : 'https://usmonastir.tn/images/seo/usm-social-share-default.webp'}" />`}
                 </pre>
               </div>
 
+              {/* External Crawlers */}
               <div className="p-4 border border-slate-200 rounded-2xl flex items-center justify-between">
                 <div>
                   <div className="text-xs font-bold text-slate-900">Facebook Sharing Debugger</div>
                   <div className="text-[11px] text-slate-500">
-                    Testez et videz le cache de partage Facebook pour cette URL
+                    Testez et videz le cache de prévisualisation Facebook pour cette URL
                   </div>
                 </div>
                 <a
                   href={`https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(
                     `https://usmonastir.tn${item.path}`
                   )}`}
-
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold cursor-pointer transition-colors"

@@ -723,6 +723,39 @@ export const api = {
   getUpcomingMatches: (sport?: string, limit = 10) => fetchJson(`/matches/upcoming?limit=${limit}${sport ? `&sport=${sport}` : ''}`),
   getMatchResults: (sport?: string, limit = 10) => fetchJson(`/matches/results?limit=${limit}${sport ? `&sport=${sport}` : ''}`),
   getMatchBySlug: (slug: string) => fetchJson(`/matches/${slug}`),
+  getSportsSyncTeamInfo: (sport: 'football' | 'basketball' = 'football') => fetchJson(`/sports-sync/team-info?sport=${sport}`),
+
+  // ── Admin Match Management ───────────────────────────────────────────
+  getAdminMatches: () => fetchJson('/admin/matches'),
+  createAdminMatch: (body: any) =>
+    fetchJson('/admin/matches', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  updateAdminMatch: (id: string, body: any) =>
+    fetchJson(`/admin/matches/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+  deleteAdminMatch: (id: string) =>
+    fetchJson(`/admin/matches/${id}`, {
+      method: 'DELETE',
+    }),
+  updateAdminMatchScore: (id: string, team: 'home' | 'away', amount: number) =>
+    fetchJson(`/admin/matches/${id}/score`, {
+      method: 'PATCH',
+      body: JSON.stringify({ team, amount }),
+    }),
+  updateAdminMatchStatus: (id: string, status: 'upcoming' | 'live' | 'finished') =>
+    fetchJson(`/admin/matches/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+  addAdminMatchEvent: (id: string, event: any) =>
+    fetchJson(`/admin/matches/${id}/events`, {
+      method: 'POST',
+      body: JSON.stringify(event),
+    }),
 
   // Match Predictions
   getPredictionsByMatch: (matchId: string) => fetchJson(`/predictions/match/${matchId}`),
@@ -1070,9 +1103,11 @@ export const api = {
       method: 'DELETE',
     }),
   getSeo404Logs: () => fetchJson('/admin/seo/404'),
+  getSeoDiagnostics: (path: string) =>
+    fetchJson(`/admin/seo/diagnostics?path=${encodeURIComponent(path)}`),
   revalidateSeoPath: async (path: string) => {
     try {
-      await fetch('/api/revalidate', {
+      await fetch('/revalidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path }),

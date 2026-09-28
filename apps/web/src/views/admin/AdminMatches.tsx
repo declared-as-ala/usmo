@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import { requestConfirmation } from '../../components/Common/ConfirmDialog';
 import { AdminPageHeader } from '../../components/Admin/AdminPageHeader';
 import { Match, MatchEvent } from '../../data/mockData';
+import { api } from '../../lib/api-client';
 import {
   Plus,
   X,
@@ -13,6 +14,8 @@ import {
   Radio,
   Send,
   AlertTriangle,
+  Lock,
+  RefreshCw,
 } from 'lucide-react';
 
 const STATUS_STYLES: Record<Match['status'], string> = {
@@ -21,14 +24,97 @@ const STATUS_STYLES: Record<Match['status'], string> = {
   finished: 'bg-emerald-50 text-emerald-700',
 };
 
+const DATA_SOURCE_STYLES: Record<string, string> = {
+  MANUAL: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  HYBRID: 'bg-sky-50 text-sky-700 border-sky-200',
+  EXTERNAL_API: 'bg-purple-50 text-purple-700 border-purple-200',
+  sportsdb: 'bg-purple-50 text-purple-700 border-purple-200',
+  manual: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
+interface BackendMatch {
+  _id?: string;
+  id?: string;
+  slug: string;
+  sport: 'football' | 'basketball';
+  competition: string;
+  competitionAr?: string;
+  season?: string;
+  homeTeam: string;
+  homeTeamAr?: string;
+  homeLogo?: string;
+  awayTeam: string;
+  awayTeamAr?: string;
+  awayLogo?: string;
+  date: string;
+  time?: string;
+  venue?: string;
+  venueAr?: string;
+  status: 'upcoming' | 'live' | 'finished';
+  score?: { home: number; away: number };
+  quarters?: { home: number[]; away: number[] } | null;
+  timeline?: MatchEvent[];
+  stats?: Record<string, { home: number; away: number }>;
+  dataSource?: string;
+  manualOverride?: boolean;
+}
+
+function normalizeMatch(m: any): Match & { quarters?: { home: number[]; away: number[] } | null; dataSource?: string; manualOverride?: boolean } {
+  return {
+    id: m._id || m.id || m.slug,
+    sport: m.sport,
+    competition: m.competition,
+    competitionAr: m.competitionAr || m.competition,
+    homeTeam: m.homeTeam,
+    homeTeamAr: m.homeTeamAr || m.homeTeam,
+    homeLogo: m.homeLogo || (m.homeTeam?.includes('Monastir') ? '/brand/usm-logo.webp' : ''),
+    awayTeam: m.awayTeam,
+    awayTeamAr: m.awayTeamAr || m.awayTeam,
+    awayLogo: m.awayLogo || (m.awayTeam?.includes('Monastir') ? '/brand/usm-logo.webp' : ''),
+    date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
+    time: m.time || '18:00',
+    venue: m.venue || (m.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
+    venueAr: m.venueAr || m.venue,
+    status: m.status || 'upcoming',
+    score: m.score || { home: 0, away: 0 },
+    quarters: m.quarters || null,
+    timeline: m.timeline || [],
+    stats: m.stats || {},
+    dataSource: m.dataSource || 'MANUAL',
+    manualOverride: m.manualOverride ?? false,
+  };
+}
+
 export default function AdminMatches() {
-  const { matches, addMatch, deleteMatch, updateMatchScore, addMatchEvent, updateMatchStatus } = useApp();
+  const { matches: contextMatches, showToast } = useApp();
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const [dbMatches, setDbMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [sportFilter, setSportFilter] = useState<'all' | 'football' | 'basketball'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | Match['status']>('all');
   const [showAddForm, setShowAddForm] = useState(() => searchParams.get('new') === '1');
+
+  const fetchMatches = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await api.getAdminMatches();
+      if (Array.isArray(res) && res.length > 0) {
+        setDbMatches(res.map(normalizeMatch));
+      } else {
+        setDbMatches(contextMatches);
+      }
+    } catch {
+      setDbMatches(contextMatches);
+    } finally {
+      setLoading(false);
+    }
+  }, [contextMatches]);
+
+  useEffect(() => {
+    fetchMatches();
+  }, [fetchMatches]);
 
   useEffect(() => {
     if (searchParams.get('new') === '1') {
@@ -38,88 +124,221 @@ export default function AdminMatches() {
 
   // Add match form state
   const [form, setForm] = useState({
-    sport: 'football' as 'football' | 'basketball',
-    competition: '',
+    sport: 'basketball' as 'football' | 'basketball',
+    competition: 'Championnat Pro A',
+    season: '2026/2027',
     homeTeam: 'US Monastir',
+    homeLogo: '/brand/usm-logo.webp',
     awayTeam: '',
+    awayLogo: '',
     date: '',
-    time: '',
-    venue: '',
+    time: '18:00',
+    venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+    status: 'upcoming' as 'upcoming' | 'live' | 'finished',
+    scoreHome: 0,
+    scoreAway: 0,
+    q1Home: 0,
+    q1Away: 0,
+    q2Home: 0,
+    q2Away: 0,
+    q3Home: 0,
+    q3Away: 0,
+    q4Home: 0,
+    q4Away: 0,
   });
 
-  const handleAddMatch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.awayTeam || !form.competition || !form.date || !form.venue) return;
-
-    const newMatch: Match = {
-      id: `m-${Date.now()}`,
-      sport: form.sport,
-      competition: form.competition,
-      competitionAr: form.competition,
-      homeTeam: form.homeTeam,
-      homeTeamAr: form.homeTeam,
-      homeLogo: '/logo.webp',
-      awayTeam: form.awayTeam,
-      awayTeamAr: form.awayTeam,
-      awayLogo: '',
-      date: form.date,
-      time: form.time,
-      venue: form.venue,
-      venueAr: form.venue,
-      status: 'upcoming',
-      score: { home: 0, away: 0 },
-      timeline: [],
-      stats: {},
-    };
-    addMatch(newMatch);
-    setShowAddForm(false);
-    setForm({ sport: 'football', competition: '', homeTeam: 'US Monastir', awayTeam: '', date: '', time: '', venue: '' });
+  const handleSportChange = (sport: 'football' | 'basketball') => {
+    setForm((f) => ({
+      ...f,
+      sport,
+      competition: sport === 'basketball' ? 'Championnat Pro A' : 'Ligue 1 Professionnelle',
+      venue:
+        sport === 'basketball'
+          ? 'Salle Omnisports Mohamed Mzali, Monastir'
+          : 'Stade Mustapha Ben Jannet, Monastir',
+    }));
   };
 
-  const filteredMatches = matches.filter(
-    (m) => (sportFilter === 'all' || m.sport === sportFilter) && (statusFilter === 'all' || m.status === statusFilter)
+  const handleAddMatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.awayTeam || !form.competition || !form.date || !form.venue) {
+      showToast?.('Veuillez remplir tous les champs obligatoires.', 'error');
+      return;
+    }
+
+    try {
+      const quarters =
+        form.sport === 'basketball' && form.status !== 'upcoming'
+          ? {
+              home: [Number(form.q1Home), Number(form.q2Home), Number(form.q3Home), Number(form.q4Home)],
+              away: [Number(form.q1Away), Number(form.q2Away), Number(form.q3Away), Number(form.q4Away)],
+            }
+          : null;
+
+      const payload = {
+        sport: form.sport,
+        competition: form.competition,
+        competitionAr: form.competition,
+        season: form.season,
+        homeTeam: form.homeTeam,
+        homeTeamAr: form.homeTeam,
+        homeLogo: form.homeLogo || '/brand/usm-logo.webp',
+        awayTeam: form.awayTeam,
+        awayTeamAr: form.awayTeam,
+        awayLogo: form.awayLogo || '',
+        date: form.date,
+        time: form.time,
+        venue: form.venue,
+        venueAr: form.venue,
+        status: form.status,
+        score: {
+          home: Number(form.scoreHome),
+          away: Number(form.scoreAway),
+        },
+        quarters,
+        dataSource: 'MANUAL',
+        manualOverride: true,
+      };
+
+      await api.createAdminMatch(payload);
+      showToast?.('Match créé et verrouillé manuellement avec succès.', 'success');
+      setShowAddForm(false);
+      fetchMatches();
+      setForm({
+        sport: 'basketball',
+        competition: 'Championnat Pro A',
+        season: '2026/2027',
+        homeTeam: 'US Monastir',
+        homeLogo: '/brand/usm-logo.webp',
+        awayTeam: '',
+        awayLogo: '',
+        date: '',
+        time: '18:00',
+        venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+        status: 'upcoming',
+        scoreHome: 0,
+        scoreAway: 0,
+        q1Home: 0,
+        q1Away: 0,
+        q2Home: 0,
+        q2Away: 0,
+        q3Home: 0,
+        q3Away: 0,
+        q4Home: 0,
+        q4Away: 0,
+      });
+    } catch (err: any) {
+      showToast?.(`Erreur lors de la création : ${err.message || 'Échec réseau'}`, 'error');
+    }
+  };
+
+  const matchesList = dbMatches.length > 0 ? dbMatches : contextMatches;
+
+  const filteredMatches = matchesList.filter(
+    (m) =>
+      (sportFilter === 'all' || m.sport === sportFilter) &&
+      (statusFilter === 'all' || m.status === statusFilter),
   );
 
   // Live control room state
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(matches.find((m) => m.status === 'live')?.id ?? matches[0]?.id ?? '');
-  const activeMatch = matches.find((m) => m.id === selectedMatchId) ?? matches[0];
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
+
+  useEffect(() => {
+    if (!selectedMatchId && matchesList.length > 0) {
+      const live = matchesList.find((m) => m.status === 'live');
+      setSelectedMatchId(live?.id ?? matchesList[0]?.id ?? '');
+    }
+  }, [matchesList, selectedMatchId]);
+
+  const activeMatch = matchesList.find((m) => m.id === selectedMatchId) ?? matchesList[0];
   const [eventType, setEventType] = useState<MatchEvent['type']>('goal');
   const [eventPlayer, setEventPlayer] = useState('');
   const [eventDetail, setEventDetail] = useState('');
 
-  const handleTriggerEvent = (e: React.FormEvent) => {
+  const handleDeleteMatch = async (matchId: string) => {
+    try {
+      await api.deleteAdminMatch(matchId);
+      showToast?.('Match supprimé avec succès.', 'success');
+      fetchMatches();
+    } catch (err: any) {
+      showToast?.(`Erreur lors de la suppression : ${err.message}`, 'error');
+    }
+  };
+
+  const handleScoreUpdate = async (team: 'home' | 'away', amount: number) => {
+    if (!activeMatch) return;
+    try {
+      await api.updateAdminMatchScore(activeMatch.id, team, amount);
+      fetchMatches();
+    } catch (err: any) {
+      showToast?.(`Erreur de score : ${err.message}`, 'error');
+    }
+  };
+
+  const handleStatusUpdate = async (status: 'upcoming' | 'live' | 'finished') => {
+    if (!activeMatch) return;
+    try {
+      await api.updateAdminMatchStatus(activeMatch.id, status);
+      showToast?.(`Statut mis à jour : ${status}`, 'success');
+      fetchMatches();
+    } catch (err: any) {
+      showToast?.(`Erreur de statut : ${err.message}`, 'error');
+    }
+  };
+
+  const handleTriggerEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventPlayer.trim() || !activeMatch) return;
 
-    addMatchEvent(activeMatch.id, {
-      time: activeMatch.status === 'live' ? Math.floor(Math.random() * 85 + 5) : 45,
-      type: eventType,
-      team: 'home',
-      player: eventPlayer,
-      playerAr: eventPlayer,
-      detail: eventDetail,
-      detailAr: eventDetail,
-    });
+    try {
+      await api.addAdminMatchEvent(activeMatch.id, {
+        time: activeMatch.status === 'live' ? Math.floor(Math.random() * 85 + 5) : 45,
+        type: eventType,
+        team: 'home',
+        player: eventPlayer,
+        playerAr: eventPlayer,
+        detail: eventDetail,
+        detailAr: eventDetail,
+      });
 
-    if (eventType === 'goal') updateMatchScore(activeMatch.id, 'home', 1);
-    else if (eventType === 'basket') updateMatchScore(activeMatch.id, 'home', eventDetail.includes('Three') ? 3 : 2);
+      if (eventType === 'goal') {
+        await api.updateAdminMatchScore(activeMatch.id, 'home', 1);
+      } else if (eventType === 'basket') {
+        await api.updateAdminMatchScore(activeMatch.id, 'home', eventDetail.includes('Three') ? 3 : 2);
+      }
 
-    setEventPlayer('');
-    setEventDetail('');
+      setEventPlayer('');
+      setEventDetail('');
+      fetchMatches();
+      showToast?.('Événement ajouté au direct.', 'success');
+    } catch (err: any) {
+      showToast?.(`Erreur lors de l'ajout de l'événement : ${err.message}`, 'error');
+    }
   };
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Match Center"
-        description="Manage fixtures and run the live control room for football and basketball."
+        title="Match Center & Gestion des Rencontres"
+        description="Gérez les matchs officiels Football & Basketball, saisissez manuellement les quarts-temps et pilotez le Live Center."
         actions={
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
-          >
-            <Plus size={14} /> Add Match
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchMatches()}
+              disabled={loading}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg cursor-pointer transition-colors"
+              title="Rafraîchir"
+            >
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+              Actualiser
+            </button>
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors shadow-sm"
+            >
+              <Plus size={14} /> Planifier un match
+            </button>
+          </div>
         }
       />
 
@@ -134,7 +353,7 @@ export default function AdminMatches() {
                 sportFilter === s ? 'bg-usm-blue-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {s}
+              {s === 'all' ? 'Tous les sports' : s}
             </button>
           ))}
           <span className="w-px h-5 bg-slate-200 mx-1" />
@@ -146,7 +365,7 @@ export default function AdminMatches() {
                 statusFilter === s ? 'bg-usm-blue-dark text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {s}
+              {s === 'all' ? 'Tous statuts' : s === 'upcoming' ? 'À venir' : s === 'live' ? 'En direct' : 'Terminé'}
             </button>
           ))}
         </div>
@@ -156,31 +375,53 @@ export default function AdminMatches() {
             <thead>
               <tr className="border-b border-slate-100 text-slate-400 uppercase text-[10px] font-bold">
                 <th className="py-3 px-4">Sport</th>
-                <th className="py-3 px-4">Fixture</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Venue</th>
+                <th className="py-3 px-4">Affiche</th>
+                <th className="py-3 px-4">Date & Heure</th>
+                <th className="py-3 px-4">Lieu</th>
                 <th className="py-3 px-4">Score</th>
-                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Source</th>
+                <th className="py-3 px-4">Statut</th>
                 <th className="py-3 px-4 text-right rtl:text-left">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredMatches.map((m) => (
                 <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 capitalize text-slate-600">{m.sport}</td>
+                  <td className="py-3 px-4 capitalize font-semibold text-slate-700">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold ${
+                      m.sport === 'basketball' ? 'bg-amber-50 text-amber-800' : 'bg-blue-50 text-blue-800'
+                    }`}>
+                      {m.sport === 'basketball' ? '🏀 Basket' : '⚽ Foot'}
+                    </span>
+                  </td>
                   <td className="py-3 px-4 font-bold text-slate-900">
                     {m.homeTeam} <span className="text-slate-400 font-normal">vs</span> {m.awayTeam}
                     <span className="block text-[10px] text-slate-400 font-normal">{m.competition}</span>
+                    {m.quarters && (
+                      <span className="block text-[10px] font-mono text-slate-500 mt-0.5">
+                        Q1: {m.quarters.home[0]}-{m.quarters.away[0]} | Q2: {m.quarters.home[1]}-{m.quarters.away[1]} | Q3: {m.quarters.home[2]}-{m.quarters.away[2]} | Q4: {m.quarters.home[3]}-{m.quarters.away[3]}
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-slate-600">
-                    {m.date} <span className="text-slate-400">{m.time}</span>
+                    {m.date} <span className="text-slate-400 font-mono">{m.time}</span>
                   </td>
-                  <td className="py-3 px-4 text-slate-600 max-w-[160px] truncate">{m.venue}</td>
-                  <td className="py-3 px-4 font-mono font-bold text-slate-900">
+                  <td className="py-3 px-4 text-slate-600 max-w-[160px] truncate" title={m.venue}>{m.venue}</td>
+                  <td className="py-3 px-4 font-mono font-bold text-slate-900 text-sm">
                     {m.score.home} - {m.score.away}
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_STYLES[m.status]}`}>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                        DATA_SOURCE_STYLES[m.dataSource || 'MANUAL'] || 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {m.manualOverride && <Lock size={10} className="text-amber-600" />}
+                      {m.dataSource || 'MANUAL'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${STATUS_STYLES[m.status as Match['status']] || 'bg-slate-100'}`}>
                       {m.status}
                     </span>
                   </td>
@@ -188,13 +429,25 @@ export default function AdminMatches() {
                     <div className="flex items-center justify-end rtl:justify-start gap-1.5">
                       <button
                         onClick={() => setSelectedMatchId(m.id)}
-                        className="px-2.5 py-1 bg-usm-blue-primary/10 text-usm-blue-primary hover:bg-usm-blue-primary hover:text-white rounded font-bold cursor-pointer transition-all"
+                        className={`px-2.5 py-1 rounded font-bold cursor-pointer transition-all ${
+                          activeMatch?.id === m.id
+                            ? 'bg-usm-blue-primary text-white'
+                            : 'bg-usm-blue-primary/10 text-usm-blue-primary hover:bg-usm-blue-primary hover:text-white'
+                        }`}
                       >
-                        Control
+                        Piloter
                       </button>
                       <button
-                        onClick={() => requestConfirmation({ title: 'Supprimer ce match ?', message: `${m.homeTeam} vs ${m.awayTeam} sera supprimé définitivement.`, confirmLabel: 'Supprimer', onConfirm: () => deleteMatch(m.id) })}
+                        onClick={() =>
+                          requestConfirmation({
+                            title: 'Supprimer ce match ?',
+                            message: `${m.homeTeam} vs ${m.awayTeam} sera supprimé définitivement de la base de données.`,
+                            confirmLabel: 'Supprimer',
+                            onConfirm: () => handleDeleteMatch(m.id),
+                          })
+                        }
                         className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded cursor-pointer transition-all"
+                        title="Supprimer"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -204,8 +457,8 @@ export default function AdminMatches() {
               ))}
               {filteredMatches.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-400">
-                    No matches match these filters.
+                  <td colSpan={8} className="py-10 text-center text-slate-400">
+                    Aucun match ne correspond aux filtres sélectionnés.
                   </td>
                 </tr>
               )}
@@ -217,24 +470,31 @@ export default function AdminMatches() {
       {/* Live Control Room */}
       {activeMatch && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Radio size={16} className="text-red-500" />
-            <h3 className="text-sm font-black text-slate-900">Live Control Room</h3>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Radio size={16} className={activeMatch.status === 'live' ? 'text-red-500 animate-pulse' : 'text-slate-400'} />
+              <h3 className="text-sm font-black text-slate-900">
+                Live Control Room — {activeMatch.homeTeam} vs {activeMatch.awayTeam} ({activeMatch.sport.toUpperCase()})
+              </h3>
+            </div>
+            <span className="text-xs font-medium text-slate-500">
+              Source: <strong className="text-slate-800">{activeMatch.dataSource || 'MANUAL'}</strong>
+            </span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Match selector + status + score */}
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Select Match</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Sélectionner un match</label>
                 <select
                   value={selectedMatchId}
                   onChange={(e) => setSelectedMatchId(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                 >
-                  {matches.map((m) => (
+                  {matchesList.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.homeTeam} vs {m.awayTeam} ({m.status})
+                      [{m.sport.toUpperCase()}] {m.homeTeam} vs {m.awayTeam} ({m.status})
                     </option>
                   ))}
                 </select>
@@ -244,12 +504,14 @@ export default function AdminMatches() {
                 {(['upcoming', 'live', 'finished'] as const).map((status) => (
                   <button
                     key={status}
-                    onClick={() => updateMatchStatus(activeMatch.id, status)}
+                    onClick={() => handleStatusUpdate(status)}
                     className={`py-2 rounded-lg text-[10px] font-bold uppercase cursor-pointer transition-all ${
-                      activeMatch.status === status ? 'bg-usm-blue-primary text-white shadow' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      activeMatch.status === status
+                        ? 'bg-usm-blue-primary text-white shadow'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
                   >
-                    {status}
+                    {status === 'upcoming' ? 'À venir' : status === 'live' ? 'En direct' : 'Terminé'}
                   </button>
                 ))}
               </div>
@@ -260,17 +522,35 @@ export default function AdminMatches() {
                     <span className="text-[10px] text-slate-500 font-bold block uppercase truncate">
                       {side === 'home' ? activeMatch.homeTeam : activeMatch.awayTeam}
                     </span>
-                    <span className="font-black text-2xl text-slate-900 block">{activeMatch.score[side]}</span>
-                    <div className="flex justify-center gap-1.5">
+                    <span className="font-black text-2xl text-slate-900 block font-mono">
+                      {activeMatch.score?.[side] ?? 0}
+                    </span>
+                    <div className="flex flex-wrap justify-center gap-1.5">
                       <button
-                        onClick={() => updateMatchScore(activeMatch.id, side, 1)}
+                        onClick={() => handleScoreUpdate(side, 1)}
                         className="px-2 py-1 bg-white border border-slate-200 rounded hover:border-usm-blue-primary cursor-pointer text-xs font-bold"
                       >
                         +1
                       </button>
+                      {activeMatch.sport === 'basketball' && (
+                        <>
+                          <button
+                            onClick={() => handleScoreUpdate(side, 2)}
+                            className="px-2 py-1 bg-white border border-slate-200 rounded hover:border-usm-blue-primary cursor-pointer text-xs font-bold"
+                          >
+                            +2
+                          </button>
+                          <button
+                            onClick={() => handleScoreUpdate(side, 3)}
+                            className="px-2 py-1 bg-white border border-slate-200 rounded hover:border-usm-blue-primary cursor-pointer text-xs font-bold"
+                          >
+                            +3
+                          </button>
+                        </>
+                      )}
                       <button
-                        onClick={() => updateMatchScore(activeMatch.id, side, -1)}
-                        className="px-2 py-1 bg-white border border-slate-200 rounded hover:border-red-300 cursor-pointer text-xs font-bold"
+                        onClick={() => handleScoreUpdate(side, -1)}
+                        className="px-2 py-1 bg-white border border-slate-200 rounded hover:border-red-300 cursor-pointer text-xs font-bold text-red-600"
                       >
                         -1
                       </button>
@@ -285,7 +565,7 @@ export default function AdminMatches() {
               <form onSubmit={handleTriggerEvent} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Event Type</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Type d&apos;événement</label>
                     <select
                       value={eventType}
                       onChange={(e) => setEventType(e.target.value as MatchEvent['type'])}
@@ -293,28 +573,28 @@ export default function AdminMatches() {
                     >
                       {activeMatch.sport === 'football' ? (
                         <>
-                          <option value="goal">⚽ Goal scored</option>
-                          <option value="card-yellow">🟨 Yellow Card</option>
-                          <option value="card-red">🟥 Red Card</option>
-                          <option value="substitution">🔄 Substitution</option>
-                          <option value="foul">🛑 Foul committed</option>
+                          <option value="goal">⚽ But marqué</option>
+                          <option value="card-yellow">🟨 Carton jaune</option>
+                          <option value="card-red">🟥 Carton rouge</option>
+                          <option value="substitution">🔄 Remplacement</option>
+                          <option value="foul">🛑 Faute</option>
                         </>
                       ) : (
                         <>
-                          <option value="basket">🏀 Basket scored</option>
-                          <option value="foul">🛑 Foul committed</option>
-                          <option value="timeout">⏱️ Timeout called</option>
-                          <option value="substitution">🔄 Substitution</option>
+                          <option value="basket">🏀 Panier marqué (2 ou 3 pts)</option>
+                          <option value="foul">🛑 Faute commise</option>
+                          <option value="timeout">⏱️ Temps mort</option>
+                          <option value="substitution">🔄 Remplacement</option>
                         </>
                       )}
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Player</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Joueur concerné *</label>
                     <input
                       required
                       type="text"
-                      placeholder="e.g. Adem Alimi"
+                      placeholder={activeMatch.sport === 'basketball' ? 'ex. Lassaad Chouaya' : 'ex. Adem Alimi'}
                       value={eventPlayer}
                       onChange={(e) => setEventPlayer(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
@@ -322,10 +602,10 @@ export default function AdminMatches() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Event Detail / Note</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Détail / Note (ex: Tir à 3 points, Passe décisive)</label>
                   <input
                     type="text"
-                    placeholder="e.g. Assist by Ifia, or Three-pointer"
+                    placeholder="ex. Tir à 3 points réussi"
                     value={eventDetail}
                     onChange={(e) => setEventDetail(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 text-xs text-slate-700 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
@@ -336,19 +616,19 @@ export default function AdminMatches() {
                   disabled={activeMatch.status !== 'live'}
                   className="px-4 py-2.5 bg-red-500 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-black uppercase rounded-lg hover:bg-red-600 transition-colors cursor-pointer disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  <Send size={13} /> Push Timeline Event
+                  <Send size={13} /> Diffuser l&apos;événement
                 </button>
                 {activeMatch.status !== 'live' && (
                   <p className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-center gap-1.5">
-                    <AlertTriangle size={13} className="shrink-0" /> Set match status to LIVE to push timeline events.
+                    <AlertTriangle size={13} className="shrink-0" /> Passez le statut du match à « EN DIRECT » pour diffuser des événements sur le flux public.
                   </p>
                 )}
               </form>
 
               {/* Recent timeline */}
-              {activeMatch.timeline.length > 0 && (
+              {activeMatch.timeline && activeMatch.timeline.length > 0 && (
                 <div className="mt-4 space-y-1.5 max-h-40 overflow-y-auto">
-                  {activeMatch.timeline.slice(0, 5).map((ev) => (
+                  {activeMatch.timeline.slice(0, 5).map((ev: any) => (
                     <div key={ev.id} className="flex items-center gap-2 text-[11px] text-slate-600 bg-slate-50 rounded-lg px-3 py-1.5">
                       <span className="font-mono font-bold text-usm-blue-primary shrink-0">{ev.time}&apos;</span>
                       <span className="capitalize font-semibold">{ev.type.replace('-', ' ')}</span>
@@ -368,57 +648,86 @@ export default function AdminMatches() {
         <div className="fixed inset-0 z-[100] bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowAddForm(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Add Match</h3>
+              <h3 className="text-sm font-bold text-slate-900">Planifier / Ajouter un Match (Manuel Garanti)</h3>
               <button onClick={() => setShowAddForm(false)} className="p-1 text-slate-400 hover:text-slate-700 rounded cursor-pointer">
                 <X size={16} />
               </button>
             </div>
-            <form onSubmit={handleAddMatch} className="p-5 space-y-3 max-h-[75vh] overflow-y-auto">
+            <form onSubmit={handleAddMatch} className="p-5 space-y-3 max-h-[75vh] overflow-y-auto text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Sport</label>
                   <select
                     value={form.sport}
-                    onChange={(e) => setForm((f) => ({ ...f, sport: e.target.value as 'football' | 'basketball' }))}
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    onChange={(e) => handleSportChange(e.target.value as 'football' | 'basketball')}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   >
-                    <option value="football">Football</option>
-                    <option value="basketball">Basketball</option>
+                    <option value="basketball">🏀 Basketball</option>
+                    <option value="football">⚽ Football</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Competition *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Compétition *</label>
                   <input
                     required
                     type="text"
                     value={form.competition}
                     onChange={(e) => setForm((f) => ({ ...f, competition: e.target.value }))}
-                    placeholder="Ligue 1 Tunisia"
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    placeholder={form.sport === 'basketball' ? 'Championnat Pro A' : 'Ligue 1 Professionnelle'}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Home Team</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Saison *</label>
+                  <input
+                    required
+                    type="text"
+                    value={form.season}
+                    onChange={(e) => setForm((f) => ({ ...f, season: e.target.value }))}
+                    placeholder="2026/2027"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Statut *</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as any }))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                  >
+                    <option value="upcoming">À venir (Upcoming)</option>
+                    <option value="live">En direct (Live)</option>
+                    <option value="finished">Terminé (Finished)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Équipe Domicile</label>
                   <input
                     type="text"
                     value={form.homeTeam}
                     onChange={(e) => setForm((f) => ({ ...f, homeTeam: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Away Team *</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Équipe Extérieur *</label>
                   <input
                     required
                     type="text"
                     value={form.awayTeam}
                     onChange={(e) => setForm((f) => ({ ...f, awayTeam: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    placeholder="ex. Club Africain, Etoile du Sahel..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Date *</label>
@@ -427,35 +736,145 @@ export default function AdminMatches() {
                     type="date"
                     value={form.date}
                     onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Time</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Heure</label>
                   <input
                     type="time"
                     value={form.time}
                     onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
-                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                   />
                 </div>
               </div>
+
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Venue *</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Lieu / Salle / Stade *</label>
                 <input
                   required
                   type="text"
                   value={form.venue}
                   onChange={(e) => setForm((f) => ({ ...f, venue: e.target.value }))}
-                  placeholder="Stade Mustapha Ben Jannet, Monastir"
-                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-usm-blue-primary"
                 />
               </div>
+
+              {form.status !== 'upcoming' && (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                  <div className="font-bold text-[11px] text-slate-800">Score Final</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.homeTeam}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.scoreHome}
+                        onChange={(e) => setForm((f) => ({ ...f, scoreHome: parseInt(e.target.value, 10) || 0 }))}
+                        className="w-full bg-white border border-slate-200 rounded-lg p-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-slate-500 block mb-1">Score {form.awayTeam || 'Adversaire'}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.scoreAway}
+                        onChange={(e) => setForm((f) => ({ ...f, scoreAway: parseInt(e.target.value, 10) || 0 }))}
+                        className="w-full bg-white border border-slate-200 rounded-lg p-2 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {form.sport === 'basketball' && (
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <div className="font-bold text-[11px] text-slate-800">Scores par quart-temps (Basketball)</div>
+                      <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                        <div>
+                          <span className="block font-bold text-slate-400 mb-1">Q1 (Dom - Ext)</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={form.q1Home}
+                              onChange={(e) => setForm((f) => ({ ...f, q1Home: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                            <input
+                              type="number"
+                              value={form.q1Away}
+                              onChange={(e) => setForm((f) => ({ ...f, q1Away: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <span className="block font-bold text-slate-400 mb-1">Q2 (Dom - Ext)</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={form.q2Home}
+                              onChange={(e) => setForm((f) => ({ ...f, q2Home: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                            <input
+                              type="number"
+                              value={form.q2Away}
+                              onChange={(e) => setForm((f) => ({ ...f, q2Away: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <span className="block font-bold text-slate-400 mb-1">Q3 (Dom - Ext)</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={form.q3Home}
+                              onChange={(e) => setForm((f) => ({ ...f, q3Home: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                            <input
+                              type="number"
+                              value={form.q3Away}
+                              onChange={(e) => setForm((f) => ({ ...f, q3Away: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <span className="block font-bold text-slate-400 mb-1">Q4 (Dom - Ext)</span>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={form.q4Home}
+                              onChange={(e) => setForm((f) => ({ ...f, q4Home: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                            <input
+                              type="number"
+                              value={form.q4Away}
+                              onChange={(e) => setForm((f) => ({ ...f, q4Away: parseInt(e.target.value, 10) || 0 }))}
+                              className="w-full bg-white border border-slate-200 rounded p-1 text-center font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-[11px] flex items-center gap-2">
+                <Lock size={14} className="shrink-0 text-emerald-600" />
+                <span>Ce match sera sauvegardé avec le drapeau <strong>MANUAL (Verrouillé)</strong> afin que les synchronisations externes ne l&apos;écrasent jamais.</span>
+              </div>
+
               <button
                 type="submit"
-                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2"
+                className="w-full py-2.5 bg-usm-blue-primary hover:bg-usm-blue-primary/85 text-white text-xs font-black uppercase rounded-lg cursor-pointer transition-colors mt-2 shadow-sm"
               >
-                Schedule Match
+                Enregistrer et Verrouiller le Match
               </button>
             </form>
           </div>

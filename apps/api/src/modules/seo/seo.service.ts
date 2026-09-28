@@ -775,6 +775,9 @@ export class SeoService implements OnModuleInit {
       });
     }
 
+    // Invalidate Next.js frontend cache for this route immediately
+    await this.triggerFrontendRevalidation(item.path);
+
     return saved;
   }
 
@@ -1069,4 +1072,39 @@ export class SeoService implements OnModuleInit {
 
     return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
   }
+
+  async triggerFrontendRevalidation(path: string) {
+    if (!path) return;
+    const internalUrl = process.env.WEB_INTERNAL_URL || 'http://web:3000';
+    try {
+      await fetch(`${internalUrl}/revalidate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-revalidate-secret': process.env.REVALIDATION_SECRET || 'usm-revalidate-secret',
+        },
+        body: JSON.stringify({ path }),
+        signal: AbortSignal.timeout(3000),
+      });
+      this.logger.log(`Frontend revalidation triggered for: ${path}`);
+    } catch (err: any) {
+      this.logger.warn(`Frontend revalidation failed for ${path}: ${err.message}`);
+    }
+  }
+
+  async getDiagnostics(path: string) {
+    const normalizedPath = path?.startsWith('/') ? path : `/${path || ''}`;
+    const stored = await this.seoModel.findOne({ path: normalizedPath }).lean();
+    const resolved = await this.resolveMetadataForPath(normalizedPath);
+    return {
+      path: normalizedPath,
+      storedSeo: stored || null,
+      resolvedMetadata: resolved,
+      canonicalUrl: resolved.canonicalUrl,
+      ogImage: resolved.ogImage,
+      isHttps: resolved.canonicalUrl?.startsWith('https://') ?? false,
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
+

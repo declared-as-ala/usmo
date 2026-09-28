@@ -31,6 +31,12 @@ export class AdminSeoController {
     return this.seoService.getOverview();
   }
 
+  @Get('diagnostics')
+  @Permissions(SYSTEM_PERMISSIONS.SEO_VIEW)
+  async getDiagnostics(@Query('path') path: string) {
+    return this.seoService.getDiagnostics(path);
+  }
+
   @Get('content')
   @Permissions(SYSTEM_PERMISSIONS.SEO_VIEW)
   async getContentList(

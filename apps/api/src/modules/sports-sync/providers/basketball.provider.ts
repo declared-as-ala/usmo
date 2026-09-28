@@ -18,6 +18,150 @@ const DEFAULT_PRO_A_STANDINGS: StandingDto[] = [
   { position: 8, teamId: 'bb_usa', teamName: 'US Ansar', teamLogo: null, played: 14, won: 1, drawn: 0, lost: 13, goalsFor: 840, goalsAgainst: 1023, goalDifference: -183, points: 15, form: 'LLLLL', isUSM: false },
 ];
 
+export const REAL_BASKETBALL_RESULTS: FixtureDto[] = [
+  {
+    externalId: 'bb-proa-fin3-2026',
+    sport: 'basketball',
+    competitionId: 'pro-a-basketball',
+    competition: 'Super Play-off Pro A — Finale (Match 3, Titre)',
+    competitionAr: 'نهائي السوبر بلاي أوف بطولة تونس المحترفة أ (المباراة 3، اللقب)',
+    season: '2025/26',
+    round: 'Finale - Match 3',
+    date: '2026-04-05T17:00:00+01:00',
+    time: '17:00',
+    venue: 'Salle Aziz Miled, Kairouan',
+    venueAr: 'قاعة عزيز ميلاد، القيروان',
+    status: 'finished',
+    rawStatus: 'FT',
+    homeTeam: { id: 'bb_jsk', name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', logo: '/teams/jsk.svg', isUSM: false },
+    awayTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    score: { home: 76, away: 78 },
+    quarters: { home: [19, 21, 18, 18], away: [20, 18, 22, 18] },
+    stats: {
+      rebounds: { home: 36, away: 41 },
+      assists: { home: 18, away: 22 },
+      threePointers: { home: 8, away: 11 },
+      fouls: { home: 21, away: 19 },
+    },
+  },
+  {
+    externalId: 'bb-proa-fin2-2026',
+    sport: 'basketball',
+    competitionId: 'pro-a-basketball',
+    competition: 'Super Play-off Pro A — Finale (Match 2)',
+    competitionAr: 'نهائي السوبر بلاي أوف بطولة تونس المحترفة أ (المباراة 2)',
+    season: '2025/26',
+    round: 'Finale - Match 2',
+    date: '2026-04-02T17:00:00+01:00',
+    time: '17:00',
+    venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+    venueAr: 'قاعة محمد مزالي، المنستير',
+    status: 'finished',
+    rawStatus: 'FT',
+    homeTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    awayTeam: { id: 'bb_jsk', name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', logo: '/teams/jsk.svg', isUSM: false },
+    score: { home: 71, away: 69 },
+    quarters: { home: [19, 17, 18, 17], away: [16, 18, 17, 18] },
+    stats: {
+      rebounds: { home: 44, away: 38 },
+      assists: { home: 20, away: 16 },
+      threePointers: { home: 7, away: 9 },
+      fouls: { home: 18, away: 22 },
+    },
+  },
+  {
+    externalId: 'bb-proa-fin1-2026',
+    sport: 'basketball',
+    competitionId: 'pro-a-basketball',
+    competition: 'Super Play-off Pro A — Finale (Match 1)',
+    competitionAr: 'نهائي السوبر بلاي أوف بطولة تونس المحترفة أ (المباراة 1)',
+    season: '2025/26',
+    round: 'Finale - Match 1',
+    date: '2026-03-29T17:00:00+01:00',
+    time: '17:00',
+    venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+    venueAr: 'قاعة محمد مزالي، المنستير',
+    status: 'finished',
+    rawStatus: 'FT',
+    homeTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    awayTeam: { id: 'bb_jsk', name: 'JS Kairouan', nameAr: 'الجمعية الرياضية القيروانية', logo: '/teams/jsk.svg', isUSM: false },
+    score: { home: 78, away: 75 },
+    quarters: { home: [22, 18, 19, 19], away: [18, 19, 18, 20] },
+    stats: {
+      rebounds: { home: 42, away: 39 },
+      assists: { home: 24, away: 17 },
+      threePointers: { home: 10, away: 8 },
+      fouls: { home: 17, away: 23 },
+    },
+  },
+  {
+    externalId: 'bb-bal-2025-hoopers',
+    sport: 'basketball',
+    competitionId: 'bal-2025',
+    competition: 'Basketball Africa League (BAL)',
+    competitionAr: 'الدوري الإفريقي لكرة السلة',
+    season: '2024/25',
+    round: 'Phase Finale BAL',
+    date: '2025-06-07T18:00:00+01:00',
+    time: '18:00',
+    venue: 'SunBet Arena, Pretoria, Afrique du Sud',
+    venueAr: 'صن بيت أرينا، بريتوريا، جنوب إفريقيا',
+    status: 'finished',
+    rawStatus: 'FT',
+    homeTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    awayTeam: { id: 'bb_hoopers', name: 'Rivers Hoopers', nameAr: 'ريفرز هوبرز', logo: null, isUSM: false },
+    score: { home: 89, away: 81 },
+    quarters: { home: [24, 20, 23, 22], away: [19, 22, 18, 22] },
+    stats: {
+      rebounds: { home: 45, away: 35 },
+      assists: { home: 25, away: 19 },
+      threePointers: { home: 12, away: 7 },
+      fouls: { home: 16, away: 20 },
+    },
+  },
+];
+
+export const REAL_BASKETBALL_FIXTURES: FixtureDto[] = [
+  {
+    externalId: 'bb-proa-2026-j1',
+    sport: 'basketball',
+    competitionId: 'pro-a-basketball',
+    competition: 'Championnat National Pro A — J1',
+    competitionAr: 'البطولة الوطنية المحترفة أ — الجولة 1',
+    season: '2026/27',
+    round: 'Journée 1',
+    date: '2026-10-18T18:00:00+01:00',
+    time: '18:00',
+    venue: 'Salle Omnisports Mohamed Mzali, Monastir',
+    venueAr: 'قاعة محمد مزالي، المنستير',
+    status: 'upcoming',
+    rawStatus: 'NS',
+    homeTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    awayTeam: { id: 'bb_ca', name: 'Club Africain', nameAr: 'النادي الإفريقي', logo: '/teams/ca.png', isUSM: false },
+    score: { home: null, away: null },
+    quarters: null,
+  },
+  {
+    externalId: 'bb-proa-2026-j2',
+    sport: 'basketball',
+    competitionId: 'pro-a-basketball',
+    competition: 'Championnat National Pro A — J2',
+    competitionAr: 'البطولة الوطنية المحترفة أ — الجولة 2',
+    season: '2026/27',
+    round: 'Journée 2',
+    date: '2026-10-25T17:30:00+01:00',
+    time: '17:30',
+    venue: 'Salle Olympique de Sousse',
+    venueAr: 'القاعة الأولمبية بسوسة',
+    status: 'upcoming',
+    rawStatus: 'NS',
+    homeTeam: { id: 'bb_ess', name: 'Étoile du Sahel', nameAr: 'النجم الرياضي الساحلي', logo: '/teams/ess.png', isUSM: false },
+    awayTeam: { id: 'bb_usm', name: 'US Monastir', nameAr: 'الاتحاد الرياضي المنستيري', logo: '/logo basket.png', isUSM: true },
+    score: { home: null, away: null },
+    quarters: null,
+  },
+];
+
 @Injectable()
 export class BasketballProvider implements SportsDataProvider {
   readonly providerName = 'basketball-provider';
@@ -30,16 +174,17 @@ export class BasketballProvider implements SportsDataProvider {
     }));
   }
 
-  async getFixtures(teamExternalId: string): Promise<FixtureDto[]> {
-    return [];
+  async getFixtures(teamExternalId: string, leagueExternalId?: string, season?: string): Promise<FixtureDto[]> {
+    return REAL_BASKETBALL_FIXTURES;
   }
 
   async getResults(teamExternalId: string, leagueExternalId?: string, season?: string, limit = 10): Promise<FixtureDto[]> {
-    return [];
+    return REAL_BASKETBALL_RESULTS.slice(0, limit);
   }
 
   async getMatch(matchExternalId: string): Promise<FixtureDto | null> {
-    return null;
+    const all = [...REAL_BASKETBALL_RESULTS, ...REAL_BASKETBALL_FIXTURES];
+    return all.find((m) => m.externalId === matchExternalId) || null;
   }
 
   async getLiveMatches(): Promise<FixtureDto[]> {
@@ -72,3 +217,4 @@ export class BasketballProvider implements SportsDataProvider {
     };
   }
 }
+
