@@ -55,6 +55,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     label: 'Pages Management',
     items: [
       { label: 'Homepage Hero', href: '/admin/homepage/hero', icon: GalleryHorizontal },
+      { label: 'Matchs & Calendrier', href: '/admin/matches', icon: CalendarDays },
       { label: 'Joueurs & Effectif', href: '/admin/players', icon: Users, permission: 'players.view' },
       { label: 'Staff Technique', href: '/admin/staff', icon: UserCog, permission: 'staff.view' },
       { label: 'Boutique Catalog', href: '/admin/boutique', icon: ShoppingBag, permission: 'products.view' },
