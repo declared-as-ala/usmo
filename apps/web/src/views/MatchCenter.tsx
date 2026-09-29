@@ -426,28 +426,28 @@ export const MatchCenter: React.FC = () => {
                   return (
                     <div className="flex items-center justify-around gap-4">
                       {/* Home Team */}
-                      <div className="flex flex-col items-center text-center w-28">
+                      <div className={`flex flex-col items-center text-center ${isHomeUsm ? 'w-32 sm:w-36' : 'w-24 sm:w-28'}`}>
                         {homeLogo ? (
-                          <div className="h-14 w-14 flex items-center justify-center mb-2">
+                          <div className={`flex items-center justify-center mb-2 ${isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={homeLogo}
                               alt={nextBBMatch.homeTeam}
-                              className="max-h-14 max-w-14 object-contain drop-shadow-sm"
+                              className={`object-contain ${isHomeUsm ? 'max-h-20 max-w-20 sm:max-h-24 sm:max-w-24' : 'max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 opacity-90'}`}
                             />
                           </div>
                         ) : (
-                          <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm">
+                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
                             {nextBBMatch.homeTeam.slice(0, 3).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
+                        <span className={`line-clamp-2 ${isHomeUsm ? 'text-xs sm:text-sm font-black text-usm-blue-dark' : 'text-xs font-semibold text-slate-700'}`}>
                           {language === 'ar' ? nextBBMatch.homeTeamAr || nextBBMatch.homeTeam : nextBBMatch.homeTeam}
                         </span>
                       </div>
 
                       {/* Match Details */}
-                      <div className="flex flex-col items-center gap-2">
+                      <div className="flex flex-col items-center gap-2 px-2">
                         <span className="text-[11px] font-bold text-slate-500 uppercase">
                           {nextBBMatch.competition}
                         </span>
@@ -465,22 +465,22 @@ export const MatchCenter: React.FC = () => {
                       </div>
 
                       {/* Away Team */}
-                      <div className="flex flex-col items-center text-center w-28">
+                      <div className={`flex flex-col items-center text-center ${!isHomeUsm ? 'w-32 sm:w-36' : 'w-24 sm:w-28'}`}>
                         {awayLogo ? (
-                          <div className="h-14 w-14 flex items-center justify-center mb-2">
+                          <div className={`flex items-center justify-center mb-2 ${!isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={awayLogo}
                               alt={nextBBMatch.awayTeam}
-                              className="max-h-14 max-w-14 object-contain drop-shadow-sm"
+                              className={`object-contain ${!isHomeUsm ? 'max-h-20 max-w-20 sm:max-h-24 sm:max-w-24' : 'max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 opacity-90'}`}
                             />
                           </div>
                         ) : (
-                          <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm">
+                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${!isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
                             {nextBBMatch.awayTeam.slice(0, 3).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
+                        <span className={`line-clamp-2 ${!isHomeUsm ? 'text-xs sm:text-sm font-black text-usm-blue-dark' : 'text-xs font-semibold text-slate-700'}`}>
                           {language === 'ar' ? nextBBMatch.awayTeamAr || nextBBMatch.awayTeam : nextBBMatch.awayTeam}
                         </span>
                       </div>
@@ -510,7 +510,7 @@ export const MatchCenter: React.FC = () => {
                   <img
                     src="/images/usm-basketball-logo.png"
                     alt="US Monastir Basketball"
-                    className="h-16 w-16 object-contain mb-3 drop-shadow-sm"
+                    className="h-16 w-16 object-contain mb-3"
                   />
                   <h4 className="font-display font-black text-usm-blue-dark uppercase tracking-wide text-sm mb-1">{bbTeamInfo.name}</h4>
                   <span className="text-[10px] text-slate-500 font-bold uppercase mb-4">{bbTeamInfo.league}</span>
