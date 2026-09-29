@@ -13,9 +13,9 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'L\'adresse email est requise' })
   email: string;
 
-  @IsOptional()
-  @IsString()
-  phone?: string;
+  @IsNotEmpty({ message: 'Le numéro de téléphone est requis' })
+  @IsString({ message: 'Le numéro de téléphone doit être une chaîne valide' })
+  phone: string;
 
   @IsNotEmpty({ message: 'Le mot de passe est requis' })
   @MinLength(6, { message: 'Le mot de passe doit comporter au moins 6 caractères' })

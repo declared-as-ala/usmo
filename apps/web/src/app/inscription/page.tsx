@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api-client';
 import { tr } from '../../utils/i18n';
-import { ShieldCheck, Eye, EyeOff, Loader2, Check, X, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, Loader2, Check, X, AlertCircle, Phone } from 'lucide-react';
 
 export default function InscriptionPage() {
   const router = useRouter();
@@ -15,6 +15,7 @@ export default function InscriptionPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -44,8 +45,14 @@ export default function InscriptionPage() {
     e.preventDefault();
     setErrorMessage('');
 
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
       setErrorMessage(tr(language, 'Please fill in all required fields.', 'Veuillez renseigner tous les champs obligatoires.', 'يرجى ملء جميع الحقول المطلوبة.'));
+      return;
+    }
+
+    const cleanPhone = phone.replace(/[\s\-\.\(\)]/g, '');
+    if (cleanPhone.length < 8) {
+      setErrorMessage(tr(language, 'Please enter a valid phone number (at least 8 digits).', 'Veuillez saisir un numéro de téléphone valide (au moins 8 chiffres).', 'يرجى إدخال رقم هاتف صالح (8 أرقام على الأقل).'));
       return;
     }
 
@@ -70,6 +77,7 @@ export default function InscriptionPage() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim().toLowerCase(),
+        phone: phone.trim(),
         password,
         acceptTerms: true,
       });
@@ -175,6 +183,23 @@ export default function InscriptionPage() {
                 placeholder="nom@exemple.com"
                 className="w-full bg-white border border-[#DDE8F8] focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2.5 text-xs text-[#071A30] outline-none transition-all"
               />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-wider text-[#5B6B82] mb-1.5">
+                {tr(language, 'Phone number', 'Numéro de téléphone', 'رقم الهاتف')} *
+              </label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="ex. +216 98 123 456"
+                  className="w-full bg-white border border-[#DDE8F8] focus:border-[#0D63FF] focus:ring-1 focus:ring-[#0D63FF] rounded-xl px-4 py-2.5 pl-10 rtl:pl-4 rtl:pr-10 text-xs text-[#071A30] outline-none transition-all"
+                />
+                <Phone size={14} className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
             </div>
 
             <div>

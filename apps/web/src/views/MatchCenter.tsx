@@ -283,8 +283,8 @@ export const MatchCenter: React.FC = () => {
               ) : nextMatch ? (
                 <div className="flex items-center justify-around gap-4">
                   <div className="flex flex-col items-center text-center w-24">
-                    {nextMatch.homeBadge ? (
-                      <img src={nextMatch.homeBadge} alt="" className="h-14 w-14 object-contain mb-2" />
+                    {(nextMatch.homeBadge || (nextMatch as any).homeLogo) ? (
+                      <img src={nextMatch.homeBadge || (nextMatch as any).homeLogo} alt="" className="h-14 w-14 object-contain mb-2" />
                     ) : <Logo size={56} />}
                     <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">{nextMatch.homeTeam}</span>
                   </div>
@@ -302,8 +302,8 @@ export const MatchCenter: React.FC = () => {
                     )}
                   </div>
                   <div className="flex flex-col items-center text-center w-24">
-                    {nextMatch.awayBadge ? (
-                      <img src={nextMatch.awayBadge} alt="" className="h-14 w-14 object-contain mb-2" />
+                    {(nextMatch.awayBadge || (nextMatch as any).awayLogo) ? (
+                      <img src={nextMatch.awayBadge || (nextMatch as any).awayLogo} alt="" className="h-14 w-14 object-contain mb-2" />
                     ) : <div className="h-14 w-14 rounded-full bg-usm-blue-soft border border-usm-border" />}
                     <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">{nextMatch.awayTeam}</span>
                   </div>
@@ -399,24 +399,47 @@ export const MatchCenter: React.FC = () => {
                 <div className="skeleton-loader h-24 rounded-xl" />
               ) : nextBBMatch ? (
                 (() => {
+                  const getBasketballTeamLogo = (teamName: string, customLogo?: string): string | null => {
+                    if (customLogo && customLogo.trim()) return customLogo.trim();
+                    const lower = (teamName || '').toLowerCase().trim();
+                    if (lower.includes('monastir') || lower.includes('usm')) return '/images/usm-basketball-logo.png';
+                    if (lower.includes('css') || lower.includes('sfax')) return '/teams/css.png';
+                    if (lower.includes('africain') || lower.includes('ca')) return '/teams/ca.png';
+                    if (lower.includes('sahel') || lower.includes('ess') || lower.includes('étoile') || lower.includes('etoile')) return '/teams/ess.png';
+                    if (lower.includes('kairouan') || lower.includes('jsk')) return '/teams/jsk.svg';
+                    if (lower.includes('radès') || lower.includes('rades') || lower.includes('esr')) return '/teams/esg.svg';
+                    if (lower.includes('nabeul') || lower.includes('stade nabeulien') || lower.includes('sn')) return '/teams/st.png';
+                    if (lower.includes('grombalia') || lower.includes('dsg')) return '/teams/dsg.svg';
+                    if (lower.includes('ezzahra') || lower.includes('ezs')) return '/teams/esz.png';
+                    if (lower.includes('manazeh') || lower.includes('jsm')) return '/teams/jso.png';
+                    return null;
+                  };
+
                   const isHomeUsm = (nextBBMatch.homeTeam || '').toLowerCase().includes('monastir') || (nextBBMatch.homeTeam || '').toLowerCase().includes('usm');
-                  const homeIsOpponent = !isHomeUsm;
-                  const awayIsOpponent = isHomeUsm;
+                  const homeLogo = isHomeUsm
+                    ? (nextBBMatch.homeLogo || '/images/usm-basketball-logo.png')
+                    : getBasketballTeamLogo(nextBBMatch.homeTeam, nextBBMatch.homeLogo);
+                  const awayLogo = !isHomeUsm
+                    ? (nextBBMatch.awayLogo || '/images/usm-basketball-logo.png')
+                    : getBasketballTeamLogo(nextBBMatch.awayTeam, nextBBMatch.awayLogo);
 
                   return (
                     <div className="flex items-center justify-around gap-4">
                       {/* Home Team */}
                       <div className="flex flex-col items-center text-center w-28">
-                        {homeIsOpponent ? (
+                        {homeLogo ? (
+                          <div className="h-14 w-14 flex items-center justify-center mb-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={homeLogo}
+                              alt={nextBBMatch.homeTeam}
+                              className="max-h-14 max-w-14 object-contain drop-shadow-sm"
+                            />
+                          </div>
+                        ) : (
                           <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm">
                             {nextBBMatch.homeTeam.slice(0, 3).toUpperCase()}
                           </div>
-                        ) : (
-                          <img
-                            src="/images/usm-basketball-logo.png"
-                            alt="US Monastir Basketball"
-                            className="h-14 w-14 object-contain mb-2 drop-shadow-sm"
-                          />
                         )}
                         <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.homeTeamAr || nextBBMatch.homeTeam : nextBBMatch.homeTeam}
@@ -443,16 +466,19 @@ export const MatchCenter: React.FC = () => {
 
                       {/* Away Team */}
                       <div className="flex flex-col items-center text-center w-28">
-                        {awayIsOpponent ? (
+                        {awayLogo ? (
+                          <div className="h-14 w-14 flex items-center justify-center mb-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={awayLogo}
+                              alt={nextBBMatch.awayTeam}
+                              className="max-h-14 max-w-14 object-contain drop-shadow-sm"
+                            />
+                          </div>
+                        ) : (
                           <div className="h-14 w-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm">
                             {nextBBMatch.awayTeam.slice(0, 3).toUpperCase()}
                           </div>
-                        ) : (
-                          <img
-                            src="/images/usm-basketball-logo.png"
-                            alt="US Monastir Basketball"
-                            className="h-14 w-14 object-contain mb-2 drop-shadow-sm"
-                          />
                         )}
                         <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.awayTeamAr || nextBBMatch.awayTeam : nextBBMatch.awayTeam}
