@@ -426,22 +426,22 @@ export const MatchCenter: React.FC = () => {
                   return (
                     <div className="flex items-center justify-around gap-4">
                       {/* Home Team */}
-                      <div className={`flex flex-col items-center text-center ${isHomeUsm ? 'w-32 sm:w-36' : 'w-24 sm:w-28'}`}>
+                      <div className="flex flex-col items-center text-center w-28 sm:w-32">
                         {homeLogo ? (
-                          <div className={`flex items-center justify-center mb-2 ${isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
+                          <div className={`flex items-center justify-center mb-2 ${isHomeUsm ? 'h-16 w-16 sm:h-18 sm:w-18' : 'h-12 w-12 sm:h-13 sm:w-13'}`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={homeLogo}
                               alt={nextBBMatch.homeTeam}
-                              className={`object-contain ${isHomeUsm ? 'max-h-20 max-w-20 sm:max-h-24 sm:max-w-24' : 'max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 opacity-90'}`}
+                              className={`object-contain ${isHomeUsm ? 'max-h-16 max-w-16 sm:max-h-18 sm:max-w-18' : 'max-h-12 max-w-12 sm:max-h-13 sm:max-w-13'}`}
                             />
                           </div>
                         ) : (
-                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
+                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${isHomeUsm ? 'h-16 w-16 sm:h-18 sm:w-18' : 'h-12 w-12 sm:h-13 sm:w-13'}`}>
                             {nextBBMatch.homeTeam.slice(0, 3).toUpperCase()}
                           </div>
                         )}
-                        <span className={`line-clamp-2 ${isHomeUsm ? 'text-xs sm:text-sm font-black text-usm-blue-dark' : 'text-xs font-semibold text-slate-700'}`}>
+                        <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.homeTeamAr || nextBBMatch.homeTeam : nextBBMatch.homeTeam}
                         </span>
                       </div>
@@ -465,22 +465,22 @@ export const MatchCenter: React.FC = () => {
                       </div>
 
                       {/* Away Team */}
-                      <div className={`flex flex-col items-center text-center ${!isHomeUsm ? 'w-32 sm:w-36' : 'w-24 sm:w-28'}`}>
+                      <div className="flex flex-col items-center text-center w-28 sm:w-32">
                         {awayLogo ? (
-                          <div className={`flex items-center justify-center mb-2 ${!isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
+                          <div className={`flex items-center justify-center mb-2 ${!isHomeUsm ? 'h-16 w-16 sm:h-18 sm:w-18' : 'h-12 w-12 sm:h-13 sm:w-13'}`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={awayLogo}
                               alt={nextBBMatch.awayTeam}
-                              className={`object-contain ${!isHomeUsm ? 'max-h-20 max-w-20 sm:max-h-24 sm:max-w-24' : 'max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 opacity-90'}`}
+                              className={`object-contain ${!isHomeUsm ? 'max-h-16 max-w-16 sm:max-h-18 sm:max-w-18' : 'max-h-12 max-w-12 sm:max-h-13 sm:max-w-13'}`}
                             />
                           </div>
                         ) : (
-                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${!isHomeUsm ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-12 w-12 sm:h-14 sm:w-14'}`}>
+                          <div className={`rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-sm text-slate-700 mb-2 shadow-sm ${!isHomeUsm ? 'h-16 w-16 sm:h-18 sm:w-18' : 'h-12 w-12 sm:h-13 sm:w-13'}`}>
                             {nextBBMatch.awayTeam.slice(0, 3).toUpperCase()}
                           </div>
                         )}
-                        <span className={`line-clamp-2 ${!isHomeUsm ? 'text-xs sm:text-sm font-black text-usm-blue-dark' : 'text-xs font-semibold text-slate-700'}`}>
+                        <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
                           {language === 'ar' ? nextBBMatch.awayTeamAr || nextBBMatch.awayTeam : nextBBMatch.awayTeam}
                         </span>
                       </div>
