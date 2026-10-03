@@ -7,7 +7,7 @@ import { LeagueStandingsTable } from '../components/Common/LeagueStandingsTable'
 import { Logo } from '../components/Common/Logo';
 import {
   MapPin, Calendar, Users2,
-  Clock3, ExternalLink, Radio,
+  Clock3, ExternalLink, Radio, CheckCircle2, Trophy, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 interface ResultRow {
@@ -16,17 +16,324 @@ interface ResultRow {
   homeScore: number | null; awayScore: number | null; homeBadge: string | null; awayBadge: string | null;
   venue: string | null;
   quarters?: { home: number[]; away: number[] } | null;
+  competitionAr?: string;
+  homeTeamAr?: string;
+  awayTeamAr?: string;
+  venueAr?: string;
 }
+
 interface TeamInfo {
   id: string; name: string; shortName: string | null; badge: string | null; stadium: string | null;
   stadiumCapacity: number | null; formedYear: number | null; league: string | null;
   description: string | null; website: string | null;
 }
 
-const USM_TEAM_ID = '139871';
+export const getBasketballTeamLogo = (teamName: string, customLogo?: string | null): string | null => {
+  if (customLogo && customLogo.trim()) return customLogo.trim();
+  const lower = (teamName || '').toLowerCase().trim();
+  if (lower.includes('monastir') || lower.includes('usm')) return '/images/usm-basketball-logo.png';
+  if (lower.includes('css') || lower.includes('sfax')) return '/teams/css.png';
+  if (lower.includes('africain') || lower.includes('ca')) return '/teams/ca.png';
+  if (lower.includes('sahel') || lower.includes('ess') || lower.includes('étoile') || lower.includes('etoile')) return '/teams/ess.png';
+  if (lower.includes('kairouan') || lower.includes('jsk')) return '/teams/jsk.svg';
+  if (lower.includes('radès') || lower.includes('rades') || lower.includes('esr')) return '/teams/esg.svg';
+  if (lower.includes('nabeul') || lower.includes('stade nabeulien') || lower.includes('sn')) return '/teams/st.png';
+  if (lower.includes('grombalia') || lower.includes('dsg')) return '/teams/dsg.svg';
+  if (lower.includes('ezzahra') || lower.includes('ezs')) return '/teams/esz.png';
+  if (lower.includes('manazeh') || lower.includes('jsm')) return '/teams/jso.png';
+  if (lower.includes('goulette')) return '/teams/esg.svg';
+  return null;
+};
+
+export const getFootballTeamLogo = (teamName: string, customLogo?: string | null): string | null => {
+  if (customLogo && customLogo.trim()) return customLogo.trim();
+  const lower = (teamName || '').toLowerCase().trim();
+  if (lower.includes('monastir') || lower.includes('usm')) return '/brand/usm-logo.webp';
+  if (lower.includes('esperance') || lower.includes('espérance') || lower.includes('est')) return '/teams/est.png';
+  if (lower.includes('africain') || lower.includes('ca')) return '/teams/ca.png';
+  if (lower.includes('étoile') || lower.includes('etoile') || lower.includes('ess') || lower.includes('sahel')) return '/teams/ess.png';
+  if (lower.includes('sfax') || lower.includes('css')) return '/teams/css.png';
+  if (lower.includes('stade tunisien') || lower.includes('st')) return '/teams/st.png';
+  if (lower.includes('bizertin') || lower.includes('cab')) return '/teams/cab.png';
+  if (lower.includes('zarzis') || lower.includes('esz')) return '/teams/esz.png';
+  if (lower.includes('beja') || lower.includes('béja') || lower.includes('ob')) return '/teams/ob.png';
+  if (lower.includes('metlaoui') || lower.includes('esm')) return '/teams/esm.png';
+  if (lower.includes('omrane') || lower.includes('jso')) return '/teams/jso.png';
+  if (lower.includes('sakiet') || lower.includes('pss')) return '/teams/pss.svg';
+  if (lower.includes('guerdane') || lower.includes('usbg')) return '/teams/usbg.png';
+  if (lower.includes('marsa') || lower.includes('asm')) return '/teams/asm.png';
+  if (lower.includes('hammam sousse') || lower.includes('eshs')) return '/teams/eshs.png';
+  if (lower.includes('hammam-lif') || lower.includes('cshl')) return '/teams/cshl.png';
+  return null;
+};
+
+interface PlayedMatchProps {
+  match: any;
+  sport: 'football' | 'basketball';
+  language: string;
+  fmtDate: (d: string) => string;
+}
+
+const PlayedMatchCard: React.FC<PlayedMatchProps> = ({ match, sport, language, fmtDate }) => {
+  const isBasketball = sport === 'basketball';
+  const isHomeUsm = (match.homeTeam || '').toLowerCase().includes('monastir') || (match.homeTeam || '').toLowerCase().includes('usm');
+  const isAwayUsm = (match.awayTeam || '').toLowerCase().includes('monastir') || (match.awayTeam || '').toLowerCase().includes('usm');
+
+  const defaultLogo = isBasketball ? '/images/usm-basketball-logo.png' : '/brand/usm-logo.webp';
+
+  const homeLogo = isHomeUsm
+    ? (match.homeLogo || match.homeBadge || defaultLogo)
+    : (isBasketball
+        ? getBasketballTeamLogo(match.homeTeam, match.homeLogo || match.homeBadge)
+        : getFootballTeamLogo(match.homeTeam, match.homeLogo || match.homeBadge));
+
+  const awayLogo = isAwayUsm
+    ? (match.awayLogo || match.awayBadge || defaultLogo)
+    : (isBasketball
+        ? getBasketballTeamLogo(match.awayTeam, match.awayLogo || match.awayBadge)
+        : getFootballTeamLogo(match.awayTeam, match.awayLogo || match.awayBadge));
+
+  const homeScore = Number(match.score?.home ?? match.homeScore ?? 0);
+  const awayScore = Number(match.score?.away ?? match.awayScore ?? 0);
+
+  let outcome: 'win' | 'loss' | 'draw' | 'neutral' = 'neutral';
+  if (isHomeUsm) {
+    if (homeScore > awayScore) outcome = 'win';
+    else if (homeScore < awayScore) outcome = 'loss';
+    else outcome = 'draw';
+  } else if (isAwayUsm) {
+    if (awayScore > homeScore) outcome = 'win';
+    else if (awayScore < homeScore) outcome = 'loss';
+    else outcome = 'draw';
+  }
+
+  const compLabel = language === 'ar' && match.competitionAr ? match.competitionAr : match.competition;
+  const homeTeamName = language === 'ar' && match.homeTeamAr ? match.homeTeamAr : match.homeTeam;
+  const awayTeamName = language === 'ar' && match.awayTeamAr ? match.awayTeamAr : match.awayTeam;
+  const venueLabel = language === 'ar' && match.venueAr ? match.venueAr : match.venue;
+
+  const quarters = match.quarters;
+  const hasQuarters =
+    isBasketball &&
+    quarters &&
+    Array.isArray(quarters.home) &&
+    Array.isArray(quarters.away) &&
+    quarters.home.length === 4;
+
+  return (
+    <div className="usm-card rounded-2xl p-5 sm:p-6 border border-usm-blue-primary/15 bg-white/95 dark:bg-slate-900/90 shadow-md hover:shadow-xl hover:border-usm-blue-primary/35 transition-all flex flex-col justify-between gap-4">
+      {/* Top row: Competition & Date */}
+      <div className="flex items-center justify-between gap-2 border-b border-usm-border/60 pb-3 flex-wrap">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-usm-blue-primary shrink-0" />
+          <span className="text-[11px] font-black uppercase text-usm-blue-dark tracking-wide truncate max-w-[220px] sm:max-w-xs" title={compLabel}>
+            {compLabel}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
+            <Calendar size={11} className="text-usm-blue-primary" /> {fmtDate(match.date)}
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            {language === 'ar' ? 'انتهت' : 'Terminé'}
+          </span>
+        </div>
+      </div>
+
+      {/* Main Scoreboard */}
+      <div className="grid grid-cols-7 items-center gap-2 py-1">
+        {/* Home Team (3 cols) */}
+        <div className="col-span-3 flex flex-col items-center text-center">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center mb-2 shrink-0">
+            {homeLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={homeLogo} alt={homeTeamName} className="max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 object-contain drop-shadow-sm" />
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-xs text-slate-700">
+                {match.homeTeam?.slice(0, 3).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <span className={`text-xs sm:text-sm font-bold line-clamp-2 ${isHomeUsm ? 'text-usm-blue-primary font-black' : 'text-usm-blue-dark'}`}>
+            {homeTeamName}
+          </span>
+        </div>
+
+        {/* Score & Outcome (1 col) */}
+        <div className="col-span-1 flex flex-col items-center justify-center text-center">
+          <div className="bg-usm-blue-soft/70 dark:bg-slate-800/80 px-2.5 sm:px-3 py-1.5 rounded-xl border border-usm-border flex items-center gap-1 sm:gap-1.5 shadow-inner">
+            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${homeScore > awayScore ? 'text-usm-blue-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+              {homeScore}
+            </span>
+            <span className="text-slate-400 font-bold text-xs">-</span>
+            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${awayScore > homeScore ? 'text-usm-blue-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+              {awayScore}
+            </span>
+          </div>
+
+          <div className="mt-1.5 shrink-0">
+            {outcome === 'win' && (
+              <span className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/25">
+                <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                {language === 'ar' ? 'فوز' : 'Victoire'}
+              </span>
+            )}
+            {outcome === 'loss' && (
+              <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 border border-rose-500/25">
+                {language === 'ar' ? 'هزيمة' : 'Défaite'}
+              </span>
+            )}
+            {outcome === 'draw' && (
+              <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/25">
+                {language === 'ar' ? 'تعادل' : 'Nul'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Away Team (3 cols) */}
+        <div className="col-span-3 flex flex-col items-center text-center">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center mb-2 shrink-0">
+            {awayLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={awayLogo} alt={awayTeamName} className="max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 object-contain drop-shadow-sm" />
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center font-black text-xs text-slate-700">
+                {match.awayTeam?.slice(0, 3).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <span className={`text-xs sm:text-sm font-bold line-clamp-2 ${isAwayUsm ? 'text-usm-blue-primary font-black' : 'text-usm-blue-dark'}`}>
+            {awayTeamName}
+          </span>
+        </div>
+      </div>
+
+      {/* Quarters for Basketball */}
+      {hasQuarters && (
+        <div className="pt-2 border-t border-usm-border/50">
+          <div className="grid grid-cols-4 gap-1.5 text-center">
+            {[0, 1, 2, 3].map((idx) => (
+              <div key={idx} className="bg-slate-50 dark:bg-slate-800/40 rounded-lg py-1 px-1 border border-slate-100 dark:border-slate-800">
+                <span className="block text-[8px] sm:text-[9px] font-black uppercase text-slate-400">
+                  Q{idx + 1}
+                </span>
+                <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
+                  {quarters.home[idx] ?? 0} - {quarters.away[idx] ?? 0}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Venue bottom note */}
+      {venueLabel && (
+        <div className="pt-2 border-t border-usm-border/40 text-[10px] text-slate-500 flex items-center gap-1 justify-center text-center truncate">
+          <MapPin size={10} className="shrink-0 text-usm-blue-primary" />
+          <span className="truncate">{venueLabel}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PlayedMatchesSection: React.FC<{
+  matches: any[];
+  sport: 'football' | 'basketball';
+  language: string;
+  fmtDate: (d: string) => string;
+}> = ({ matches, sport, language, fmtDate }) => {
+  const [showAll, setShowAll] = useState(false);
+  const displayedMatches = showAll ? matches : matches.slice(0, 6);
+
+  return (
+    <div className="space-y-5">
+      {/* Section Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-usm-blue-primary/30 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-usm-blue-primary/10 flex items-center justify-center text-usm-blue-primary shrink-0">
+            <Trophy size={16} />
+          </div>
+          <div>
+            <h3 className="font-display font-black text-xl text-usm-blue-dark uppercase tracking-wider flex items-center gap-2">
+              <span>{language === 'ar' ? 'آخر النتائج' : 'Derniers résultats'}</span>
+              <span className="text-xs font-bold text-slate-500 font-sans normal-case">
+                ({matches.length})
+              </span>
+            </h3>
+            <p className="text-[11px] text-slate-500">
+              {language === 'ar'
+                ? 'المباريات المكتملة والنتائج الرسمية المسجلة'
+                : 'Matchs déjà joués et résultats officiels'}
+            </p>
+          </div>
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-usm-blue-soft border border-usm-border text-usm-blue-primary self-start sm:self-auto">
+          {sport === 'basketball'
+            ? (language === 'ar' ? '🏀 نتائج كرة السلة' : '🏀 Basketball')
+            : (language === 'ar' ? '⚽ نتائج كرة القدم' : '⚽ Football')}
+        </span>
+      </div>
+
+      {/* Grid or Empty */}
+      {matches.length === 0 ? (
+        <div className="usm-card rounded-2xl p-8 text-center border border-usm-border">
+          <Trophy size={28} className="mx-auto text-slate-400 mb-2" />
+          <p className="text-sm font-bold text-usm-blue-dark mb-1">
+            {language === 'ar' ? 'لا توجد نتائج مسجلة حالياً' : 'Aucun match terminé enregistré'}
+          </p>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            {language === 'ar'
+              ? 'ستظهر نتائج المباريات الرسمية هنا فور انتهاء المقابلات وتحديثها من الإدارة.'
+              : 'Les scores et résultats des matchs apparaîtront ici dès leur enregistrement dans le tableau de bord.'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            {displayedMatches.map((m: any) => (
+              <PlayedMatchCard
+                key={m.id || m._id || m.slug || `${m.homeTeam}-${m.awayTeam}-${m.date}`}
+                match={m}
+                sport={sport}
+                language={language}
+                fmtDate={fmtDate}
+              />
+            ))}
+          </div>
+
+          {matches.length > 6 && (
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAll((prev) => !prev)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-usm-blue-primary/30 bg-usm-blue-soft text-usm-blue-primary font-bold text-xs uppercase tracking-wider hover:bg-usm-blue-primary hover:text-white transition-all cursor-pointer shadow-sm"
+              >
+                {showAll ? (
+                  <>
+                    <ChevronUp size={14} />
+                    {language === 'ar' ? 'عرض أقل' : 'Afficher moins'}
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} />
+                    {language === 'ar'
+                      ? `عرض باقي النتائج (${matches.length - 6})`
+                      : `Voir plus de résultats (${matches.length - 6})`}
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 export const MatchCenter: React.FC = () => {
-  const { language, predictions, submitPrediction, addBluePoints, t } = useApp();
+  const { language, t, matches: contextMatches } = useApp();
   const [sportTab, setSportTab] = useState<'football' | 'basketball'>('football');
 
   // Football states
@@ -64,38 +371,110 @@ export const MatchCenter: React.FC = () => {
     return () => { cancelled = true; };
   }, [sportTab]);
 
-  // Load Football data
+  // Load Football data (both API-Football and Admin/DB matches)
   useEffect(() => {
     let cancelled = false;
 
-    // 1. Fetch API-Football Fixtures (Upcoming & Recent Results)
-    api.getFootballFixtures()
-      .then((res: any) => {
+    Promise.all([
+      api.getFootballFixtures().catch(() => null),
+      api.getMatches('football').catch(() => []),
+    ])
+      .then(([fixturesRes, dbMatchesRes]) => {
         if (cancelled) return;
-        if (res && Array.isArray(res.previous) && res.previous.length > 0) {
-          const mappedPrevious: ResultRow[] = res.previous.slice(0, 10).map((f: any) => ({
-            id: String(f.id),
-            date: f.date ? f.date.split('T')[0] : f.formattedDate,
-            time: f.formattedTime || '16:00',
-            competition: f.competition || 'Ligue 1',
-            round: null,
-            homeTeam: f.homeTeam.name,
-            awayTeam: f.awayTeam.name,
-            homeTeamId: String(f.homeTeam.id),
-            awayTeamId: String(f.awayTeam.id),
-            homeScore: f.score.home,
-            awayScore: f.score.away,
-            homeBadge: f.homeTeam.logo,
-            awayBadge: f.awayTeam.logo,
-            venue: f.venue,
-          }));
-          setRecentResults(mappedPrevious);
-        } else {
-          api.getRecentResults(6).then((rows) => { if (!cancelled) setRecentResults(rows || []); }).catch(() => {});
+
+        const dbList = Array.isArray(dbMatchesRes) ? dbMatchesRes : [];
+        const ctxList = (contextMatches || []).filter((m: any) => m.sport === 'football');
+        const mergedDb = [...dbList];
+        for (const cm of ctxList) {
+          const id = (cm as any)._id || cm.id || (cm as any).slug;
+          if (!mergedDb.some((m: any) => (m._id || m.id || m.slug) === id)) {
+            mergedDb.push(cm);
+          }
         }
 
-        if (res && Array.isArray(res.upcoming) && res.upcoming.length > 0) {
-          const f = res.upcoming[0];
+        // 1. Map finished DB matches (controlled from admin dashboard)
+        const dbPlayed: ResultRow[] = mergedDb
+          .filter((m: any) => m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0)))
+          .map((m: any) => ({
+            id: String(m._id || m.id || m.slug),
+            date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
+            time: m.time || '16:00',
+            competition: m.competition || 'Ligue 1 Professionnelle',
+            competitionAr: m.competitionAr,
+            round: null,
+            homeTeam: m.homeTeam,
+            homeTeamAr: m.homeTeamAr,
+            awayTeam: m.awayTeam,
+            awayTeamAr: m.awayTeamAr,
+            homeTeamId: String(m.homeTeamId || 'home'),
+            awayTeamId: String(m.awayTeamId || 'away'),
+            homeScore: m.score?.home ?? 0,
+            awayScore: m.score?.away ?? 0,
+            homeBadge: m.homeLogo || null,
+            awayBadge: m.awayLogo || null,
+            venue: m.venue || null,
+            venueAr: m.venueAr || null,
+          }));
+
+        // 2. Map external fixtures previous results
+        const apiPrevious: ResultRow[] = (fixturesRes && Array.isArray(fixturesRes.previous))
+          ? fixturesRes.previous.slice(0, 10).map((f: any) => ({
+              id: String(f.id),
+              date: f.date ? f.date.split('T')[0] : f.formattedDate,
+              time: f.formattedTime || '16:00',
+              competition: f.competition || 'Ligue 1',
+              round: null,
+              homeTeam: f.homeTeam.name,
+              awayTeam: f.awayTeam.name,
+              homeTeamId: String(f.homeTeam.id),
+              awayTeamId: String(f.awayTeam.id),
+              homeScore: f.score.home,
+              awayScore: f.score.away,
+              homeBadge: f.homeTeam.logo,
+              awayBadge: f.awayTeam.logo,
+              venue: f.venue,
+            }))
+          : [];
+
+        // Combine DB played matches (highest priority) with API previous results
+        const combinedPlayed: ResultRow[] = [...dbPlayed];
+        for (const row of apiPrevious) {
+          if (!combinedPlayed.some((r) => r.date === row.date && (r.homeTeam === row.homeTeam || r.awayTeam === row.awayTeam))) {
+            combinedPlayed.push(row);
+          }
+        }
+
+        if (combinedPlayed.length > 0) {
+          setRecentResults(combinedPlayed);
+        } else {
+          api.getRecentResults(6).then((rows) => { if (!cancelled && rows) setRecentResults(rows); }).catch(() => {});
+        }
+
+        // 3. Derive upcoming match (DB admin upcoming first, then API upcoming)
+        const dbUpcoming = mergedDb.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
+        if (dbUpcoming.length > 0) {
+          const u = [...dbUpcoming].sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime())[0];
+          setNextMatch({
+            id: String(u._id || u.id || u.slug),
+            date: typeof u.date === 'string' ? u.date.slice(0, 10) : u.date,
+            time: u.time || '17:00',
+            competition: u.competition || 'Ligue 1 Professionnelle',
+            round: null,
+            homeTeam: u.homeTeam,
+            homeTeamAr: u.homeTeamAr,
+            awayTeam: u.awayTeam,
+            awayTeamAr: u.awayTeamAr,
+            homeTeamId: 'home',
+            awayTeamId: 'away',
+            homeScore: u.score?.home ?? null,
+            awayScore: u.score?.away ?? null,
+            homeBadge: u.homeLogo || null,
+            awayBadge: u.awayLogo || null,
+            venue: u.venue || null,
+            venueAr: u.venueAr || null,
+          });
+        } else if (fixturesRes && Array.isArray(fixturesRes.upcoming) && fixturesRes.upcoming.length > 0) {
+          const f = fixturesRes.upcoming[0];
           setNextMatch({
             id: String(f.id),
             date: f.date ? f.date.split('T')[0] : f.formattedDate,
@@ -126,7 +505,7 @@ export const MatchCenter: React.FC = () => {
         if (!cancelled) setLiveLoading(false);
       });
 
-    // 2. Fetch Football Team Information
+    // 4. Fetch Football Team Information
     api.getFootballTeam()
       .then((tInfo: any) => {
         if (!cancelled && tInfo && tInfo.name) {
@@ -151,9 +530,9 @@ export const MatchCenter: React.FC = () => {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [contextMatches]);
 
-  // Load Basketball data
+  // Load Basketball data (both API / MongoDB and Context fallback)
   useEffect(() => {
     let cancelled = false;
     setBbLoading(true);
@@ -164,7 +543,17 @@ export const MatchCenter: React.FC = () => {
     ])
       .then(([matches, team]) => {
         if (cancelled) return;
-        const normalized = (matches || []).map((m: any) => ({
+        const apiList = Array.isArray(matches) ? matches : [];
+        const ctxList = (contextMatches || []).filter((m: any) => m.sport === 'basketball');
+        const merged = [...apiList];
+        for (const cm of ctxList) {
+          const id = (cm as any)._id || cm.id || (cm as any).slug;
+          if (!merged.some((m: any) => (m._id || m.id || m.slug) === id)) {
+            merged.push(cm);
+          }
+        }
+
+        const normalized = merged.map((m: any) => ({
           ...m,
           id: m._id || m.id || m.slug,
           date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
@@ -204,7 +593,7 @@ export const MatchCenter: React.FC = () => {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [contextMatches]);
 
   const fmtDate = (d: string) => {
     try {
@@ -221,6 +610,16 @@ export const MatchCenter: React.FC = () => {
     .filter((m) => m.status === 'upcoming' || m.status === 'live')
     .sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime());
   const nextBBMatch = bbUpcoming.length > 0 ? bbUpcoming[0] : null;
+
+  // Derive basketball played / completed matches (sorted descending by date so latest is first)
+  const bbPlayed = basketballMatches
+    .filter((m) => m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0)))
+    .sort((a, b) => new Date(`${b.date}T${b.time || '00:00'}`).getTime() - new Date(`${a.date}T${a.time || '00:00'}`).getTime());
+
+  // Derive football played / completed matches
+  const footballPlayed = [...recentResults].sort(
+    (a, b) => new Date(`${b.date}T${b.time || '00:00'}`).getTime() - new Date(`${a.date}T${a.time || '00:00'}`).getTime()
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-16 space-y-10">
@@ -286,7 +685,9 @@ export const MatchCenter: React.FC = () => {
                     {(nextMatch.homeBadge || (nextMatch as any).homeLogo) ? (
                       <img src={nextMatch.homeBadge || (nextMatch as any).homeLogo} alt="" className="h-14 w-14 object-contain mb-2" />
                     ) : <Logo size={56} />}
-                    <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">{nextMatch.homeTeam}</span>
+                    <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
+                      {language === 'ar' && nextMatch.homeTeamAr ? nextMatch.homeTeamAr : nextMatch.homeTeam}
+                    </span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
                     <span className="font-display font-black text-2xl text-usm-blue-primary uppercase tracking-wide">
@@ -297,7 +698,7 @@ export const MatchCenter: React.FC = () => {
                     </span>
                     {nextMatch.venue && (
                       <span className="text-[10px] text-slate-500 flex items-center gap-1 max-w-[180px] text-center">
-                        <MapPin size={11} className="shrink-0" /> {nextMatch.venue}
+                        <MapPin size={11} className="shrink-0" /> {language === 'ar' && nextMatch.venueAr ? nextMatch.venueAr : nextMatch.venue}
                       </span>
                     )}
                   </div>
@@ -305,7 +706,9 @@ export const MatchCenter: React.FC = () => {
                     {(nextMatch.awayBadge || (nextMatch as any).awayLogo) ? (
                       <img src={nextMatch.awayBadge || (nextMatch as any).awayLogo} alt="" className="h-14 w-14 object-contain mb-2" />
                     ) : <div className="h-14 w-14 rounded-full bg-usm-blue-soft border border-usm-border" />}
-                    <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">{nextMatch.awayTeam}</span>
+                    <span className="text-xs font-bold text-usm-blue-dark line-clamp-2">
+                      {language === 'ar' && nextMatch.awayTeamAr ? nextMatch.awayTeamAr : nextMatch.awayTeam}
+                    </span>
                   </div>
                 </div>
               ) : (
@@ -346,7 +749,6 @@ export const MatchCenter: React.FC = () => {
                         <span className="font-bold text-usm-blue-dark">{teamInfo.stadiumCapacity.toLocaleString()}</span>
                       </div>
                     )}
-
                   </div>
                   {teamInfo.website && (
                     <a
@@ -365,6 +767,14 @@ export const MatchCenter: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Derniers résultats Football (Matchs déjà joués) */}
+          <PlayedMatchesSection
+            matches={footballPlayed}
+            sport="football"
+            language={language}
+            fmtDate={fmtDate}
+          />
 
           {/* Classement Football */}
           <div>
@@ -386,7 +796,7 @@ export const MatchCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ════════════════ BASKETBALL — PROCHAIN MATCH ════════════════ */}
+      {/* ════════════════ BASKETBALL — PROCHAIN MATCH & DERNIERS RÉSULTATS ════════════════ */}
       {sportTab === 'basketball' && (
         <div className="space-y-10 animate-[fadeIn_0.25s_ease-out]">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -399,22 +809,6 @@ export const MatchCenter: React.FC = () => {
                 <div className="skeleton-loader h-24 rounded-xl" />
               ) : nextBBMatch ? (
                 (() => {
-                  const getBasketballTeamLogo = (teamName: string, customLogo?: string): string | null => {
-                    if (customLogo && customLogo.trim()) return customLogo.trim();
-                    const lower = (teamName || '').toLowerCase().trim();
-                    if (lower.includes('monastir') || lower.includes('usm')) return '/images/usm-basketball-logo.png';
-                    if (lower.includes('css') || lower.includes('sfax')) return '/teams/css.png';
-                    if (lower.includes('africain') || lower.includes('ca')) return '/teams/ca.png';
-                    if (lower.includes('sahel') || lower.includes('ess') || lower.includes('étoile') || lower.includes('etoile')) return '/teams/ess.png';
-                    if (lower.includes('kairouan') || lower.includes('jsk')) return '/teams/jsk.svg';
-                    if (lower.includes('radès') || lower.includes('rades') || lower.includes('esr')) return '/teams/esg.svg';
-                    if (lower.includes('nabeul') || lower.includes('stade nabeulien') || lower.includes('sn')) return '/teams/st.png';
-                    if (lower.includes('grombalia') || lower.includes('dsg')) return '/teams/dsg.svg';
-                    if (lower.includes('ezzahra') || lower.includes('ezs')) return '/teams/esz.png';
-                    if (lower.includes('manazeh') || lower.includes('jsm')) return '/teams/jso.png';
-                    return null;
-                  };
-
                   const isHomeUsm = (nextBBMatch.homeTeam || '').toLowerCase().includes('monastir') || (nextBBMatch.homeTeam || '').toLowerCase().includes('usm');
                   const homeLogo = isHomeUsm
                     ? (nextBBMatch.homeLogo || '/images/usm-basketball-logo.png')
@@ -523,8 +917,6 @@ export const MatchCenter: React.FC = () => {
                       <span className="text-slate-500 flex items-center gap-1"><Users2 size={11} /> {language === 'ar' ? 'السعة' : 'Capacité'}</span>
                       <span className="font-bold text-usm-blue-dark">4 075 places</span>
                     </div>
-
-
                   </div>
                   <a
                     href="https://usmonastir.tn"
@@ -537,9 +929,16 @@ export const MatchCenter: React.FC = () => {
               ) : null}
             </div>
           </div>
+
+          {/* Derniers résultats Basketball (Matchs déjà joués) */}
+          <PlayedMatchesSection
+            matches={bbPlayed}
+            sport="basketball"
+            language={language}
+            fmtDate={fmtDate}
+          />
         </div>
       )}
     </div>
   );
 };
-
