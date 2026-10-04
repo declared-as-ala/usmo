@@ -383,17 +383,10 @@ export const MatchCenter: React.FC = () => {
         if (cancelled) return;
 
         const dbList = Array.isArray(dbMatchesRes) ? dbMatchesRes : [];
-        const ctxList = (contextMatches || []).filter((m: any) => m.sport === 'football');
-        const mergedDb = [...dbList];
-        for (const cm of ctxList) {
-          const id = (cm as any)._id || cm.id || (cm as any).slug;
-          if (!mergedDb.some((m: any) => (m._id || m.id || m.slug) === id)) {
-            mergedDb.push(cm);
-          }
-        }
+        const sourceMatches = dbList.length > 0 ? dbList : (contextMatches || []).filter((m: any) => m.sport === 'football');
 
-        // 1. Map finished DB matches (controlled from admin dashboard)
-        const dbPlayed: ResultRow[] = mergedDb
+        // 1. Map finished DB matches (controlled from admin dashboard only)
+        const dbPlayed: ResultRow[] = sourceMatches
           .filter((m: any) => m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0)))
           .map((m: any) => ({
             id: String(m._id || m.id || m.slug),
@@ -416,42 +409,11 @@ export const MatchCenter: React.FC = () => {
             venueAr: m.venueAr || null,
           }));
 
-        // 2. Map external fixtures previous results
-        const apiPrevious: ResultRow[] = (fixturesRes && Array.isArray(fixturesRes.previous))
-          ? fixturesRes.previous.slice(0, 10).map((f: any) => ({
-              id: String(f.id),
-              date: f.date ? f.date.split('T')[0] : f.formattedDate,
-              time: f.formattedTime || '16:00',
-              competition: f.competition || 'Ligue 1',
-              round: null,
-              homeTeam: f.homeTeam.name,
-              awayTeam: f.awayTeam.name,
-              homeTeamId: String(f.homeTeam.id),
-              awayTeamId: String(f.awayTeam.id),
-              homeScore: f.score.home,
-              awayScore: f.score.away,
-              homeBadge: f.homeTeam.logo,
-              awayBadge: f.awayTeam.logo,
-              venue: f.venue,
-            }))
-          : [];
+        // ONLY use matches filled from dashboard (no external API fixtures for played matches)
+        setRecentResults(dbPlayed);
 
-        // Combine DB played matches (highest priority) with API previous results
-        const combinedPlayed: ResultRow[] = [...dbPlayed];
-        for (const row of apiPrevious) {
-          if (!combinedPlayed.some((r) => r.date === row.date && (r.homeTeam === row.homeTeam || r.awayTeam === row.awayTeam))) {
-            combinedPlayed.push(row);
-          }
-        }
-
-        if (combinedPlayed.length > 0) {
-          setRecentResults(combinedPlayed);
-        } else {
-          api.getRecentResults(6).then((rows) => { if (!cancelled && rows) setRecentResults(rows); }).catch(() => {});
-        }
-
-        // 3. Derive upcoming match (DB admin upcoming first, then API upcoming)
-        const dbUpcoming = mergedDb.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
+        // 2. Derive upcoming match (DB admin upcoming first, then API upcoming if any)
+        const dbUpcoming = sourceMatches.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
         if (dbUpcoming.length > 0) {
           const u = [...dbUpcoming].sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime())[0];
           setNextMatch({
@@ -498,7 +460,6 @@ export const MatchCenter: React.FC = () => {
       .catch(() => {
         if (!cancelled) {
           api.getNextLeagueMatch().then(setNextMatch).catch(() => {});
-          api.getRecentResults(6).then((rows) => setRecentResults(rows || [])).catch(() => {});
         }
       })
       .finally(() => {
@@ -544,16 +505,9 @@ export const MatchCenter: React.FC = () => {
       .then(([matches, team]) => {
         if (cancelled) return;
         const apiList = Array.isArray(matches) ? matches : [];
-        const ctxList = (contextMatches || []).filter((m: any) => m.sport === 'basketball');
-        const merged = [...apiList];
-        for (const cm of ctxList) {
-          const id = (cm as any)._id || cm.id || (cm as any).slug;
-          if (!merged.some((m: any) => (m._id || m.id || m.slug) === id)) {
-            merged.push(cm);
-          }
-        }
+        const sourceMatches = apiList.length > 0 ? apiList : (contextMatches || []).filter((m: any) => m.sport === 'basketball');
 
-        const normalized = merged.map((m: any) => ({
+        const normalized = sourceMatches.map((m: any) => ({
           ...m,
           id: m._id || m.id || m.slug,
           date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
