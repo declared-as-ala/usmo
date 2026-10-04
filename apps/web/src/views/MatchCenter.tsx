@@ -371,12 +371,15 @@ export const MatchCenter: React.FC = () => {
     return () => { cancelled = true; };
   }, [sportTab]);
 
-  // Load Football data (strictly from Admin Dashboard / DB matches)
+  // Load Football data (results strictly from Admin Dashboard, upcoming match from external API)
   useEffect(() => {
     let cancelled = false;
 
-    api.getMatches('football')
-      .then((dbMatchesRes) => {
+    Promise.all([
+      api.getFootballFixtures().catch(() => null),
+      api.getMatches('football').catch(() => []),
+    ])
+      .then(async ([fixturesRes, dbMatchesRes]) => {
         if (cancelled) return;
 
         const dbList = Array.isArray(dbMatchesRes) ? dbMatchesRes : [];
@@ -408,31 +411,72 @@ export const MatchCenter: React.FC = () => {
         // ONLY use matches filled from dashboard (no external API fixtures, no mock data)
         setRecentResults(dbPlayed);
 
-        // 2. Derive upcoming match (dashboard upcoming matches)
-        const dbUpcoming = dbList.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
-        if (dbUpcoming.length > 0) {
-          const u = [...dbUpcoming].sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime())[0];
-          setNextMatch({
-            id: String(u._id || u.id || u.slug),
-            date: typeof u.date === 'string' ? u.date.slice(0, 10) : u.date,
-            time: u.time || '17:00',
-            competition: u.competition || 'Ligue 1 Professionnelle',
+        // 2. Upcoming match (strictly from external API: API-Football, fallback TheSportsDB, fallback DB upcoming)
+        let resolvedNext: ResultRow | null = null;
+
+        if (fixturesRes && Array.isArray(fixturesRes.upcoming) && fixturesRes.upcoming.length > 0) {
+          const f = fixturesRes.upcoming[0];
+          resolvedNext = {
+            id: String(f.id),
+            date: f.date ? f.date.split('T')[0] : f.formattedDate,
+            time: f.formattedTime || '17:00',
+            competition: f.competition || 'Ligue 1 Professionnelle',
             round: null,
-            homeTeam: u.homeTeam,
-            homeTeamAr: u.homeTeamAr,
-            awayTeam: u.awayTeam,
-            awayTeamAr: u.awayTeamAr,
-            homeTeamId: 'home',
-            awayTeamId: 'away',
-            homeScore: u.score?.home ?? null,
-            awayScore: u.score?.away ?? null,
-            homeBadge: u.homeLogo || null,
-            awayBadge: u.awayLogo || null,
-            venue: u.venue || null,
-            venueAr: u.venueAr || null,
-          });
+            homeTeam: f.homeTeam.name,
+            awayTeam: f.awayTeam.name,
+            homeTeamId: String(f.homeTeam.id),
+            awayTeamId: String(f.awayTeam.id),
+            homeScore: f.score?.home ?? null,
+            awayScore: f.score?.away ?? null,
+            homeBadge: getFootballTeamLogo(f.homeTeam.name, f.homeTeam.logo),
+            awayBadge: getFootballTeamLogo(f.awayTeam.name, f.awayTeam.logo),
+            venue: f.venue || null,
+          };
         } else {
-          setNextMatch(null);
+          try {
+            const nm = await api.getNextLeagueMatch();
+            if (nm) {
+              resolvedNext = {
+                ...nm,
+                homeBadge: getFootballTeamLogo(nm.homeTeam, nm.homeBadge),
+                awayBadge: getFootballTeamLogo(nm.awayTeam, nm.awayBadge),
+              };
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        // Secondary fallback to DB upcoming if external API has no upcoming match
+        if (!resolvedNext) {
+          const dbUpcoming = dbList.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
+          if (dbUpcoming.length > 0) {
+            const u = [...dbUpcoming].sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime())[0];
+            resolvedNext = {
+              id: String(u._id || u.id || u.slug),
+              date: typeof u.date === 'string' ? u.date.slice(0, 10) : u.date,
+              time: u.time || '17:00',
+              competition: u.competition || 'Ligue 1 Professionnelle',
+              competitionAr: u.competitionAr,
+              round: null,
+              homeTeam: u.homeTeam,
+              homeTeamAr: u.homeTeamAr,
+              awayTeam: u.awayTeam,
+              awayTeamAr: u.awayTeamAr,
+              homeTeamId: 'home',
+              awayTeamId: 'away',
+              homeScore: u.score?.home ?? null,
+              awayScore: u.score?.away ?? null,
+              homeBadge: u.homeLogo || null,
+              awayBadge: u.awayLogo || null,
+              venue: u.venue || null,
+              venueAr: u.venueAr || null,
+            };
+          }
+        }
+
+        if (!cancelled) {
+          setNextMatch(resolvedNext);
         }
       })
       .catch(() => {
