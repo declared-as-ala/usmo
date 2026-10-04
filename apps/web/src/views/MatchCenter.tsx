@@ -333,7 +333,7 @@ const PlayedMatchesSection: React.FC<{
 };
 
 export const MatchCenter: React.FC = () => {
-  const { language, t, matches: contextMatches } = useApp();
+  const { language, t } = useApp();
   const [sportTab, setSportTab] = useState<'football' | 'basketball'>('football');
 
   // Football states
@@ -371,23 +371,19 @@ export const MatchCenter: React.FC = () => {
     return () => { cancelled = true; };
   }, [sportTab]);
 
-  // Load Football data (both API-Football and Admin/DB matches)
+  // Load Football data (strictly from Admin Dashboard / DB matches)
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([
-      api.getFootballFixtures().catch(() => null),
-      api.getMatches('football').catch(() => []),
-    ])
-      .then(([fixturesRes, dbMatchesRes]) => {
+    api.getMatches('football')
+      .then((dbMatchesRes) => {
         if (cancelled) return;
 
         const dbList = Array.isArray(dbMatchesRes) ? dbMatchesRes : [];
-        const sourceMatches = dbList.length > 0 ? dbList : (contextMatches || []).filter((m: any) => m.sport === 'football');
 
-        // 1. Map finished DB matches (controlled from admin dashboard only)
-        const dbPlayed: ResultRow[] = sourceMatches
-          .filter((m: any) => m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0)))
+        // 1. Map finished DB matches (strictly from admin dashboard database)
+        const dbPlayed: ResultRow[] = dbList
+          .filter((m: any) => m.status === 'finished')
           .map((m: any) => ({
             id: String(m._id || m.id || m.slug),
             date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
@@ -409,11 +405,11 @@ export const MatchCenter: React.FC = () => {
             venueAr: m.venueAr || null,
           }));
 
-        // ONLY use matches filled from dashboard (no external API fixtures for played matches)
+        // ONLY use matches filled from dashboard (no external API fixtures, no mock data)
         setRecentResults(dbPlayed);
 
-        // 2. Derive upcoming match (DB admin upcoming first, then API upcoming if any)
-        const dbUpcoming = sourceMatches.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
+        // 2. Derive upcoming match (dashboard upcoming matches)
+        const dbUpcoming = dbList.filter((m: any) => m.status === 'upcoming' || m.status === 'live');
         if (dbUpcoming.length > 0) {
           const u = [...dbUpcoming].sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime())[0];
           setNextMatch({
@@ -435,38 +431,21 @@ export const MatchCenter: React.FC = () => {
             venue: u.venue || null,
             venueAr: u.venueAr || null,
           });
-        } else if (fixturesRes && Array.isArray(fixturesRes.upcoming) && fixturesRes.upcoming.length > 0) {
-          const f = fixturesRes.upcoming[0];
-          setNextMatch({
-            id: String(f.id),
-            date: f.date ? f.date.split('T')[0] : f.formattedDate,
-            time: f.formattedTime || '17:00',
-            competition: f.competition || 'Ligue 1',
-            round: null,
-            homeTeam: f.homeTeam.name,
-            awayTeam: f.awayTeam.name,
-            homeTeamId: String(f.homeTeam.id),
-            awayTeamId: String(f.awayTeam.id),
-            homeScore: f.score.home,
-            awayScore: f.score.away,
-            homeBadge: f.homeTeam.logo,
-            awayBadge: f.awayTeam.logo,
-            venue: f.venue,
-          });
         } else {
-          api.getNextLeagueMatch().then((nm) => { if (!cancelled) setNextMatch(nm); }).catch(() => {});
+          setNextMatch(null);
         }
       })
       .catch(() => {
         if (!cancelled) {
-          api.getNextLeagueMatch().then(setNextMatch).catch(() => {});
+          setRecentResults([]);
+          setNextMatch(null);
         }
       })
       .finally(() => {
         if (!cancelled) setLiveLoading(false);
       });
 
-    // 4. Fetch Football Team Information
+    // 3. Fetch Football Team Information
     api.getFootballTeam()
       .then((tInfo: any) => {
         if (!cancelled && tInfo && tInfo.name) {
@@ -491,9 +470,9 @@ export const MatchCenter: React.FC = () => {
       });
 
     return () => { cancelled = true; };
-  }, [contextMatches]);
+  }, []);
 
-  // Load Basketball data (both API / MongoDB and Context fallback)
+  // Load Basketball data (strictly from Admin Dashboard / DB matches)
   useEffect(() => {
     let cancelled = false;
     setBbLoading(true);
@@ -505,9 +484,8 @@ export const MatchCenter: React.FC = () => {
       .then(([matches, team]) => {
         if (cancelled) return;
         const apiList = Array.isArray(matches) ? matches : [];
-        const sourceMatches = apiList.length > 0 ? apiList : (contextMatches || []).filter((m: any) => m.sport === 'basketball');
 
-        const normalized = sourceMatches.map((m: any) => ({
+        const normalized = apiList.map((m: any) => ({
           ...m,
           id: m._id || m.id || m.slug,
           date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
@@ -547,7 +525,7 @@ export const MatchCenter: React.FC = () => {
       });
 
     return () => { cancelled = true; };
-  }, [contextMatches]);
+  }, []);
 
   const fmtDate = (d: string) => {
     try {
