@@ -97,7 +97,7 @@ export const Home: React.FC = () => {
             📰 {t('home.news')}
           </h3>
           <button
-            onClick={() => setActiveScreen('news')}
+            onClick={() => router.push('/actualites')}
             className="text-xs font-bold text-usm-blue-primary hover:text-usm-blue-primary flex items-center space-x-1 rtl:space-x-reverse cursor-pointer transition-colors"
           >
             <span>{t('btn.allNews')}</span>
@@ -107,7 +107,10 @@ export const Home: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Large Featured Card */}
-          <div className="lg:col-span-2 bg-white border border-usm-border rounded-3xl overflow-hidden group hover:border-usm-blue-primary/40 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(13,99,255,0.35)] transition-all duration-300 flex flex-col justify-between shadow-[0_18px_45px_-30px_rgba(13,99,255,0.15)] cursor-pointer" onClick={() => setActiveScreen('news')}>
+          <div
+            className="lg:col-span-2 bg-white border border-usm-border rounded-3xl overflow-hidden group hover:border-usm-blue-primary/40 hover:-translate-y-1 hover:shadow-[0_24px_60px_-30px_rgba(13,99,255,0.35)] transition-all duration-300 flex flex-col justify-between shadow-[0_18px_45px_-30px_rgba(13,99,255,0.15)] cursor-pointer"
+            onClick={() => router.push(`/actualites/${(publishedNews[0] as any).slug || (publishedNews[0] as any)._id || publishedNews[0].id}`)}
+          >
             <div className="relative overflow-hidden h-72">
               <img
                 src={publishedNews[0].image}
@@ -141,7 +144,7 @@ export const Home: React.FC = () => {
               <div
                 key={item.id}
                 className="bg-white border border-usm-border rounded-2xl p-4 hover:border-usm-blue-primary/40 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_rgba(13,99,255,0.3)] transition-all duration-300 flex space-x-4 rtl:space-x-reverse cursor-pointer shadow-[0_10px_28px_-24px_rgba(13,99,255,0.15)] group"
-                onClick={() => setActiveScreen('news')}
+                onClick={() => router.push(`/actualites/${(item as any).slug || (item as any)._id || item.id}`)}
               >
                 <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0">
                   <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />

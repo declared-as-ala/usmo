@@ -8,10 +8,16 @@ const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL
 
 async function fetchArticleBySlug(slug: string) {
   try {
-    const res = await fetch(`${API_BASE}/news/slug/${encodeURIComponent(slug)}`, {
+    let res = await fetch(`${API_BASE}/news/slug/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
       signal: AbortSignal.timeout(2000),
     });
+    if (!res.ok) {
+      res = await fetch(`${API_BASE}/news/${encodeURIComponent(slug)}`, {
+        next: { revalidate: 60 },
+        signal: AbortSignal.timeout(2000),
+      });
+    }
     if (!res.ok) return null;
     return res.json();
   } catch {

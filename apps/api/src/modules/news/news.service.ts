@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import { News } from './news.schema';
 
 @Injectable()
@@ -72,11 +72,18 @@ export class NewsService {
   }
 
   async findBySlug(slug: string): Promise<News> {
-    const article = await this.newsModel.findOneAndUpdate(
+    let article = await this.newsModel.findOneAndUpdate(
       { slug, published: true },
       { $inc: { views: 1 } },
       { new: true },
     ).exec();
+    if (!article && isValidObjectId(slug)) {
+      article = await this.newsModel.findOneAndUpdate(
+        { _id: slug, published: true },
+        { $inc: { views: 1 } },
+        { new: true },
+      ).exec();
+    }
     if (!article) throw new NotFoundException(`Article introuvable: ${slug}`);
     return article;
   }
