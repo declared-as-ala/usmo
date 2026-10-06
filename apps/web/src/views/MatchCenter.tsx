@@ -112,14 +112,6 @@ const PlayedMatchCard: React.FC<PlayedMatchProps> = ({ match, sport, language, f
   const awayTeamName = language === 'ar' && match.awayTeamAr ? match.awayTeamAr : match.awayTeam;
   const venueLabel = language === 'ar' && match.venueAr ? match.venueAr : match.venue;
 
-  const quarters = match.quarters;
-  const hasQuarters =
-    isBasketball &&
-    quarters &&
-    Array.isArray(quarters.home) &&
-    Array.isArray(quarters.away) &&
-    quarters.home.length === 4;
-
   return (
     <div className="usm-card rounded-2xl p-5 sm:p-6 border border-usm-blue-primary/15 bg-white/95 dark:bg-slate-900/90 shadow-md hover:shadow-xl hover:border-usm-blue-primary/35 transition-all flex flex-col justify-between gap-4">
       {/* Top row: Competition & Date */}
@@ -161,12 +153,12 @@ const PlayedMatchCard: React.FC<PlayedMatchProps> = ({ match, sport, language, f
 
         {/* Score & Outcome (1 col) */}
         <div className="col-span-1 flex flex-col items-center justify-center text-center">
-          <div className="bg-usm-blue-soft/70 dark:bg-slate-800/80 px-2.5 sm:px-3 py-1.5 rounded-xl border border-usm-border flex items-center gap-1 sm:gap-1.5 shadow-inner">
-            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${homeScore > awayScore ? 'text-usm-blue-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+          <div className="bg-white dark:bg-white px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-200 flex items-center gap-1 sm:gap-1.5 shadow-sm">
+            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${homeScore > awayScore ? 'text-usm-blue-primary' : 'text-slate-800 dark:text-slate-800'}`}>
               {homeScore}
             </span>
-            <span className="text-slate-400 font-bold text-xs">-</span>
-            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${awayScore > homeScore ? 'text-usm-blue-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+            <span className="text-slate-400 dark:text-slate-400 font-bold text-xs">-</span>
+            <span className={`font-display font-black text-lg sm:text-2xl tabular-nums ${awayScore > homeScore ? 'text-usm-blue-primary' : 'text-slate-800 dark:text-slate-800'}`}>
               {awayScore}
             </span>
           </div>
@@ -208,24 +200,6 @@ const PlayedMatchCard: React.FC<PlayedMatchProps> = ({ match, sport, language, f
           </span>
         </div>
       </div>
-
-      {/* Quarters for Basketball */}
-      {hasQuarters && (
-        <div className="pt-2 border-t border-usm-border/50">
-          <div className="grid grid-cols-4 gap-1.5 text-center">
-            {[0, 1, 2, 3].map((idx) => (
-              <div key={idx} className="bg-slate-50 dark:bg-slate-800/40 rounded-lg py-1 px-1 border border-slate-100 dark:border-slate-800">
-                <span className="block text-[8px] sm:text-[9px] font-black uppercase text-slate-400">
-                  Q{idx + 1}
-                </span>
-                <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
-                  {quarters.home[idx] ?? 0} - {quarters.away[idx] ?? 0}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Venue bottom note */}
       {venueLabel && (
