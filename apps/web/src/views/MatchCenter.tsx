@@ -67,6 +67,23 @@ export const getFootballTeamLogo = (teamName: string, customLogo?: string | null
   return null;
 };
 
+/**
+ * Identify matches originating from external APIs / automated sync.
+ * Finished matches from external APIs are hidden so only dashboard-managed
+ * results appear under "Derniers résultats".
+ */
+export const isExternalMatch = (m: any): boolean => {
+  if (!m) return false;
+  // If explicitly created or manually overridden by admin in dashboard, it is kept
+  if (m.manualOverride === true || m.dataSource === 'MANUAL') return false;
+  // External sync flags
+  if (m.dataSource === 'EXTERNAL_API' || m.dataSource === 'sportsdb') return true;
+  if (m.source === 'sportsdb') return true;
+  if (Boolean(m.externalId) && !m.manualOverride) return true;
+  if (Boolean(m.providerUpdatedAt) && !m.manualOverride) return true;
+  return false;
+};
+
 interface PlayedMatchProps {
   match: any;
   sport: 'football' | 'basketball';
@@ -358,9 +375,9 @@ export const MatchCenter: React.FC = () => {
 
         const dbList = Array.isArray(dbMatchesRes) ? dbMatchesRes : [];
 
-        // 1. Map finished DB matches (strictly from admin dashboard database)
+        // 1. Map finished DB matches (strictly from admin dashboard database, never from external API)
         const dbPlayed: ResultRow[] = dbList
-          .filter((m: any) => m.status === 'finished')
+          .filter((m: any) => m.status === 'finished' && !isExternalMatch(m))
           .map((m: any) => ({
             id: String(m._id || m.id || m.slug),
             date: typeof m.date === 'string' ? m.date.slice(0, 10) : m.date,
@@ -561,9 +578,9 @@ export const MatchCenter: React.FC = () => {
     .sort((a, b) => new Date(`${a.date}T${a.time || '00:00'}`).getTime() - new Date(`${b.date}T${b.time || '00:00'}`).getTime());
   const nextBBMatch = bbUpcoming.length > 0 ? bbUpcoming[0] : null;
 
-  // Derive basketball played / completed matches (sorted descending by date so latest is first)
+  // Derive basketball played / completed matches (strictly dashboard-managed, never from external API)
   const bbPlayed = basketballMatches
-    .filter((m) => m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0)))
+    .filter((m) => (m.status === 'finished' || (!['upcoming', 'live'].includes(m.status) && m.score && (Number(m.score.home) > 0 || Number(m.score.away) > 0))) && !isExternalMatch(m))
     .sort((a, b) => new Date(`${b.date}T${b.time || '00:00'}`).getTime() - new Date(`${a.date}T${a.time || '00:00'}`).getTime());
 
   // Derive football played / completed matches

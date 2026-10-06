@@ -47,6 +47,19 @@ export class SportsSyncScheduler implements OnApplicationBootstrap {
           ],
         }).catch((e) => this.logger.warn(`Stale match cleanup notice: ${e.message}`));
 
+        // User requirement: Finished match results are strictly managed in the Admin Dashboard.
+        // Purge any external finished matches from MongoDB so they do not appear anywhere.
+        await this.matchModel.deleteMany({
+          status: 'finished',
+          $or: [
+            { dataSource: 'EXTERNAL_API' },
+            { dataSource: 'sportsdb' },
+            { source: 'sportsdb' },
+            { externalId: { $ne: null, $exists: true } },
+          ],
+          manualOverride: { $ne: true },
+        }).catch((e) => this.logger.warn(`External finished matches cleanup notice: ${e.message}`));
+
         // Always sync basketball upcoming fixtures on boot so J1 (CSS Sfax) and J2 (ESS) are guaranteed fresh
         await this.syncService.syncUpcomingMatches('basketball', 'SYSTEM');
       } catch (err: any) {

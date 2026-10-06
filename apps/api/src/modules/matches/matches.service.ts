@@ -24,7 +24,14 @@ export class MatchesService {
   }
 
   async findResults(sport?: string, limit = 10) {
-    const filter: Record<string, unknown> = { status: 'finished' };
+    const filter: Record<string, unknown> = {
+      status: 'finished',
+      $or: [
+        { dataSource: 'MANUAL' },
+        { manualOverride: true },
+        { dataSource: { $nin: ['EXTERNAL_API', 'sportsdb'] }, externalId: null },
+      ],
+    };
     if (sport) filter.sport = sport.toLowerCase().trim();
     return this.matchModel.find(filter).sort({ date: -1 }).limit(limit).lean();
   }

@@ -521,60 +521,10 @@ export class SportsSyncService {
         return { status: 'SKIPPED', updated: 0, fetched: 0, message: 'Sync disabled' };
       }
 
-      const results = await provider.getResults(teamExternalId, leagueExternalId, season, limit);
-      const fetchedCount = results ? results.length : 0;
-      let updatedCount = 0;
-
-      for (const r of results) {
-        const slug = this.generateMatchSlug(r);
-        const existing = await this.matchModel.findOne({
-          $or: [{ externalId: r.externalId }, { slug }],
-        });
-
-        if (existing?.manualOverride) {
-          continue;
-        }
-
-        await this.matchModel.findOneAndUpdate(
-          { $or: [{ externalId: r.externalId }, { slug }] },
-          {
-            $set: {
-              externalId: r.externalId,
-              slug: existing?.slug || slug,
-              sport: r.sport,
-              competitionId: r.competitionId || competitionId,
-              competition: r.competition,
-              competitionAr: r.competitionAr || r.competition,
-              season: r.season,
-              homeTeam: r.homeTeam.name,
-              homeTeamAr: r.homeTeam.nameAr || r.homeTeam.name,
-              homeLogo: r.homeTeam.logo || existing?.homeLogo || '',
-              awayTeam: r.awayTeam.name,
-              awayTeamAr: r.awayTeam.nameAr || r.awayTeam.name,
-              awayLogo: r.awayTeam.logo || existing?.awayLogo || '',
-              date: r.date.slice(0, 10),
-              time: r.time,
-              venue: r.venue || existing?.venue || (r.sport === 'basketball' ? 'Salle Omnisports Mohamed Mzali, Monastir' : 'Stade Mustapha Ben Jannet, Monastir'),
-              venueAr: r.venueAr || existing?.venueAr || (r.sport === 'basketball' ? 'قاعة محمد مزالي، المنستير' : 'ملعب مصطفى بن جنات، المنستير'),
-              status: 'finished',
-              score: {
-                home: r.score.home ?? existing?.score?.home ?? 0,
-                away: r.score.away ?? existing?.score?.away ?? 0,
-              },
-              quarters: r.quarters || existing?.quarters || null,
-              stats: r.stats || existing?.stats || {},
-              dataSource: existing?.dataSource === 'MANUAL' ? 'HYBRID' : 'EXTERNAL_API',
-              providerUpdatedAt: new Date(),
-              syncedAt: new Date(),
-            },
-          },
-          { upsert: true, new: true },
-        );
-        updatedCount++;
-      }
-
+      // User requirement: Finished match results are strictly managed via Admin Dashboard.
+      // Do not import or override finished matches from external APIs.
       const durationMs = Date.now() - startTime;
-      const successMsg = `${updatedCount} résultats passés synchronisés`;
+      const successMsg = 'Finished matches from external API disabled (managed via dashboard)';
 
       await this.recordSyncResult({
         provider: providerName,
@@ -584,14 +534,14 @@ export class SportsSyncService {
         season,
         status: 'SUCCESS',
         message: successMsg,
-        fetchedCount,
-        updatedCount,
-        skippedCount: fetchedCount - updatedCount,
+        fetchedCount: 0,
+        updatedCount: 0,
+        skippedCount: 0,
         durationMs,
         triggeredBy,
       });
 
-      return { status: 'SUCCESS', updated: updatedCount, fetched: fetchedCount, message: successMsg };
+      return { status: 'SUCCESS', updated: 0, fetched: 0, message: successMsg };
     } catch (err: any) {
       this.logger.error(`Error in syncRecentResults: ${err.message}`);
       await this.recordSyncResult({
