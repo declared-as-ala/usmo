@@ -382,7 +382,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       <div className="flex items-center gap-1">
                         <Sparkles size={10} className="text-amber-500 shrink-0" />
                         <span className="text-[8px] font-black uppercase tracking-wider text-usm-blue-primary">
-                          {tr(language, 'Pack Add-on', 'Complétez votre tenue', 'إكسسوار مقترح')}
+                          {tr(language, 'Complete your supporter pack', 'Complétez votre pack supporter', 'أكمل باقة المشجع')}
                         </span>
                       </div>
                       <p className="text-[11px] font-bold text-slate-900 truncate">

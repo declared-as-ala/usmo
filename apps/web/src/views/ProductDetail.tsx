@@ -992,7 +992,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               {/* Title & Offer */}
               <div>
                 <h3 className="font-display font-black text-xl text-usm-blue-dark tracking-wide uppercase">
-                  {tr(language, 'Complete your look!', 'Complétez votre tenue officielle !', 'أكمل إطلالتك الرسمية!')}
+                  {tr(language, 'Complete your order!', 'Complétez votre panier !', 'أكمل سلتك!')}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                   {tr(
@@ -1045,9 +1045,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                     setShowUpsellModal(false);
                     setIsCartOpen(true);
                   }}
-                  className="w-full py-3.5 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase rounded-xl transition-all shadow-md flex items-center justify-center text-center cursor-pointer"
                 >
-                  <Sparkles size={14} />
                   <span>
                     {tr(
                       language,

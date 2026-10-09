@@ -150,20 +150,32 @@ export class ProductsService {
     if ((normalized as any).stock !== undefined && normalized.stockQuantity === undefined) {
       normalized.stockQuantity = Number((normalized as any).stock);
     }
-    if (normalized.trackStock) {
-      const qty =
-        normalized.stockQuantity !== undefined
-          ? normalized.stockQuantity
-          : normalized.variants && normalized.variants.length > 0
-          ? normalized.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
-          : 0;
+
+    // Determine the actual quantity
+    let qty: number | undefined = normalized.stockQuantity;
+    if (qty === undefined && normalized.variants && normalized.variants.length > 0) {
+      qty = normalized.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+    }
+
+    // If stockQuantity is explicitly provided, ensure variants' stock is aligned
+    if (qty !== undefined && normalized.variants && normalized.variants.length > 0) {
+      const variantSum = normalized.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+      if (variantSum === 0 && qty > 0) {
+        const perSize = Math.floor(qty / normalized.variants.length);
+        const remainder = qty % normalized.variants.length;
+        normalized.variants = normalized.variants.map((v, idx) => ({
+          ...((v as any).toObject ? (v as any).toObject() : v),
+          stock: perSize + (idx < remainder ? 1 : 0),
+        }));
+      } else if (variantSum > 0 && normalized.stockQuantity === undefined) {
+        qty = variantSum;
+      }
+    }
+
+    if (qty !== undefined) {
       normalized.stockQuantity = qty;
       if (!normalized.stockStatus) {
         normalized.stockStatus = qty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
-      }
-    } else if (normalized.stockQuantity !== undefined) {
-      if (!normalized.stockStatus) {
-        normalized.stockStatus = normalized.stockQuantity > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
       }
     } else if (!normalized.stockStatus) {
       normalized.stockStatus = 'IN_STOCK';
@@ -183,6 +195,20 @@ export class ProductsService {
 
   async update(id: string, data: Partial<Product>): Promise<Product> {
     const prepared = this.normalizeProductData(data);
+
+    // If variants were not sent in the update payload but stockQuantity was updated:
+    if (!prepared.variants && prepared.stockQuantity !== undefined) {
+      const existing = await this.productModel.findById(id).exec();
+      if (existing && existing.variants && existing.variants.length > 0) {
+        const perSize = Math.floor(prepared.stockQuantity / existing.variants.length);
+        const remainder = prepared.stockQuantity % existing.variants.length;
+        prepared.variants = existing.variants.map((v, idx) => ({
+          ...((v as any).toObject ? (v as any).toObject() : v),
+          stock: perSize + (idx < remainder ? 1 : 0),
+        }));
+      }
+    }
+
     const product = await this.productModel.findByIdAndUpdate(id, prepared, { new: true }).exec();
     if (!product) {
       throw new NotFoundException(`Produit introuvable avec l'ID "${id}"`);

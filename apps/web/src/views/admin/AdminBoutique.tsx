@@ -134,7 +134,18 @@ export default function AdminBoutique() {
     setEditingId(p._id);
     setPreviewSizeGuide(false);
     setPreviewDeliveryInfo(false);
-    const variantsStock = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
+    const variantsStock = p.variants && p.variants.length > 0
+      ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0)
+      : 0;
+    const effectiveStock = (p.stockQuantity !== undefined && p.stockQuantity !== null)
+      ? p.stockQuantity
+      : (variantsStock > 0 ? variantsStock : (p.stock ?? 10));
+
+    const isAccessory = p.category?.toLowerCase().includes('access');
+    const defaultSizes = isAccessory
+      ? ''
+      : (p.variants && p.variants.length > 0 ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL');
+
     setForm({
       name: p.name,
       nameFr: p.nameFr || '',
@@ -147,15 +158,15 @@ export default function AdminBoutique() {
       category: p.category || 'jerseys',
       sport: p.sport || 'football',
       season: p.season || '2025/26',
-      sizes: p.variants ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL',
-      stock: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
+      sizes: defaultSizes,
+      stock: effectiveStock,
       status: p.status || 'published',
       description: p.description || '',
       printColor: p.printColor || '#1A53E0',
       printStrokeColor: p.printStrokeColor || '#FFFFFF',
-      stockStatus: p.stockStatus || (p.trackStock && (p.stockQuantity ?? 0) <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
-      trackStock: Boolean(p.trackStock),
-      stockQuantity: p.stockQuantity !== undefined ? p.stockQuantity : variantsStock,
+      stockStatus: p.stockStatus || (effectiveStock <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
+      trackStock: Boolean(p.trackStock ?? true),
+      stockQuantity: effectiveStock,
       sizeGuide: p.sizeGuide || '',
       deliveryInfo: p.deliveryInfo || '',
       variantStocks: p.variants
@@ -261,23 +272,47 @@ export default function AdminBoutique() {
       const priceMillimes = parsePriceToMillimes(form.price);
       const oldPriceMillimes = form.oldPrice ? parsePriceToMillimes(form.oldPrice) : undefined;
       
+      const isAccessory = form.category?.toLowerCase().includes('access');
       const sizesArray = form.sizes
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const effectiveQuantity = form.trackStock ? Number(form.stockQuantity) : form.stock;
+      const effectiveQuantity = Math.max(0, Number(form.stockQuantity ?? form.stock ?? 0));
+      const hasPerSizeStocks = Object.values(form.variantStocks || {}).some((v) => (v || 0) > 0);
 
-      // Construct variants model with per-size stock
-      const variants = sizesArray.map((size, idx) => ({
-        id: `${editingId || 'new'}-${size}-${idx}`,
-        sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size}-${idx}`,
-        size,
-        color: 'Bleu',
-        colorHex: '#0D63FF',
-        stock: form.trackStock ? (form.variantStocks[size] || 0) : Math.round(effectiveQuantity / (sizesArray.length || 1)),
-        isActive: true,
-      }));
+      let variants: any[] = [];
+      if (sizesArray.length > 0 && !isAccessory) {
+        const perSize = Math.floor(effectiveQuantity / sizesArray.length);
+        const remainder = effectiveQuantity % sizesArray.length;
+        variants = sizesArray.map((size, idx) => ({
+          id: `${editingId || 'new'}-${size}-${idx}`,
+          sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size}-${idx}`,
+          size,
+          color: 'Bleu',
+          colorHex: '#0D63FF',
+          stock: hasPerSizeStocks
+            ? (form.variantStocks[size] || 0)
+            : (perSize + (idx < remainder ? 1 : 0)),
+          isActive: true,
+        }));
+      } else {
+        variants = [
+          {
+            id: `${editingId || 'new'}-unique-0`,
+            sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-UNIQ-0`,
+            size: 'Unique',
+            color: 'Bleu',
+            colorHex: '#0D63FF',
+            stock: effectiveQuantity,
+            isActive: true,
+          }
+        ];
+      }
+
+      const totalCalculated = hasPerSizeStocks
+        ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+        : effectiveQuantity;
 
       const productPayload = {
         name: form.name,
@@ -299,10 +334,10 @@ export default function AdminBoutique() {
         descriptionFr: form.description,
         descriptionAr: form.description,
         lowStockThreshold: 5,
-        stockStatus: form.stockStatus,
+        stockStatus: totalCalculated > 0 ? (form.stockStatus || 'IN_STOCK') : 'OUT_OF_STOCK',
         trackStock: form.trackStock,
-        stockQuantity: Number(form.stockQuantity ?? form.stock ?? 0),
-        stock: Number(form.stockQuantity ?? form.stock ?? 0),
+        stockQuantity: totalCalculated,
+        stock: totalCalculated,
         sizeGuide: form.sizeGuide,
         deliveryInfo: form.deliveryInfo,
         ...(form.category === 'jerseys' && {
@@ -377,30 +412,41 @@ export default function AdminBoutique() {
       const variants = prod.variants || [];
       const newStatus = newStock > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
 
+      let updatedVariants: any[] = [];
       if (variants.length > 0) {
-        // divide the manual stock override equally among sizes
-        const updatedVariants = variants.map((v: any) => ({
+        const perSize = Math.floor(newStock / variants.length);
+        const remainder = newStock % variants.length;
+        updatedVariants = variants.map((v: any, idx: number) => ({
           ...v,
-          stock: Math.max(0, Math.round(newStock / variants.length)),
+          stock: perSize + (idx < remainder ? 1 : 0),
         }));
-        await api.updateProduct(id, {
-          variants: updatedVariants,
-          stockQuantity: newStock,
-          stock: newStock,
-          stockStatus: newStatus,
-        });
       } else {
-        await api.updateProduct(id, {
-          stockQuantity: newStock,
-          stock: newStock,
-          stockStatus: newStatus,
-        });
+        updatedVariants = [
+          {
+            id: `${id}-unique-0`,
+            sku: `SKU-${prod.name.slice(0, 3).toUpperCase()}-UNIQ-0`,
+            size: 'Unique',
+            color: 'Bleu',
+            colorHex: '#0D63FF',
+            stock: newStock,
+            isActive: true,
+          }
+        ];
       }
+
+      await api.updateProduct(id, {
+        variants: updatedVariants,
+        stockQuantity: newStock,
+        stock: newStock,
+        stockStatus: newStatus,
+        trackStock: true,
+      });
 
       setProducts((prev) => prev.map((p) => {
         if (p._id === id || p.id === id) {
           return {
             ...p,
+            variants: updatedVariants,
             stockQuantity: newStock,
             stock: newStock,
             stockStatus: newStatus,
@@ -688,10 +734,11 @@ export default function AdminBoutique() {
                     return true;
                   })
                   .map((p, idx) => {
-                  const stockSum = p.variants ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : (p.stock || 0);
+                  const variantTotal = p.variants && p.variants.length > 0 ? p.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0) : 0;
+                  const effectiveDisplayStock = variantTotal > 0 ? variantTotal : (p.stockQuantity ?? p.stock ?? 0);
                   const isPublished = p.status === 'published';
                   const isEditingName = inlineEditId === p._id;
-                  const isOutOfStock = p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && (p.stockQuantity ?? 0) <= 0);
+                  const isOutOfStock = p.stockStatus === 'OUT_OF_STOCK' || (p.trackStock && effectiveDisplayStock <= 0);
                   return (
                     <tr key={p._id} className="hover:bg-slate-50 transition-colors text-slate-800">
                       {/* Reorder arrows */}
@@ -751,7 +798,7 @@ export default function AdminBoutique() {
                         <div className="flex items-center gap-1.5">
                           <input
                             type="number"
-                            value={p.variants && p.variants.length > 0 ? stockSum : (p.stockQuantity ?? p.stock ?? 0)}
+                            value={effectiveDisplayStock}
                             onChange={(e) => handleUpdateStock(p._id, Math.max(0, Number(e.target.value)))}
                             className="w-16 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-xs font-mono outline-none focus:border-usm-blue-primary text-slate-800"
                           />
@@ -1118,6 +1165,45 @@ export default function AdminBoutique() {
                   </div>
                 </div>
 
+                {/* Quantité globale / normale */}
+                <div className="pt-2 border-t border-slate-200">
+                  <label className="text-[10px] font-bold text-slate-700 uppercase block mb-1">
+                    Quantité en Stock (Stock Global) *
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.stockQuantity ?? form.stock ?? 0}
+                    onChange={(e) => {
+                      const val = Math.max(0, parseInt(e.target.value) || 0);
+                      setForm(f => {
+                        const sizesArray = f.sizes.split(',').map(s => s.trim()).filter(Boolean);
+                        const isAccessory = f.category?.toLowerCase().includes('access');
+                        const newVs: Record<string, number> = {};
+                        if (sizesArray.length > 0 && !isAccessory) {
+                          const perSize = Math.floor(val / sizesArray.length);
+                          const rem = val % sizesArray.length;
+                          sizesArray.forEach((sz, idx) => {
+                            newVs[sz] = perSize + (idx < rem ? 1 : 0);
+                          });
+                        }
+                        return {
+                          ...f,
+                          stockQuantity: val,
+                          stock: val,
+                          stockStatus: val > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
+                          variantStocks: sizesArray.length > 0 && !isAccessory ? newVs : f.variantStocks,
+                        };
+                      });
+                    }}
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-usm-blue-primary"
+                    placeholder="ex. 10"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Indiquez la quantité normale (ex: 10). Pour les articles avec tailles (S, M, L), elle est automatiquement répartie ci-dessous.
+                  </p>
+                </div>
+
                 <div className="pt-2 border-t border-slate-200">
                   <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
                     <input
@@ -1141,10 +1227,10 @@ export default function AdminBoutique() {
                     <div className="pt-2 border-t border-slate-200">
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase">
-                          Stock par Taille
+                          Stock par Taille (Optionnel / Répartition détaillée)
                         </label>
                         <span className="text-[10px] font-bold text-slate-400">
-                          Total: {totalStock}
+                          Total tailles: {totalStock}
                         </span>
                       </div>
                       <table className="w-full text-xs">
@@ -1171,11 +1257,17 @@ export default function AdminBoutique() {
                                     value={stock}
                                     onChange={(e) => {
                                       const val = Math.max(0, parseInt(e.target.value) || 0);
-                                      setForm(f => ({
-                                        ...f,
-                                        variantStocks: { ...f.variantStocks, [sz]: val },
-                                        stockQuantity: Object.entries({ ...f.variantStocks, [sz]: val }).reduce((s, [, v]) => s + v, 0),
-                                      }));
+                                      setForm(f => {
+                                        const newVs = { ...f.variantStocks, [sz]: val };
+                                        const newTotal = Object.values(newVs).reduce((s, v) => s + v, 0);
+                                        return {
+                                          ...f,
+                                          variantStocks: newVs,
+                                          stockQuantity: newTotal,
+                                          stock: newTotal,
+                                          stockStatus: newTotal > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
+                                        };
+                                      });
                                     }}
                                     className="w-20 bg-white border border-slate-300 rounded px-2 py-1 text-xs font-mono font-bold text-slate-900 outline-none focus:border-usm-blue-primary text-right"
                                   />
