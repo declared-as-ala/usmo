@@ -20,7 +20,9 @@ import {
   Sparkles,
   RotateCw,
   Type,
-  Hash
+  Hash,
+  Check,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,12 +38,15 @@ const TABS: { key: Tab; en: string; fr: string; ar: string }[] = [
 ];
 
 export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
-  const { language, addToCart, updateCartQuantity, wishlist, toggleWishlist } = useApp();
+  const { language, addToCart, updateCartQuantity, wishlist, toggleWishlist, setIsCartOpen, cart } = useApp();
   const router = useRouter();
 
   // API State
   const [product, setProduct] = useState<any | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [accessoryItem, setAccessoryItem] = useState<any | null>(null);
+  const [bundleSelected, setBundleSelected] = useState(false);
+  const [showUpsellModal, setShowUpsellModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +94,23 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         // Fetch related products of the same category
         const related = await api.getProducts({ category: prod.category });
         setRelatedProducts(related.products.filter((p: any) => p._id !== prod._id).slice(0, 4));
+
+        // Fetch official accessories (e.g. Planche de Stickers)
+        try {
+          const allRes = await api.getProducts({ limit: 50 });
+          const found = allRes.products.find((p: any) =>
+            (p.category?.toLowerCase().includes('access') ||
+             p.name?.toLowerCase().includes('sticker') ||
+             p.name?.toLowerCase().includes('accessoire')) &&
+            p._id !== prod._id &&
+            p.stockStatus !== 'OUT_OF_STOCK'
+          );
+          if (found) {
+            setAccessoryItem(found);
+          }
+        } catch {
+          // ignore accessory fetch error
+        }
       } catch (err: any) {
         setError(err.message || 'Impossible de charger le produit');
       } finally {
@@ -188,6 +210,16 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     ? Math.round((1 - product.price / product.oldPrice) * 100)
     : null;
 
+  const isClothingOrJersey =
+    isJersey ||
+    product.category?.toLowerCase() === 'vetements' ||
+    product.category?.toLowerCase() === 'jerseys' ||
+    product.category?.toLowerCase().includes('maillot') ||
+    product.category?.toLowerCase().includes('t-shirt') ||
+    product.name?.toLowerCase().includes('maillot') ||
+    product.name?.toLowerCase().includes('t-shirt') ||
+    product.name?.toLowerCase().includes('polo');
+
   const handleAddToCart = () => {
     // Enforce size selection
     const hasSizes = uniqueSizes.length > 0 && !(uniqueSizes.length === 1 && uniqueSizes[0] === 'One Size');
@@ -222,6 +254,32 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     );
     if (quantity > 1) {
       updateCartQuantity(product._id, selectedSize || 'One Size', quantity, customization);
+    }
+
+    // Smart Accessory Upsell trigger
+    if (bundleSelected && accessoryItem) {
+      addToCart(
+        {
+          ...accessoryItem,
+          id: accessoryItem._id || accessoryItem.id,
+          image: accessoryItem.coverImage || accessoryItem.image,
+          price: formatMoney(accessoryItem.price),
+        },
+        'Unique'
+      );
+      setIsCartOpen(true);
+    } else if (isClothingOrJersey && accessoryItem) {
+      const alreadyHasAcc = cart.some(
+        (it) => it.product.id === accessoryItem._id || it.product.name?.toLowerCase().includes('sticker')
+      );
+      if (!alreadyHasAcc) {
+        setIsCartOpen(false);
+        setShowUpsellModal(true);
+      } else {
+        setIsCartOpen(true);
+      }
+    } else {
+      setIsCartOpen(true);
     }
   };
 
@@ -692,6 +750,54 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   </div>
                 </div>
 
+                {/* Recommended Accessory Add-on Bundle */}
+                {isClothingOrJersey && accessoryItem && (
+                  <div
+                    onClick={() => setBundleSelected(!bundleSelected)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 ${
+                      bundleSelected
+                        ? 'bg-blue-50/80 border-usm-blue-primary shadow-xs ring-1 ring-usm-blue-primary/30'
+                        : 'bg-slate-50/70 border-slate-200 hover:border-usm-blue-primary/40 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <img
+                          src={accessoryItem.coverImage || accessoryItem.image || '/brand/boutique-hero.png'}
+                          alt={accessoryItem.name}
+                          className="w-12 h-12 object-cover rounded-xl border border-slate-200 bg-white"
+                        />
+                        <span className="absolute -top-1.5 -right-1.5 px-1 py-0.2 bg-amber-500 text-white text-[8px] font-black rounded-full uppercase tracking-wider">
+                          Pack
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles size={11} className="text-amber-500 shrink-0" />
+                          <span className="text-[10px] font-black uppercase tracking-wider text-usm-blue-primary">
+                            {tr(language, 'Recommended Add-on', 'Pack Supporter Recommandé', 'إكسسوار موصى به')}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {accessoryItem.nameFr || accessoryItem.name}
+                        </p>
+                        <p className="text-[11px] font-mono font-bold text-usm-blue-primary">
+                          +{formatMoney(accessoryItem.price)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center">
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                        bundleSelected
+                          ? 'bg-usm-blue-primary border-usm-blue-primary text-white'
+                          : 'border-slate-300 bg-white'
+                      }`}>
+                        {bundleSelected && <Check size={13} strokeWidth={3} />}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-3">
                   <button
                     onClick={handleAddToCart}
@@ -845,6 +951,127 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
           </section>
         )}
       </div>
+
+      {/* 5. SMART ACCESSORY UPSELL MODAL */}
+      <AnimatePresence>
+        {showUpsellModal && accessoryItem && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowUpsellModal(false);
+                setIsCartOpen(true);
+              }}
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm cursor-pointer"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-blue-100 overflow-hidden z-10 p-6 space-y-5"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  setShowUpsellModal(false);
+                  setIsCartOpen(true);
+                }}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Success Badge */}
+              <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-full w-fit text-xs font-bold">
+                <Check size={14} strokeWidth={2.5} />
+                <span>{tr(language, 'Item added to your bag!', 'Article ajouté au panier !', 'تمت إضافة المنتج إلى السلة!')}</span>
+              </div>
+
+              {/* Title & Offer */}
+              <div>
+                <h3 className="font-display font-black text-xl text-usm-blue-dark tracking-wide uppercase">
+                  {tr(language, 'Complete your look!', 'Complétez votre tenue officielle !', 'أكمل إطلالتك الرسمية!')}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  {tr(
+                    language,
+                    'Fans who purchased this item also added the Official US Monastir Stickers Pack:',
+                    'Les supporters qui ont commandé ce maillot ajoutent également la Planche de Stickers Officielle USM :',
+                    'المشجعون الذين اختاروا هذا القميص أضافوا أيضاً ملصقات الاتحاد الرسمية:'
+                  )}
+                </p>
+              </div>
+
+              {/* Accessory Card */}
+              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-3.5 flex items-center gap-3.5">
+                <div className="relative shrink-0">
+                  <img
+                    src={accessoryItem.coverImage || accessoryItem.image || '/brand/boutique-hero.png'}
+                    alt={accessoryItem.name}
+                    className="w-16 h-16 object-cover rounded-xl border border-slate-200 bg-white"
+                  />
+                  <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded-full uppercase tracking-wider">
+                    Pack
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-usm-blue-primary bg-blue-50 px-2 py-0.5 rounded-md inline-block mb-1">
+                    {tr(language, 'Official Accessory', 'Accessoire Officiel', 'إكسسوار رسمي')}
+                  </span>
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    {accessoryItem.nameFr || accessoryItem.name}
+                  </p>
+                  <p className="text-sm font-mono font-black text-usm-blue-primary mt-0.5">
+                    +{formatMoney(accessoryItem.price)}
+                  </p>
+                </div>
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={() => {
+                    addToCart(
+                      {
+                        ...accessoryItem,
+                        id: accessoryItem._id || accessoryItem.id,
+                        image: accessoryItem.coverImage || accessoryItem.image,
+                        price: formatMoney(accessoryItem.price),
+                      },
+                      'Unique'
+                    );
+                    setShowUpsellModal(false);
+                    setIsCartOpen(true);
+                  }}
+                  className="w-full py-3.5 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-xs font-black uppercase rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Sparkles size={14} />
+                  <span>
+                    {tr(
+                      language,
+                      `Add Stickers (+${formatMoney(accessoryItem.price)})`,
+                      `Ajouter les Stickers (+${formatMoney(accessoryItem.price)})`,
+                      `إضافة الملصقات (+${formatMoney(accessoryItem.price)})`
+                    )}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowUpsellModal(false);
+                    setIsCartOpen(true);
+                  }}
+                  className="w-full py-2.5 bg-transparent hover:bg-slate-100 text-slate-500 text-xs font-bold rounded-xl transition-colors text-center cursor-pointer"
+                >
+                  {tr(language, 'No thanks, view my bag', 'Non merci, voir mon panier', 'لا شكراً، عرض السلة')}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

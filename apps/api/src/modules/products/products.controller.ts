@@ -67,7 +67,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Patch('bulk/reorder')
   async reorder(@Body() body: { items: { id: string; displayOrder: number }[] }) {
     return this.productsService.bulkReorder(body.items);
@@ -81,21 +81,21 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Post()
   async create(@Body() body: Partial<Product>) {
     return this.productsService.create(body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: Partial<Product>) {
     return this.productsService.update(id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Patch(':id/stock-status')
   async patchStockStatus(
     @Param('id') id: string,
@@ -105,7 +105,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Delete(':id')
   async delete(@Param('id') id: string) {
     return this.productsService.delete(id);
@@ -118,7 +118,7 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Super Admin', 'Boutique Manager', 'Product Manager')
+  @Roles('Super Admin', 'SUPER_ADMIN', 'Admin', 'ADMIN', 'Boutique Manager', 'Product Manager', 'GESTIONNAIRE_COMMANDES', 'Gestionnaire des commandes')
   @Patch(':id/quick-stock')
   async quickStockEdit(
     @Param('id') id: string,

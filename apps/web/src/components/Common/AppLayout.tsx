@@ -7,7 +7,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileNav } from './MobileNav';
 import { Logo } from './Logo';
-import { Search, X, ShoppingCart, Trash2, Plus, Minus, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
+import { Search, X, ShoppingCart, Trash2, Plus, Minus, CheckCircle2, Info, AlertTriangle, Sparkles } from 'lucide-react';
 import { tr } from '../../utils/i18n';
 import { usePathname, useRouter } from 'next/navigation';
 import { api } from '../../lib/api-client';
@@ -22,6 +22,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     setSearchQuery,
     t,
     cart,
+    addToCart,
     isCartOpen,
     setIsCartOpen,
     updateCartQuantity,
@@ -36,6 +37,25 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   const [appLoading, setAppLoading] = useState(true);
   const [searchResults, setSearchResults] = useState<{ type: string; id: string; label: string; labelAr: string; href: string }[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [accessoryItem, setAccessoryItem] = useState<any | null>(null);
+
+  useEffect(() => {
+    async function loadAccessory() {
+      try {
+        const res = await api.getProducts({ limit: 50 });
+        const found = res.products?.find((p: any) =>
+          (p.category?.toLowerCase().includes('access') ||
+           p.name?.toLowerCase().includes('sticker') ||
+           p.name?.toLowerCase().includes('accessoire')) &&
+          p.stockStatus !== 'OUT_OF_STOCK'
+        );
+        if (found) setAccessoryItem(found);
+      } catch {
+        // ignore
+      }
+    }
+    loadAccessory();
+  }, []);
 
   useEffect(() => {
     if (!isSearchOpen || !searchQuery.trim()) {
@@ -334,6 +354,64 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 })
               )}
             </div>
+
+            {/* Smart Accessory Upsell inside Cart Drawer */}
+            {(() => {
+              const hasApparelInCart = cart.some((item) => {
+                const cat = item.product.category?.toLowerCase() || '';
+                const name = item.product.name?.toLowerCase() || '';
+                return cat === 'jerseys' || cat === 'vetements' || cat.includes('maillot') || name.includes('maillot') || name.includes('t-shirt') || name.includes('polo');
+              });
+              const hasAccessoryInCart = cart.some((item) => {
+                const cat = item.product.category?.toLowerCase() || '';
+                const name = item.product.name?.toLowerCase() || '';
+                return cat.includes('access') || name.includes('sticker') || (accessoryItem && (item.product.id === accessoryItem._id || item.product.id === accessoryItem.id));
+              });
+
+              if (!hasApparelInCart || hasAccessoryInCart || !accessoryItem) return null;
+
+              return (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-2.5 my-2 flex items-center justify-between gap-2.5 shadow-2xs shrink-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <img
+                      src={accessoryItem.coverImage || accessoryItem.image || '/brand/boutique-hero.png'}
+                      className="w-10 h-10 object-cover rounded-xl border border-blue-100 bg-white shrink-0"
+                      alt=""
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1">
+                        <Sparkles size={10} className="text-amber-500 shrink-0" />
+                        <span className="text-[8px] font-black uppercase tracking-wider text-usm-blue-primary">
+                          {tr(language, 'Pack Add-on', 'Complétez votre tenue', 'إكسسوار مقترح')}
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-bold text-slate-900 truncate">
+                        {accessoryItem.nameFr || accessoryItem.name}
+                      </p>
+                      <p className="text-[10px] font-mono font-black text-usm-blue-primary">
+                        +{(accessoryItem.price / 1000).toFixed(3)} DT
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      addToCart(
+                        {
+                          ...accessoryItem,
+                          id: accessoryItem._id || accessoryItem.id,
+                          image: accessoryItem.coverImage || accessoryItem.image,
+                          price: (accessoryItem.price / 1000).toFixed(3) + ' DT',
+                        },
+                        'Unique'
+                      );
+                    }}
+                    className="shrink-0 px-3 py-1.5 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-[10px] font-black uppercase rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
+                  >
+                    + {tr(language, 'Add', 'Ajouter', 'إضافة')}
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* Footer Summary & Checkout Redirect */}
             {cart.length > 0 && (() => {

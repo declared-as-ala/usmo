@@ -147,6 +147,9 @@ export class ProductsService {
     if (normalized.status !== undefined) {
       normalized.isPublished = normalized.status === 'published';
     }
+    if ((normalized as any).stock !== undefined && normalized.stockQuantity === undefined) {
+      normalized.stockQuantity = Number((normalized as any).stock);
+    }
     if (normalized.trackStock) {
       const qty =
         normalized.stockQuantity !== undefined
@@ -154,8 +157,14 @@ export class ProductsService {
           : normalized.variants && normalized.variants.length > 0
           ? normalized.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
           : 0;
-      normalized.stockStatus = qty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
       normalized.stockQuantity = qty;
+      if (!normalized.stockStatus) {
+        normalized.stockStatus = qty > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
+      }
+    } else if (normalized.stockQuantity !== undefined) {
+      if (!normalized.stockStatus) {
+        normalized.stockStatus = normalized.stockQuantity > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
+      }
     } else if (!normalized.stockStatus) {
       normalized.stockStatus = 'IN_STOCK';
     }
@@ -182,15 +191,42 @@ export class ProductsService {
   }
 
   async patchStockStatus(id: string, stockStatus: 'IN_STOCK' | 'OUT_OF_STOCK'): Promise<Product> {
-    const product = await this.productModel.findByIdAndUpdate(
-      id,
-      { $set: { stockStatus } },
-      { new: true },
-    ).exec();
-    if (!product) {
+    const existing = await this.productModel.findById(id).exec();
+    if (!existing) {
       throw new NotFoundException(`Produit introuvable avec l'ID "${id}"`);
     }
-    return product;
+
+    const updateObj: Record<string, any> = { stockStatus };
+    if (stockStatus === 'IN_STOCK') {
+      const currentQty = existing.stockQuantity ?? 0;
+      if (currentQty <= 0) {
+        updateObj.stockQuantity = 10;
+      }
+      if (existing.variants && existing.variants.length > 0) {
+        const allZero = existing.variants.every((v) => (v.stock || 0) <= 0);
+        if (allZero) {
+          updateObj.variants = existing.variants.map((v) => ({
+            ...((v as any).toObject ? (v as any).toObject() : v),
+            stock: 5,
+          }));
+        }
+      }
+    } else {
+      updateObj.stockQuantity = 0;
+      if (existing.variants && existing.variants.length > 0) {
+        updateObj.variants = existing.variants.map((v) => ({
+          ...((v as any).toObject ? (v as any).toObject() : v),
+          stock: 0,
+        }));
+      }
+    }
+
+    const product = await this.productModel.findByIdAndUpdate(
+      id,
+      { $set: updateObj },
+      { new: true },
+    ).exec();
+    return product!;
   }
 
   async delete(id: string): Promise<{ success: boolean }> {

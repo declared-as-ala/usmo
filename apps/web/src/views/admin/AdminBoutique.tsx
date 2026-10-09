@@ -214,13 +214,34 @@ export default function AdminBoutique() {
   const handleToggleStockStatus = async (productId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'OUT_OF_STOCK' ? 'IN_STOCK' : 'OUT_OF_STOCK';
     try {
+      const targetProd = products.find(p => p._id === productId || p.id === productId);
+      const targetQty = nextStatus === 'IN_STOCK'
+        ? (targetProd?.stockQuantity && targetProd.stockQuantity > 0 ? targetProd.stockQuantity : 10)
+        : 0;
+
       await api.patchProductStockStatus(productId, nextStatus);
+
+      // If switching to IN_STOCK, ensure stockQuantity is also at least 10 in DB so trackStock doesn't force it back to OUT_OF_STOCK
+      if (nextStatus === 'IN_STOCK' && (!targetProd?.stockQuantity || targetProd.stockQuantity <= 0)) {
+        await api.updateProduct(productId, {
+          stockQuantity: targetQty,
+          stock: targetQty,
+          stockStatus: 'IN_STOCK',
+        });
+      }
+
       setProducts(prev => prev.map(p => {
         if (p._id === productId || p.id === productId) {
-          return { ...p, stockStatus: nextStatus };
+          return {
+            ...p,
+            stockStatus: nextStatus,
+            stockQuantity: targetQty,
+            stock: targetQty,
+          };
         }
         return p;
       }));
+      loadCatalogData();
     } catch (err: any) {
       alert(err.message || 'Erreur lors du changement de statut du stock');
     }
@@ -280,7 +301,8 @@ export default function AdminBoutique() {
         lowStockThreshold: 5,
         stockStatus: form.stockStatus,
         trackStock: form.trackStock,
-        stockQuantity: form.trackStock ? Number(form.stockQuantity) : undefined,
+        stockQuantity: Number(form.stockQuantity ?? form.stock ?? 0),
+        stock: Number(form.stockQuantity ?? form.stock ?? 0),
         sizeGuide: form.sizeGuide,
         deliveryInfo: form.deliveryInfo,
         ...(form.category === 'jerseys' && {
@@ -349,20 +371,43 @@ export default function AdminBoutique() {
   const handleUpdateStock = async (id: string, newStock: number) => {
     try {
       // Find the current product to get its variants
-      const prod = products.find(p => p._id === id);
+      const prod = products.find(p => p._id === id || p.id === id);
       if (!prod) return;
 
       const variants = prod.variants || [];
+      const newStatus = newStock > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK';
+
       if (variants.length > 0) {
         // divide the manual stock override equally among sizes
         const updatedVariants = variants.map((v: any) => ({
           ...v,
           stock: Math.max(0, Math.round(newStock / variants.length)),
         }));
-        await api.updateProduct(id, { variants: updatedVariants });
+        await api.updateProduct(id, {
+          variants: updatedVariants,
+          stockQuantity: newStock,
+          stock: newStock,
+          stockStatus: newStatus,
+        });
       } else {
-        await api.updateProduct(id, { stock: newStock });
+        await api.updateProduct(id, {
+          stockQuantity: newStock,
+          stock: newStock,
+          stockStatus: newStatus,
+        });
       }
+
+      setProducts((prev) => prev.map((p) => {
+        if (p._id === id || p.id === id) {
+          return {
+            ...p,
+            stockQuantity: newStock,
+            stock: newStock,
+            stockStatus: newStatus,
+          };
+        }
+        return p;
+      }));
       
       loadCatalogData();
     } catch (err: any) {
@@ -706,7 +751,7 @@ export default function AdminBoutique() {
                         <div className="flex items-center gap-1.5">
                           <input
                             type="number"
-                            value={p.trackStock ? (p.stockQuantity ?? 0) : stockSum}
+                            value={p.variants && p.variants.length > 0 ? stockSum : (p.stockQuantity ?? p.stock ?? 0)}
                             onChange={(e) => handleUpdateStock(p._id, Math.max(0, Number(e.target.value)))}
                             className="w-16 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-xs font-mono outline-none focus:border-usm-blue-primary text-slate-800"
                           />
