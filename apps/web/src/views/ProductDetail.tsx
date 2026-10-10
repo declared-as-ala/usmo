@@ -213,7 +213,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   const soldOut = isOutOfStock;
   const lowStock = !soldOut && totalStock > 0 && totalStock <= 5;
   const liked = wishlist.includes(product._id);
-  const productName = tr(language, product.name, product.nameFr, product.nameAr);
+  const productName = language === 'ar'
+    ? (product.nameAr || product.name || product.nameFr)
+    : (product.name || product.nameFr);
 
   const discountPct = product.oldPrice
     ? Math.round((1 - product.price / product.oldPrice) * 100)
@@ -816,7 +818,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                           </span>
                         </div>
                         <p className="text-xs font-bold text-slate-900 truncate">
-                          {accessoryItem.nameFr || accessoryItem.name}
+                          {accessoryItem.name || accessoryItem.nameFr}
                         </p>
                         <p className="text-[11px] font-mono font-bold text-usm-blue-primary">
                           +{formatMoney(accessoryItem.price)}
@@ -1058,7 +1060,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                     {tr(language, 'Official Accessory', 'Accessoire Officiel', 'إكسسوار رسمي')}
                   </span>
                   <p className="text-xs font-bold text-slate-900 truncate">
-                    {accessoryItem.nameFr || accessoryItem.name}
+                    {accessoryItem.name || accessoryItem.nameFr}
                   </p>
                   <p className="text-sm font-mono font-black text-usm-blue-primary mt-0.5">
                     +{formatMoney(accessoryItem.price)}

@@ -28,6 +28,7 @@ const emptyForm = {
   name: '',
   nameFr: '',
   nameAr: '',
+  sku: '',
   price: '',
   oldPrice: '',
   coverImage: '',
@@ -142,7 +143,7 @@ export default function AdminBoutique() {
       : (variantsStock > 0 ? variantsStock : (p.stock ?? 10));
 
     const isAccessory = p.category?.toLowerCase().includes('access');
-    const isSticker = p.name?.toLowerCase().includes('sticker') || p.name?.toLowerCase().includes('planche');
+    const isSticker = p.name?.toLowerCase().includes('sticker') || p.name?.toLowerCase().includes('planche') || p.nameFr?.toLowerCase().includes('sticker') || p.nameFr?.toLowerCase().includes('planche');
     const existingSizes = p.variants && p.variants.length > 0
       ? Array.from(new Set(p.variants.map((v: any) => v.size).filter(Boolean))).join(', ')
       : '';
@@ -150,11 +151,14 @@ export default function AdminBoutique() {
       ? (existingSizes === 'Unique' && isSticker ? 'Feuille A4' : existingSizes)
       : (isAccessory ? (isSticker ? 'Feuille A4' : 'Unique') : 'S, M, L, XL');
 
+    const primaryName = p.name || p.nameFr || '';
+
     setForm({
-      name: p.name,
-      nameFr: p.nameFr || '',
+      name: primaryName,
+      nameFr: p.nameFr || primaryName,
       nameAr: p.nameAr || '',
-      price: (p.price / 1000).toFixed(3),
+      sku: p.sku || '',
+      price: p.price ? (p.price / 1000).toFixed(3) : '',
       oldPrice: p.oldPrice ? (p.oldPrice / 1000).toFixed(3) : '',
       coverImage: p.coverImage || '',
       hoverImage: p.hoverImage || '',
@@ -165,7 +169,7 @@ export default function AdminBoutique() {
       sizes: defaultSizes,
       stock: effectiveStock,
       status: p.status || 'published',
-      description: p.description || '',
+      description: p.description || p.descriptionFr || '',
       printColor: p.printColor || '#1A53E0',
       printStrokeColor: p.printStrokeColor || '#FFFFFF',
       stockStatus: p.stockStatus || (effectiveStock <= 0 ? 'OUT_OF_STOCK' : 'IN_STOCK'),
@@ -173,9 +177,9 @@ export default function AdminBoutique() {
       stockQuantity: effectiveStock,
       sizeGuide: p.sizeGuide || '',
       deliveryInfo: p.deliveryInfo || '',
-      variantStocks: p.variants
-        ? Object.fromEntries(p.variants.map((v: any) => [v.size, v.stock || 0]))
-        : {},
+      variantStocks: p.variants && p.variants.length > 0
+        ? Object.fromEntries(p.variants.map((v: any) => [v.size, v.stock ?? 0]))
+        : (defaultSizes ? Object.fromEntries(defaultSizes.split(',').map((s: string) => [s.trim(), effectiveStock])) : {}),
     });
     setShowForm(true);
   };
@@ -262,10 +266,12 @@ export default function AdminBoutique() {
     }
   };
 
-  // Convert input price strings (e.g. "85.000" or "85") to millimes
+  // Convert input price strings (e.g. "85.000", "85,000", "85", "13.9") to millimes
   const parsePriceToMillimes = (val: string): number => {
-    const cleanVal = val.replace(/[^\d.]/g, '');
-    return Math.round(parseFloat(cleanVal) * 1000);
+    if (!val) return 0;
+    const normalized = val.trim().replace(',', '.').replace(/[^\d.]/g, '');
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : Math.round(num * 1000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -273,48 +279,71 @@ export default function AdminBoutique() {
     if (!form.name || !form.price || !form.coverImage) return;
 
     try {
+      const cleanName = form.name.trim();
       const priceMillimes = parsePriceToMillimes(form.price);
       const oldPriceClean = typeof form.oldPrice === 'string' ? form.oldPrice.trim() : '';
-      const oldPriceMillimes = oldPriceClean !== '' ? parsePriceToMillimes(oldPriceClean) : null;
-      
+      const oldPriceMillimes = oldPriceClean !== '' && parsePriceToMillimes(oldPriceClean) > 0
+        ? parsePriceToMillimes(oldPriceClean)
+        : null;
+
       const isAccessory = form.category?.toLowerCase().includes('access');
-      const isSticker = form.name?.toLowerCase().includes('sticker') || form.name?.toLowerCase().includes('planche');
+      const isSticker = cleanName.toLowerCase().includes('sticker') || cleanName.toLowerCase().includes('planche');
       const sizesArray = form.sizes
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const effectiveQuantity = Math.max(0, Number(form.stockQuantity ?? form.stock ?? 0));
-      const hasPerSizeStocks = Object.values(form.variantStocks || {}).some((v) => (v || 0) > 0);
-
       const effectiveSizes = sizesArray.length > 0
         ? sizesArray
         : (isAccessory ? [isSticker ? 'Feuille A4' : 'Unique'] : ['S', 'M', 'L', 'XL']);
 
+      const effectiveQuantity = Math.max(0, Number(form.stockQuantity ?? form.stock ?? 0));
+      const hasPerSizeStocks = Object.keys(form.variantStocks || {}).length > 0 &&
+        Object.values(form.variantStocks || {}).some((v) => (v || 0) > 0);
+
       const perSize = Math.floor(effectiveQuantity / effectiveSizes.length);
       const remainder = effectiveQuantity % effectiveSizes.length;
-      const variants = effectiveSizes.map((size, idx) => ({
-        id: `${editingId || 'new'}-${size}-${idx}`,
-        sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'UNIQ'}-${idx}`,
-        size,
-        color: 'Bleu',
-        colorHex: '#0D63FF',
-        stock: hasPerSizeStocks
-          ? (form.variantStocks[size] || 0)
-          : (perSize + (idx < remainder ? 1 : 0)),
-        isActive: true,
-      }));
+
+      const existingProd = editingId
+        ? products.find((p) => p._id === editingId || p.id === editingId)
+        : null;
+      const existingVariants = existingProd?.variants || [];
+
+      const variants = effectiveSizes.map((size, idx) => {
+        const existingVar = existingVariants.find((v: any) => v.size === size);
+        const stockVal = hasPerSizeStocks
+          ? (form.variantStocks[size] ?? 0)
+          : (perSize + (idx < remainder ? 1 : 0));
+        return {
+          id: existingVar?.id || `${editingId || 'new'}-${size}-${idx}`,
+          sku: existingVar?.sku || `SKU-${cleanName.slice(0, 3).toUpperCase()}-${size.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'UNIQ'}-${idx}`,
+          size,
+          color: existingVar?.color || 'Bleu',
+          colorHex: existingVar?.colorHex || '#0D63FF',
+          stock: stockVal,
+          isActive: true,
+        };
+      });
 
       const totalCalculated = hasPerSizeStocks
         ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
         : effectiveQuantity;
 
+      const finalSku = (editingId && (form.sku || existingProd?.sku))
+        ? (form.sku || existingProd?.sku)
+        : `SKU-${cleanName.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`;
+
+      const isForcedOutOfStock = form.stockStatus === 'OUT_OF_STOCK';
+      const finalStockStatus = isForcedOutOfStock
+        ? 'OUT_OF_STOCK'
+        : (totalCalculated > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK');
+
       const productPayload = {
-        name: form.name,
-        nameFr: form.nameFr || form.name,
-        nameAr: form.nameAr || form.name,
-        slug: form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
+        name: cleanName,
+        nameFr: cleanName,
+        nameAr: form.nameAr?.trim() || cleanName,
+        slug: cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+        sku: finalSku,
         price: priceMillimes,
         oldPrice: oldPriceMillimes,
         coverImage: form.coverImage,
@@ -325,11 +354,11 @@ export default function AdminBoutique() {
         season: form.season,
         variants: variants,
         status: form.status,
-        description: form.description,
-        descriptionFr: form.description,
-        descriptionAr: form.description,
+        description: form.description.trim(),
+        descriptionFr: form.description.trim(),
+        descriptionAr: form.description.trim(),
         lowStockThreshold: 5,
-        stockStatus: totalCalculated > 0 ? (form.stockStatus || 'IN_STOCK') : 'OUT_OF_STOCK',
+        stockStatus: finalStockStatus,
         trackStock: form.trackStock,
         stockQuantity: totalCalculated,
         stock: totalCalculated,
@@ -343,8 +372,21 @@ export default function AdminBoutique() {
 
       if (editingId) {
         await api.updateProduct(editingId, productPayload);
+        setProducts(prev => prev.map(p => {
+          if (p._id === editingId || p.id === editingId) {
+            return {
+              ...p,
+              ...productPayload,
+              _id: p._id || editingId,
+            };
+          }
+          return p;
+        }));
       } else {
-        await api.createProduct(productPayload);
+        const created = await api.createProduct(productPayload);
+        if (created) {
+          setProducts(prev => [created, ...prev]);
+        }
       }
       
       setShowForm(false);
@@ -484,13 +526,15 @@ export default function AdminBoutique() {
   // Inline name editing — saves immediately to DB
   const handleInlineNameSave = async () => {
     if (!inlineEditId || !inlineEditName.trim()) return;
+    const cleanName = inlineEditName.trim();
     try {
+      const newSlug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       await api.updateProduct(inlineEditId, {
-        name: inlineEditName.trim(),
-        nameFr: inlineEditName.trim(),
-        slug: inlineEditName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        name: cleanName,
+        nameFr: cleanName,
+        slug: newSlug,
       });
-      setProducts((prev) => prev.map((p) => p._id === inlineEditId ? { ...p, name: inlineEditName.trim() } : p));
+      setProducts((prev) => prev.map((p) => p._id === inlineEditId ? { ...p, name: cleanName, nameFr: cleanName, slug: newSlug } : p));
       setInlineEditId(null);
       setInlineEditName('');
     } catch (err: any) {
@@ -889,35 +933,178 @@ export default function AdminBoutique() {
             <form onSubmit={handleSubmit} className="p-5 space-y-3 max-h-[75vh] overflow-y-auto">
               <div className="grid grid-cols-1 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Nom *</label>
-                  <input required type="text" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Nom du produit *</label>
+                  <input
+                    required
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setForm((f) => ({ ...f, name: val, nameFr: val }));
+                    }}
+                    placeholder="ex. Planche de Stickers A4"
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-900 font-semibold"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Prix (DT) *</label>
-                  <input required type="text" placeholder="85.000" value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Prix (DT) *</label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="85.000"
+                    value={form.price}
+                    onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800 font-mono"
+                  />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ancien Prix (DT)</label>
-                  <input type="text" placeholder="110.000" value={form.oldPrice} onChange={(e) => setForm((f) => ({ ...f, oldPrice: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                    Ancien Prix (DT) <span className="font-normal text-slate-400">(optionnel — barré)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="110.000"
+                    value={form.oldPrice}
+                    onChange={(e) => setForm((f) => ({ ...f, oldPrice: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800 font-mono"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Stock</label>
-                  <input type="number" value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: Number(e.target.value) }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800" />
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Catégorie</label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800"
+                  >
+                    {categories.map((c) => (
+                      <option key={c._id || c.id || c.slug} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={openAddCategory}
+                    className="mt-1 text-[10px] font-bold text-usm-blue-primary hover:underline cursor-pointer"
+                  >
+                    + Nouvelle
+                  </button>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Statut</label>
-                  <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as any }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Section Sport</label>
+                  <select
+                    value={form.sport}
+                    onChange={(e) => setForm((f) => ({ ...f, sport: e.target.value }))}
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800"
+                  >
+                    {SPORTS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Statut</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as any }))}
+                    className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800 font-semibold"
+                  >
                     <option value="published">Publié</option>
                     <option value="draft">Brouillon</option>
                     <option value="archived">Archivé</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase">
+                    Tailles disponibles (séparées par virgules)
+                  </label>
+                  <span className="text-[9px] text-slate-400">ex: S, M, L ou Feuille A4</span>
+                </div>
+                <input
+                  type="text"
+                  value={form.sizes}
+                  onChange={(e) => {
+                    const newSizes = e.target.value;
+                    const parsedSizes = newSizes.split(',').map((s) => s.trim()).filter(Boolean);
+                    setForm((f) => {
+                      const updatedVs: Record<string, number> = {};
+                      const curQty = f.stockQuantity || f.stock || 0;
+                      const perSize = parsedSizes.length > 0 ? Math.floor(curQty / parsedSizes.length) : 0;
+                      const rem = parsedSizes.length > 0 ? curQty % parsedSizes.length : 0;
+                      parsedSizes.forEach((sz, idx) => {
+                        updatedVs[sz] = f.variantStocks[sz] !== undefined ? f.variantStocks[sz] : (perSize + (idx < rem ? 1 : 0));
+                      });
+                      return {
+                        ...f,
+                        sizes: newSizes,
+                        variantStocks: updatedVs,
+                      };
+                    });
+                  }}
+                  placeholder="S, M, L, XL"
+                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800 font-semibold"
+                />
+                <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                  <span className="text-[9px] text-slate-400 font-medium">Ajout rapide :</span>
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unique', 'Feuille A4'].map((sz) => {
+                    const hasSz = form.sizes.split(',').map((s) => s.trim().toLowerCase()).includes(sz.toLowerCase());
+                    return (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => {
+                            const curList = f.sizes.split(',').map((s) => s.trim()).filter(Boolean);
+                            if (curList.some((s) => s.toLowerCase() === sz.toLowerCase())) return f;
+                            const nextList = [...curList, sz];
+                            const curQty = f.stockQuantity || f.stock || 0;
+                            const perSize = Math.floor(curQty / nextList.length);
+                            const rem = curQty % nextList.length;
+                            const nextVs: Record<string, number> = {};
+                            nextList.forEach((s, idx) => {
+                              nextVs[s] = f.variantStocks[s] !== undefined ? f.variantStocks[s] : (perSize + (idx < rem ? 1 : 0));
+                            });
+                            return {
+                              ...f,
+                              sizes: nextList.join(', '),
+                              variantStocks: nextVs,
+                            };
+                          });
+                        }}
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all cursor-pointer ${
+                          hasSz
+                            ? 'bg-slate-100 text-slate-400 border-slate-200'
+                            : 'bg-white text-usm-blue-primary border-usm-blue-primary/30 hover:bg-usm-blue-primary/5'
+                        }`}
+                      >
+                        +{sz}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Description *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  placeholder="Description détaillée du produit..."
+                  className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800"
+                />
               </div>
 
               <div>
@@ -1073,32 +1260,6 @@ export default function AdminBoutique() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Catégorie</label>
-                  <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800">
-                    {categories.map((c) => <option key={c._id || c.id || c.slug} value={c.slug}>{c.name}</option>)}
-                  </select>
-                  <button type="button" onClick={openAddCategory} className="mt-1 min-h-11 text-xs font-bold text-usm-blue-primary hover:underline">+ Nouvelle catégorie</button>
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Section Sport</label>
-                  <select value={form.sport} onChange={(e) => setForm((f) => ({ ...f, sport: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800">
-                    {SPORTS.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Tailles (séparées par virgules)</label>
-                <input type="text" value={form.sizes} onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary text-slate-800" />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Description *</label>
-                <textarea required rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2.5 outline-none focus:border-usm-blue-primary resize-none text-slate-800" />
-              </div>
-
               {form.category === 'jerseys' && (
                 <div className="border border-dashed border-usm-blue-primary/30 rounded-lg p-3 space-y-2 bg-usm-blue-light/30">
                   <label className="text-[10px] font-bold text-usm-blue-primary uppercase block">🎨 Couleurs d'impression (Nom & Numéro)</label>
@@ -1174,9 +1335,8 @@ export default function AdminBoutique() {
                       const val = Math.max(0, parseInt(e.target.value) || 0);
                       setForm(f => {
                         const sizesArray = f.sizes.split(',').map(s => s.trim()).filter(Boolean);
-                        const isAccessory = f.category?.toLowerCase().includes('access');
                         const newVs: Record<string, number> = {};
-                        if (sizesArray.length > 0 && !isAccessory) {
+                        if (sizesArray.length > 0) {
                           const perSize = Math.floor(val / sizesArray.length);
                           const rem = val % sizesArray.length;
                           sizesArray.forEach((sz, idx) => {
@@ -1187,8 +1347,8 @@ export default function AdminBoutique() {
                           ...f,
                           stockQuantity: val,
                           stock: val,
-                          stockStatus: val > 0 ? 'IN_STOCK' : 'OUT_OF_STOCK',
-                          variantStocks: sizesArray.length > 0 && !isAccessory ? newVs : f.variantStocks,
+                          stockStatus: val > 0 ? (f.stockStatus === 'OUT_OF_STOCK' && val === 0 ? 'OUT_OF_STOCK' : 'IN_STOCK') : 'OUT_OF_STOCK',
+                          variantStocks: sizesArray.length > 0 ? newVs : f.variantStocks,
                         };
                       });
                     }}
@@ -1300,7 +1460,7 @@ export default function AdminBoutique() {
                       {/* Add size presets */}
                       <div className="mt-2 flex flex-wrap gap-1">
                         <span className="text-[9px] text-slate-400 font-bold mr-1">Ajouter taille:</span>
-                        {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unique'].map(sz => {
+                        {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Unique', 'Feuille A4'].map(sz => {
                           const alreadyHas = form.sizes.split(',').map(s => s.trim()).includes(sz);
                           return (
                             <button

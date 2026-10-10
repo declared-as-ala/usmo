@@ -147,6 +147,9 @@ export class ProductsService {
     if (normalized.status !== undefined) {
       normalized.isPublished = normalized.status === 'published';
     }
+    if (normalized.name && (!normalized.nameFr || normalized.nameFr.trim() === '')) {
+      normalized.nameFr = normalized.name.trim();
+    }
     if ((normalized as any).stock !== undefined && normalized.stockQuantity === undefined) {
       normalized.stockQuantity = Number((normalized as any).stock);
     }
