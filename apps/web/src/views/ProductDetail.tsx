@@ -248,11 +248,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     uniqueSizes.length > 0 &&
     !uniqueSizes.every((s: string) => !s || s.toLowerCase() === 'one size' || s.toLowerCase() === 'unique');
 
-  useEffect(() => {
-    if (product && !hasApparelSizes && activeTab === 'sizing') {
-      setActiveTab('delivery');
-    }
-  }, [product, hasApparelSizes, activeTab]);
+  const currentTab = (!hasApparelSizes && activeTab === 'sizing') ? 'delivery' : activeTab;
 
   const handleAddToCart = () => {
     // Enforce size selection only if product has selectable apparel sizes
@@ -876,7 +872,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`shrink-0 py-4 px-3 text-xs font-bold uppercase transition-all cursor-pointer border-b-2 whitespace-nowrap ${
-                  activeTab === tab.key
+                  currentTab === tab.key
                     ? 'border-usm-blue-primary text-usm-blue-primary'
                     : 'border-transparent text-slate-500 hover:text-usm-blue-primary'
                 }`}
@@ -887,7 +883,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
           </div>
 
           <div className="p-6 md:p-8 text-xs text-slate-600 leading-relaxed max-w-3xl">
-            {activeTab === 'sizing' && (
+            {currentTab === 'sizing' && (
               product.sizeGuide?.trim() ? (
                 /<[a-z][\s\S]*>/i.test(product.sizeGuide) ? (
                   <div
@@ -918,7 +914,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               )
             )}
 
-            {activeTab === 'delivery' && (
+            {currentTab === 'delivery' && (
               product.deliveryInfo?.trim() ? (
                 /<[a-z][\s\S]*>/i.test(product.deliveryInfo) ? (
                   <div
