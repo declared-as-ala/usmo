@@ -388,9 +388,13 @@ export const Checkout: React.FC = () => {
               </p>
               <div className="flex items-center gap-2 flex-wrap mt-0.5">
                 <span className="text-[10px] text-slate-500 font-mono">
-                  {item.size && item.size !== 'Unique' && item.size !== 'One Size'
-                    ? `Qté ${item.quantity} • Taille ${item.size}`
-                    : `Qté ${item.quantity}`}
+                  {(() => {
+                    const isSticker = item.product.name?.toLowerCase().includes('sticker') || item.product.name?.toLowerCase().includes('planche');
+                    const displaySize = (item.size === 'Unique' || item.size === 'One Size') && isSticker ? 'Feuille A4' : item.size;
+                    return displaySize && displaySize !== 'Unique' && displaySize !== 'One Size'
+                      ? `Qté ${item.quantity} • Taille ${displaySize}`
+                      : `Qté ${item.quantity}`;
+                  })()}
                 </span>
                 {(item.customName || item.customNumber) && (
                   <span className="text-[9px] font-black uppercase text-[#0D63FF] bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">

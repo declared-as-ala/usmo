@@ -86,7 +86,16 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         const prod = await api.getProductBySlug(productId);
         setProduct(prod);
 
-        // Do NOT auto-select size — user must explicitly choose
+        // Auto-select size if single option (e.g. Feuille A4)
+        const isStickerProd = prod.name?.toLowerCase().includes('sticker') || prod.name?.toLowerCase().includes('planche') || prod.category?.toLowerCase().includes('access');
+        const pSizes = (prod.variants && prod.variants.length > 0)
+          ? Array.from(new Set(prod.variants.map((v: any) => v.size).filter(Boolean)))
+          : (prod.sizes || []);
+        if (pSizes.length <= 1) {
+          const onlySize = pSizes[0] || (isStickerProd ? 'Feuille A4' : 'Unique');
+          setSelectedSize(onlySize === 'Unique' && isStickerProd ? 'Feuille A4' : onlySize);
+        }
+
         if (prod.variants && prod.variants.length > 0) {
           setSelectedColor(prod.variants[0].colorHex || null);
         }
@@ -227,6 +236,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     product.name?.toLowerCase().includes('planche') ||
     product.category?.toLowerCase() === 'goodies';
 
+  const isSticker =
+    product.name?.toLowerCase().includes('sticker') ||
+    product.name?.toLowerCase().includes('planche') ||
+    product.description?.toLowerCase().includes('feuille a4');
+
   // Get unique colors
   const uniqueColors = product.variants
     ? Array.from(
@@ -238,21 +252,25 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
       )
     : [];
 
-  // Get unique sizes
-  const uniqueSizes: string[] = product.variants
+  // Get unique sizes: map 'Unique' / 'One Size' to 'Feuille A4' for stickers / planche / accessories
+  const rawSizes: string[] = product.variants
     ? (Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))) as string[])
     : (product.sizes || []);
 
-  const hasApparelSizes =
-    !isAccessory &&
-    uniqueSizes.length > 0 &&
-    !uniqueSizes.every((s: string) => !s || s.toLowerCase() === 'one size' || s.toLowerCase() === 'unique');
+  const uniqueSizes: string[] = (rawSizes.length > 0 ? rawSizes : [isSticker ? 'Feuille A4' : 'Unique']).map((sz) => {
+    if ((sz === 'Unique' || sz === 'One Size') && (isSticker || isAccessory)) {
+      return 'Feuille A4';
+    }
+    return sz;
+  });
 
-  const currentTab = (!hasApparelSizes && activeTab === 'sizing') ? 'delivery' : activeTab;
+  const requiresSizeSelection = uniqueSizes.length > 1;
+  const showSizeGuide = isClothingOrJersey || Boolean(product.sizeGuide?.trim());
+  const currentTab = (!showSizeGuide && activeTab === 'sizing') ? 'delivery' : activeTab;
 
   const handleAddToCart = () => {
-    // Enforce size selection only if product has selectable apparel sizes
-    if (hasApparelSizes && !selectedSize) {
+    // Enforce size selection only if product has multiple sizes to choose from
+    if (requiresSizeSelection && !selectedSize) {
       setSizeError(tr(language, 'Please select a size.', 'Veuillez sélectionner une taille.', 'يرجى اختيار مقاس.'));
       // Scroll to size selector on mobile so the error is visible
       sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -263,8 +281,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     }
     setSizeError('');
 
-    const defaultSize = uniqueSizes[0] || (isAccessory ? 'Unique' : 'One Size');
-    const finalSize = hasApparelSizes ? selectedSize : (selectedSize || defaultSize);
+    const defaultSize = uniqueSizes[0] || (isSticker ? 'Feuille A4' : (isAccessory ? 'Unique' : 'One Size'));
+    const finalSize = selectedSize || defaultSize;
 
     const hasCustomization = isJersey && (customName.trim() !== '' || customNumber.trim() !== '');
     const customization = hasCustomization
@@ -297,7 +315,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
           image: accessoryItem.coverImage || accessoryItem.image,
           price: formatMoney(accessoryItem.price),
         },
-        'Unique'
+        'Feuille A4'
       );
       setIsCartOpen(true);
     } else if (isClothingOrJersey && accessoryItem) {
@@ -611,8 +629,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               </div>
             )}
 
-            {/* Sizes Selection — only displayed when product has real apparel sizes */}
-            {hasApparelSizes && (
+            {/* Sizes Selection — displayed for all products with sizes including accessories */}
+            {uniqueSizes.length > 0 && (
               <div
                 ref={sizeSelectorRef}
                 className={`space-y-2 border-t border-usm-border pt-4 rounded-xl transition-all duration-300 ${
@@ -624,8 +642,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {uniqueSizes.map((sz: any) => {
-                    const variant = product.variants?.find((v: any) => v.size === sz);
-                    const isAvailable = variant && (variant.stock || 0) > 0 && variant.isActive !== false;
+                    const variant = product.variants?.find((v: any) =>
+                      v.size === sz || (sz === 'Feuille A4' && (v.size === 'Unique' || v.size === 'One Size'))
+                    );
+                    const isAvailable = variant ? ((variant.stock || 0) > 0 && variant.isActive !== false) : !soldOut;
+                    const isSelected = selectedSize === sz || (!selectedSize && uniqueSizes.length === 1 && uniqueSizes[0] === sz);
                     return (
                       <button
                         key={sz}
@@ -637,7 +658,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                         className={`px-4.5 py-2 rounded-lg text-xs font-bold border transition-all ${
                           !isAvailable
                             ? 'bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed line-through'
-                            : selectedSize === sz
+                            : isSelected
                             ? 'bg-usm-blue-primary text-white border-usm-blue-primary cursor-pointer'
                             : 'bg-white text-slate-600 border-usm-border hover:border-usm-blue-primary/45 cursor-pointer'
                         }`}
@@ -867,7 +888,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         {/* 3. TABS CONTAINER */}
         <div className="bg-white border border-usm-border rounded-2xl shadow-lg">
           <div className="flex overflow-x-auto border-b border-usm-border px-4 no-scrollbar">
-            {TABS.filter((tab) => tab.key !== 'sizing' || hasApparelSizes).map((tab) => (
+            {TABS.filter((tab) => tab.key !== 'sizing' || showSizeGuide).map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -1056,7 +1077,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                         image: accessoryItem.coverImage || accessoryItem.image,
                         price: formatMoney(accessoryItem.price),
                       },
-                      'Unique'
+                      'Feuille A4'
                     );
                     setShowUpsellModal(false);
                     setIsCartOpen(true);

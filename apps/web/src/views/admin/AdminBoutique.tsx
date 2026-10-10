@@ -142,9 +142,13 @@ export default function AdminBoutique() {
       : (variantsStock > 0 ? variantsStock : (p.stock ?? 10));
 
     const isAccessory = p.category?.toLowerCase().includes('access');
-    const defaultSizes = isAccessory
-      ? ''
-      : (p.variants && p.variants.length > 0 ? p.variants.map((v: any) => v.size).join(', ') : 'S, M, L, XL');
+    const isSticker = p.name?.toLowerCase().includes('sticker') || p.name?.toLowerCase().includes('planche');
+    const existingSizes = p.variants && p.variants.length > 0
+      ? Array.from(new Set(p.variants.map((v: any) => v.size).filter(Boolean))).join(', ')
+      : '';
+    const defaultSizes = existingSizes
+      ? (existingSizes === 'Unique' && isSticker ? 'Feuille A4' : existingSizes)
+      : (isAccessory ? (isSticker ? 'Feuille A4' : 'Unique') : 'S, M, L, XL');
 
     setForm({
       name: p.name,
@@ -270,9 +274,11 @@ export default function AdminBoutique() {
 
     try {
       const priceMillimes = parsePriceToMillimes(form.price);
-      const oldPriceMillimes = form.oldPrice ? parsePriceToMillimes(form.oldPrice) : undefined;
+      const oldPriceClean = typeof form.oldPrice === 'string' ? form.oldPrice.trim() : '';
+      const oldPriceMillimes = oldPriceClean !== '' ? parsePriceToMillimes(oldPriceClean) : null;
       
       const isAccessory = form.category?.toLowerCase().includes('access');
+      const isSticker = form.name?.toLowerCase().includes('sticker') || form.name?.toLowerCase().includes('planche');
       const sizesArray = form.sizes
         .split(',')
         .map((s) => s.trim())
@@ -281,34 +287,23 @@ export default function AdminBoutique() {
       const effectiveQuantity = Math.max(0, Number(form.stockQuantity ?? form.stock ?? 0));
       const hasPerSizeStocks = Object.values(form.variantStocks || {}).some((v) => (v || 0) > 0);
 
-      let variants: any[] = [];
-      if (sizesArray.length > 0 && !isAccessory) {
-        const perSize = Math.floor(effectiveQuantity / sizesArray.length);
-        const remainder = effectiveQuantity % sizesArray.length;
-        variants = sizesArray.map((size, idx) => ({
-          id: `${editingId || 'new'}-${size}-${idx}`,
-          sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size}-${idx}`,
-          size,
-          color: 'Bleu',
-          colorHex: '#0D63FF',
-          stock: hasPerSizeStocks
-            ? (form.variantStocks[size] || 0)
-            : (perSize + (idx < remainder ? 1 : 0)),
-          isActive: true,
-        }));
-      } else {
-        variants = [
-          {
-            id: `${editingId || 'new'}-unique-0`,
-            sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-UNIQ-0`,
-            size: 'Unique',
-            color: 'Bleu',
-            colorHex: '#0D63FF',
-            stock: effectiveQuantity,
-            isActive: true,
-          }
-        ];
-      }
+      const effectiveSizes = sizesArray.length > 0
+        ? sizesArray
+        : (isAccessory ? [isSticker ? 'Feuille A4' : 'Unique'] : ['S', 'M', 'L', 'XL']);
+
+      const perSize = Math.floor(effectiveQuantity / effectiveSizes.length);
+      const remainder = effectiveQuantity % effectiveSizes.length;
+      const variants = effectiveSizes.map((size, idx) => ({
+        id: `${editingId || 'new'}-${size}-${idx}`,
+        sku: `SKU-${form.name.slice(0, 3).toUpperCase()}-${size.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'UNIQ'}-${idx}`,
+        size,
+        color: 'Bleu',
+        colorHex: '#0D63FF',
+        stock: hasPerSizeStocks
+          ? (form.variantStocks[size] || 0)
+          : (perSize + (idx < remainder ? 1 : 0)),
+        isActive: true,
+      }));
 
       const totalCalculated = hasPerSizeStocks
         ? variants.reduce((sum, v) => sum + (v.stock || 0), 0)
@@ -421,11 +416,12 @@ export default function AdminBoutique() {
           stock: perSize + (idx < remainder ? 1 : 0),
         }));
       } else {
+        const isSticker = prod.name?.toLowerCase().includes('sticker') || prod.name?.toLowerCase().includes('planche');
         updatedVariants = [
           {
             id: `${id}-unique-0`,
             sku: `SKU-${prod.name.slice(0, 3).toUpperCase()}-UNIQ-0`,
-            size: 'Unique',
+            size: isSticker ? 'Feuille A4' : 'Unique',
             color: 'Bleu',
             colorHex: '#0D63FF',
             stock: newStock,

@@ -185,6 +185,9 @@ export class ProductsService {
 
   async create(data: Partial<Product>): Promise<Product> {
     const prepared = this.normalizeProductData(data);
+    if ((prepared as any).oldPrice === null) {
+      delete (prepared as any).oldPrice;
+    }
     // Generate slug from name if not provided
     if (!prepared.slug && prepared.name) {
       prepared.slug = prepared.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -209,7 +212,20 @@ export class ProductsService {
       }
     }
 
-    const product = await this.productModel.findByIdAndUpdate(id, prepared, { new: true }).exec();
+    const updatePayload: any = { ...prepared };
+    const unsetFields: Record<string, any> = {};
+
+    if ((prepared as any).oldPrice === null || (prepared as any).oldPrice === '') {
+      delete updatePayload.oldPrice;
+      unsetFields.oldPrice = 1;
+    }
+
+    const mongoUpdate: any = { $set: updatePayload };
+    if (Object.keys(unsetFields).length > 0) {
+      mongoUpdate.$unset = unsetFields;
+    }
+
+    const product = await this.productModel.findByIdAndUpdate(id, mongoUpdate, { new: true }).exec();
     if (!product) {
       throw new NotFoundException(`Produit introuvable avec l'ID "${id}"`);
     }

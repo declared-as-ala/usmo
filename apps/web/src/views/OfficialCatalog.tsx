@@ -67,7 +67,9 @@ function BoutiqueProductCard({ product, index = 0 }: { product: any; index?: num
     if (soldOut) return;
 
     if (!hasMultipleSizes) {
-      const defaultSize = sizeOptions[0]?.size || 'Unique';
+      const isSticker = product.name?.toLowerCase().includes('sticker') || product.name?.toLowerCase().includes('planche');
+      const rawSize = sizeOptions[0]?.size || (isSticker ? 'Feuille A4' : 'Unique');
+      const defaultSize = (rawSize === 'Unique' && isSticker) ? 'Feuille A4' : rawSize;
       addToCart({ ...product, id, image: coverImage, price: formatTND(product.price) }, defaultSize);
       return;
     }

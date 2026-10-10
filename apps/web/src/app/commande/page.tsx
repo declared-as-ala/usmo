@@ -218,7 +218,11 @@ export default function OrderTrackingPage() {
                     <div>
                       <p className="text-sm font-semibold text-usm-blue-dark">{item.name}</p>
                       <p className="text-xs text-slate-500">
-                        {item.size && item.size !== 'Unique' && item.size !== 'One Size' ? `Taille: ${item.size} · ` : ''}Qté: {item.quantity}
+                        {(() => {
+                          const isSticker = item.name?.toLowerCase().includes('sticker') || item.name?.toLowerCase().includes('planche');
+                          const displaySize = (item.size === 'Unique' || item.size === 'One Size') && isSticker ? 'Feuille A4' : item.size;
+                          return displaySize && displaySize !== 'Unique' && displaySize !== 'One Size' ? `Taille: ${displaySize} · ` : '';
+                        })()}Qté: {item.quantity}
                       </p>
                       {(item.customName || item.customNumber) && (
                         <span className="inline-block mt-1 text-[11px] font-bold text-[#0D63FF] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">

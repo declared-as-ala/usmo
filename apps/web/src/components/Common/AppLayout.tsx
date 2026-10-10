@@ -290,9 +290,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                           {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
                         </p>
                         <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                          {!item.size || item.size === 'Unique' || item.size === 'One Size'
-                            ? item.product.price
-                            : `${item.size} • ${item.product.price}`}
+                          {(() => {
+                            const isSticker = item.product.name?.toLowerCase().includes('sticker') || item.product.name?.toLowerCase().includes('planche');
+                            const displaySize = (item.size === 'Unique' || item.size === 'One Size') && isSticker ? 'Feuille A4' : item.size;
+                            return !displaySize || displaySize === 'Unique' || displaySize === 'One Size'
+                              ? item.product.price
+                              : `${displaySize} • ${item.product.price}`;
+                          })()}
                         </p>
                         {isItemOut && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-black uppercase tracking-wider mt-1">
@@ -406,7 +410,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                           image: accessoryItem.coverImage || accessoryItem.image,
                           price: (accessoryItem.price / 1000).toFixed(3) + ' DT',
                         },
-                        'Unique'
+                        'Feuille A4'
                       );
                     }}
                     className="shrink-0 px-3 py-1.5 bg-usm-blue-primary hover:bg-usm-blue-hover text-white text-[10px] font-black uppercase rounded-xl transition-all cursor-pointer shadow-xs whitespace-nowrap"
