@@ -220,10 +220,43 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
     product.name?.toLowerCase().includes('t-shirt') ||
     product.name?.toLowerCase().includes('polo');
 
+  const isAccessory =
+    product.category?.toLowerCase().includes('access') ||
+    product.name?.toLowerCase().includes('sticker') ||
+    product.name?.toLowerCase().includes('accessoire') ||
+    product.name?.toLowerCase().includes('planche') ||
+    product.category?.toLowerCase() === 'goodies';
+
+  // Get unique colors
+  const uniqueColors = product.variants
+    ? Array.from(
+        new Map(
+          product.variants
+            .filter((v: any) => v.color && v.colorHex)
+            .map((v: any) => [v.colorHex, { name: v.color, hex: v.colorHex }])
+        ).values()
+      )
+    : [];
+
+  // Get unique sizes
+  const uniqueSizes: string[] = product.variants
+    ? (Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))) as string[])
+    : (product.sizes || []);
+
+  const hasApparelSizes =
+    !isAccessory &&
+    uniqueSizes.length > 0 &&
+    !uniqueSizes.every((s: string) => !s || s.toLowerCase() === 'one size' || s.toLowerCase() === 'unique');
+
+  useEffect(() => {
+    if (product && !hasApparelSizes && activeTab === 'sizing') {
+      setActiveTab('delivery');
+    }
+  }, [product, hasApparelSizes, activeTab]);
+
   const handleAddToCart = () => {
-    // Enforce size selection
-    const hasSizes = uniqueSizes.length > 0 && !(uniqueSizes.length === 1 && uniqueSizes[0] === 'One Size');
-    if (hasSizes && !selectedSize) {
+    // Enforce size selection only if product has selectable apparel sizes
+    if (hasApparelSizes && !selectedSize) {
       setSizeError(tr(language, 'Please select a size.', 'Veuillez sélectionner une taille.', 'يرجى اختيار مقاس.'));
       // Scroll to size selector on mobile so the error is visible
       sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -233,6 +266,9 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
       return;
     }
     setSizeError('');
+
+    const defaultSize = uniqueSizes[0] || (isAccessory ? 'Unique' : 'One Size');
+    const finalSize = hasApparelSizes ? selectedSize : (selectedSize || defaultSize);
 
     const hasCustomization = isJersey && (customName.trim() !== '' || customNumber.trim() !== '');
     const customization = hasCustomization
@@ -249,11 +285,11 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         image: product.coverImage || product.image,
         price: formatMoney(product.price),
       },
-      selectedSize || 'One Size',
+      finalSize,
       customization
     );
     if (quantity > 1) {
-      updateCartQuantity(product._id, selectedSize || 'One Size', quantity, customization);
+      updateCartQuantity(product._id, finalSize, quantity, customization);
     }
 
     // Smart Accessory Upsell trigger
@@ -282,22 +318,6 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
       setIsCartOpen(true);
     }
   };
-
-  // Get unique colors
-  const uniqueColors = product.variants
-    ? Array.from(
-        new Map(
-          product.variants
-            .filter((v: any) => v.color && v.colorHex)
-            .map((v: any) => [v.colorHex, { name: v.color, hex: v.colorHex }])
-        ).values()
-      )
-    : [];
-
-  // Get unique sizes
-  const uniqueSizes = product.variants
-    ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean)))
-    : (product.sizes || []);
 
   return (
     <div className="usm-premium-bg text-usm-blue-dark min-h-screen relative overflow-hidden">
@@ -573,8 +593,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               {tr(language, product.description, product.descriptionFr, product.descriptionAr)}
             </p>
 
-            {/* Colors Indicator — hidden for jerseys */}
-            {uniqueColors.length > 0 && !isJersey && (
+            {/* Colors Indicator — hidden for jerseys and accessories */}
+            {uniqueColors.length > 0 && !isJersey && !isAccessory && (
               <div className="space-y-2 border-t border-usm-border pt-4">
                 <label className="text-[10px] font-bold text-slate-500 uppercase block">
                   {tr(language, 'Color', 'Couleur', 'اللون')}
@@ -595,8 +615,8 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               </div>
             )}
 
-            {/* Sizes Selection */}
-            {uniqueSizes.length > 0 && uniqueSizes[0] !== 'One Size' && (
+            {/* Sizes Selection — only displayed when product has real apparel sizes */}
+            {hasApparelSizes && (
               <div
                 ref={sizeSelectorRef}
                 className={`space-y-2 border-t border-usm-border pt-4 rounded-xl transition-all duration-300 ${
@@ -851,7 +871,7 @@ export const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         {/* 3. TABS CONTAINER */}
         <div className="bg-white border border-usm-border rounded-2xl shadow-lg">
           <div className="flex overflow-x-auto border-b border-usm-border px-4 no-scrollbar">
-            {TABS.map((tab) => (
+            {TABS.filter((tab) => tab.key !== 'sizing' || hasApparelSizes).map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}

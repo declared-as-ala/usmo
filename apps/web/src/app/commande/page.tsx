@@ -217,7 +217,9 @@ export default function OrderTrackingPage() {
                   <div key={i} className="flex items-center justify-between px-5 py-3">
                     <div>
                       <p className="text-sm font-semibold text-usm-blue-dark">{item.name}</p>
-                      <p className="text-xs text-slate-500">Taille: {item.size} · Qté: {item.quantity}</p>
+                      <p className="text-xs text-slate-500">
+                        {item.size && item.size !== 'Unique' && item.size !== 'One Size' ? `Taille: ${item.size} · ` : ''}Qté: {item.quantity}
+                      </p>
                       {(item.customName || item.customNumber) && (
                         <span className="inline-block mt-1 text-[11px] font-bold text-[#0D63FF] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
                           Flocage: {[item.customName, item.customNumber ? '#' + item.customNumber : ''].filter(Boolean).join(' ')}

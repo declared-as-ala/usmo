@@ -289,7 +289,11 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                         <p className="font-bold truncate text-[12px] text-usm-blue-dark">
                           {tr(language, item.product.name, item.product.nameFr, item.product.nameAr)}
                         </p>
-                        <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{item.size} • {item.product.price}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                          {!item.size || item.size === 'Unique' || item.size === 'One Size'
+                            ? item.product.price
+                            : `${item.size} • ${item.product.price}`}
+                        </p>
                         {isItemOut && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[9px] font-black uppercase tracking-wider mt-1">
                             Article Épuisé
@@ -429,10 +433,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   <div className="flex justify-between items-center text-sm font-bold">
                     <span className="text-slate-600">{tr(language, 'Total:', 'Total :', 'المجموع:')}</span>
                     <span className="text-usm-blue-primary text-lg font-mono">
-                      {cart.reduce((sum, item) => {
+                      {(cart.reduce((sum, item) => {
                         const priceNum = parseFloat(item.product.price.replace(/[^\d.]/g, '')) || 0;
                         return sum + (priceNum * item.quantity);
-                      }, 0)} TND
+                      }, 0)).toFixed(3)} TND
                     </span>
                   </div>
                   {hasOutOfStock && (
