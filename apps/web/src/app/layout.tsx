@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Cairo, Inter, Cormorant_Garamond } from 'next/font/google';
+import { Outfit, Cairo, Inter } from 'next/font/google';
 import './globals.css';
 import { AppProvider } from '../context/AppContext';
 
@@ -20,14 +20,6 @@ const cairo = Cairo({
 const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
-  display: 'swap',
-});
-
-// Refined serif used sparingly for luxury accents (eyebrows, taglines) — never body copy.
-const cormorant = Cormorant_Garamond({
-  variable: '--font-cormorant',
-  subsets: ['latin'],
-  weight: ['400', '700'],
   display: 'swap',
 });
 
@@ -99,7 +91,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${cairo.variable} ${inter.variable} ${cormorant.variable} h-full antialiased`}
+      className={`${outfit.variable} ${cairo.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
